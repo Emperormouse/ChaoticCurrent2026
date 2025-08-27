@@ -15,7 +15,7 @@ public class Example1 extends LinearOpMode {
         //The variable name can be anything, but the string must be the name that is assigned to it on the control hub.
         DcMotor motor1 = hardwareMap.get(DcMotor.class, "motor1");
 
-        //Main Loop
+        //Main Loop, which stops when the stop button on the driver hub is pressed
         while(opModeIsActive()) {
             if (gamepad1.a) { //This checks if the 'a' button is pressed
                 motor1.setPower(1.0); //Motors' speed can be set to any value from -1.0 to 1.0
@@ -32,3 +32,4 @@ public class Example1 extends LinearOpMode {
 
     }
 }
+
