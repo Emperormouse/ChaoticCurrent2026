@@ -1,9 +1,8 @@
-package org.firstinspires.ftc.teamcode.code.TeleOp;
+package org.firstinspires.ftc.teamcode.examples.TeleOp;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.code.subsystems.Claw;
+import org.firstinspires.ftc.teamcode.examples.subsystems.Claw;
 
 // This code uses the "Claw" class which I created in the subsystems folder, to "abstract" some code sway
 // it sets a servo to one of two positions, based on whether a or b is pressed. It could be used
