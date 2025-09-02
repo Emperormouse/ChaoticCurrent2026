@@ -23,6 +23,7 @@ public class Example2_Servo extends LinearOpMode {
             }
             //Even after a and b are released, the servo will stay at either 0.0 or 1.0, instead of
             //going back to 0.5, since no code is telling it to go back.
+            //Also, the speed of servos cannot be set, only their target position
         }
 
     }

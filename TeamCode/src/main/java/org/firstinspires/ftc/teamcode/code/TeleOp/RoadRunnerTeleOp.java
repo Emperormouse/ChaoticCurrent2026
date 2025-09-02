@@ -7,6 +7,7 @@ import static java.lang.Math.sin;
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
@@ -34,7 +35,7 @@ public class RoadRunnerTeleOp extends LinearOpMode {
     //This is the roadrunner mecanum drive
     MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
-    //All of the manual controls beside movement will go inside of the run method
+    //MANUAL CONTROLS BESIDES MOVEMENT IN HERE
     private class ManualControls implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
             if (gamepad1.a) {
@@ -98,9 +99,13 @@ public class RoadRunnerTeleOp extends LinearOpMode {
             return true;
         }
     }
+    //END OF MANUAL CONTROLS
 
     @Override
     public void runOpMode() {
+        FtcDashboard dash = FtcDashboard.getInstance();
+        TelemetryPacket t = new TelemetryPacket();
+
         Action defaultAction = new ParallelAction(
             new FieldCentricMovement(),
             new ManualControls()
@@ -111,10 +116,13 @@ public class RoadRunnerTeleOp extends LinearOpMode {
         while (opModeIsActive()) {
             //TODO: Replace this with the actual current location found with the odometry system
             currentPose = new Pose2d(0, 0, 0);
+            dash.sendTelemetryPacket(t);
+            telemetry.update();
 
             //All of the controls for switching between roadrunner paths should go here.
-            //These controls can always be accessed
-            if (gamepad1.bWasPressed()) {
+            //These controls can always be accessed regardless of which action is currently running
+            //Always use "WasPressed" controls for changing the running action
+            if (gamepad1.bWasPressed()) { //Ends any running paths/actions and returns to manual mode
                 isActionRunning = false;
             }
             if (gamepad1.dpadUpWasPressed()) {
@@ -127,9 +135,9 @@ public class RoadRunnerTeleOp extends LinearOpMode {
             }
 
             if (isActionRunning) {
-                isActionRunning = currentAction.run(new TelemetryPacket());
+                isActionRunning = currentAction.run(t);
             } else {
-                defaultAction.run(new TelemetryPacket());
+                defaultAction.run(t);
             }
         }
 
