@@ -28,13 +28,16 @@ public class Slides {
 
         public boolean run(@NonNull TelemetryPacket t) {
             int error = targetTicks - motor.getCurrentPosition();
-            motor.setPower(Math.min(1, error*kp));
+            motor.setPower(error*kp);
 
             return Math.abs(error) > 10;
         }
     }
     public Action moveSlides(int targetTicks) {
         return new MoveSlides(targetTicks);
+    }
+    public Action resetSlides() {
+        return new MoveSlides(0);
     }
 
 }

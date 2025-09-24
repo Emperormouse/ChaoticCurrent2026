@@ -24,9 +24,10 @@ public class ExampleAuto4 extends LinearOpMode {
 
         Action path = drive.actionBuilder(startPose)
             .lineToY(-35)
+            //This action runs and the rest of the path does not run until it finishes
             .stopAndAdd(slides.moveSlides(400))
             .waitSeconds(2.0)
-            .stopAndAdd(slides.moveSlides(0))
+            .stopAndAdd(slides.resetSlides())
 
             .strafeTo(new Vector2d(25, -35))
             .strafeTo(new Vector2d(45, 0))
@@ -39,22 +40,22 @@ public class ExampleAuto4 extends LinearOpMode {
             .lineToY(-55)
 
             .waitSeconds(1.5)
-            .stopAndAdd(slides.moveSlides(0))
+            .stopAndAdd(slides.resetSlides())
 
             .afterTime(1, slides.moveSlides(400))
             .strafeToLinearHeading(new Vector2d(5, -35), toRadians(90))
             .waitSeconds(1.5)
-            .stopAndAdd(slides.moveSlides(0))
+            .stopAndAdd(slides.resetSlides())
 
             .afterTime(1, slides.moveSlides(300))
             .strafeToLinearHeading(new Vector2d(45, -55), toRadians(-90))
             .waitSeconds(1.5)
-            .stopAndAdd(slides.moveSlides(0))
+            .stopAndAdd(slides.resetSlides())
 
             .afterTime(1, slides.moveSlides(400))
             .strafeToLinearHeading(new Vector2d(5, -35), toRadians(90))
             .waitSeconds(1.5)
-            .stopAndAdd(slides.moveSlides(0))
+            .stopAndAdd(slides.resetSlides())
             .build();
 
         Actions.runBlocking(path);

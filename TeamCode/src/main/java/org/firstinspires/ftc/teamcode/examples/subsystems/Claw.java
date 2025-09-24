@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class Claw {
     Servo servo;
+
     public Claw(HardwareMap hardwareMap) {
         servo = hardwareMap.get(Servo.class, "servo1");
         open();
