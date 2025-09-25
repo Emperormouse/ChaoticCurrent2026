@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Canon;
@@ -27,10 +28,11 @@ import org.firstinspires.ftc.teamcode.code.Subsystems.Canon;
 //This will most likely be used if we want to make a TeleOp which is mostly automated
 @TeleOp(name = "RRTeleOp")
 public class RoadRunnerTeleOp extends LinearOpMode {
-    //private final DcMotor frontLeft = (DcMotorEx) hardwareMap.dcMotor.get("leftFront");
-    //private final DcMotor backLeft = (DcMotorEx) hardwareMap.dcMotor.get("leftBack");
-    //private final DcMotor frontRight = (DcMotorEx) hardwareMap.dcMotor.get("rightFront");
-    //private final DcMotor backRight = (DcMotorEx) hardwareMap.dcMotor.get("rightBack");
+    private final DcMotor frontLeft = (DcMotorEx) hardwareMap.dcMotor.get("leftFront");
+    private final DcMotor backLeft = (DcMotorEx) hardwareMap.dcMotor.get("leftBack");
+    private final DcMotor frontRight = (DcMotorEx) hardwareMap.dcMotor.get("rightFront");
+    private final DcMotor backRight = (DcMotorEx) hardwareMap.dcMotor.get("rightBack");
+    private final IMU imu = hardwareMap.get(IMU.class, "imu");
     private final Canon canon = new Canon(hardwareMap);
     private Pose2d currentPose;
 
@@ -41,7 +43,7 @@ public class RoadRunnerTeleOp extends LinearOpMode {
     private class ManualControls implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
             if (gamepad1.a) {
-                //do something
+                telemetry.addLine("A pressed");
             }
 
             return true;
@@ -53,7 +55,8 @@ public class RoadRunnerTeleOp extends LinearOpMode {
     //It's structured as an Action however since this teleOp is based on roadrunner Actions
     private class FieldCentricMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
-            double botRot = currentPose.heading.toDouble(); //RADIANS
+            double botRot = imu.getRobotYawPitchRollAngles().getYaw(); //RADIANS
+            telemetry.addData("Heading: ", botRot);
 
             double frPower = 0;
             double flPower = 0;
@@ -93,10 +96,10 @@ public class RoadRunnerTeleOp extends LinearOpMode {
 
             double denominator = max(1, max(max(max(abs(frPower), abs(brPower)), abs(flPower)), abs(blPower)));
 
-            //frontLeft.setPower(flPower / denominator);
-            //frontRight.setPower(frPower / denominator);
-            //backLeft.setPower(blPower / denominator);
-            //backRight.setPower(brPower / denominator);
+            frontLeft.setPower(flPower / denominator);
+            frontRight.setPower(frPower / denominator);
+            backLeft.setPower(blPower / denominator);
+            backRight.setPower(brPower / denominator);
 
             return true;
         }
@@ -108,10 +111,10 @@ public class RoadRunnerTeleOp extends LinearOpMode {
         //FtcDashboard dash = FtcDashboard.getInstance();
         TelemetryPacket t = new TelemetryPacket();
 
-        Action defaultAction = canon.maintainSpeed(1500); /*new ParallelAction(
+        Action defaultAction = new ParallelAction(
             new FieldCentricMovement(),
             new ManualControls()
-        );*/
+        );
         Action currentAction = null;
         boolean isActionRunning = false;
 

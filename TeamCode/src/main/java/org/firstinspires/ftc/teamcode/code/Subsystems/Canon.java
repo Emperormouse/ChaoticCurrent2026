@@ -22,16 +22,15 @@ public class Canon {
 
     private class SpinUp implements Action {
         private double targetSpeed;
-        private final double k = (1.0 / 2_500);
+        private final double k = (1.0 / 50_000);
 
         public SpinUp(double target) {
             targetSpeed = target;
         }
 
-        public boolean run(@NonNull TelemetryPacket t) {
+        public boolean run(TelemetryPacket t) {
             double speed = motor1.getVelocity();
             double error = targetSpeed - speed;
-            error = Math.sqrt(Math.abs(error)) * (error > 0 ? 1 : -1);
             motor1.setPower(motor1.getPower() + (error*k));
 
             return Math.abs(error) > 20;
@@ -41,8 +40,19 @@ public class Canon {
         public MaintainSpeed(double target) {
             super(target);
         }
-        public boolean run(@NonNull TelemetryPacket t) {
+        public boolean run(TelemetryPacket t) {
             super.run(t);
+            return true;
+        }
+    }
+
+    private class ActionName implements Action { //Action Structure
+        private int a;
+        public ActionName() {
+
+        }
+        public boolean run(TelemetryPacket t) {
+
             return true;
         }
     }
