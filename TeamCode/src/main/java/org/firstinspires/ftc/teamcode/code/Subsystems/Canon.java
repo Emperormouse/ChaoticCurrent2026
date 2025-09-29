@@ -11,13 +11,18 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import java.util.Set;
 
 public class Canon {
-    private DcMotorEx motor1;
-    private DcMotorEx motor2;
+    private DcMotorEx motorL;
+    private DcMotorEx motorR;
 
     public Canon(HardwareMap hardwareMap) {
-        motor1 = hardwareMap.get(DcMotorEx.class, "motor1");
-        //motor2 = hardwareMap.get(DcMotorEx.class, "outtakeR");
-        //motor2 = motor1;
+        motorL = hardwareMap.get(DcMotorEx.class, "outtakeL");
+        motorR = hardwareMap.get(DcMotorEx.class, "outtakeR");
+        //motorR = motorL;
+    }
+    
+    public void setSpeed(double p) {
+        motorL.setPower(-p);
+        motorR.setPower(p);
     }
 
     private class SpinUp implements Action {
@@ -29,11 +34,15 @@ public class Canon {
         }
 
         public boolean run(TelemetryPacket t) {
-            double speed = motor1.getVelocity();
-            double error = targetSpeed - speed;
-            motor1.setPower(motor1.getPower() + (error*k));
+            double speedR = motorR.getVelocity();
+            double errorR = targetSpeed - speedR;
+            motorL.setPower(motorL.getPower() + (errorR*k));
 
-            return Math.abs(error) > 20;
+            double speedL = motorL.getVelocity();
+            double errorL = (-targetSpeed) - speedL;
+            motorL.setPower(motorL.getPower() + (errorL*k));
+
+            return Math.abs(errorR) > 20;
         }
     }
     private class MaintainSpeed extends SpinUp {
