@@ -7,33 +7,30 @@ import static java.lang.Math.sin;
 
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.code.Subsystems.Canon;
+import org.firstinspires.ftc.teamcode.code.Subsystems.Intake;
+import org.firstinspires.ftc.teamcode.code.Subsystems.Outtake;
 
 //This is a teleOp that I'm working on which will be able to run RoadRunner paths in teleOp.
 //The best way that I figured out to do this is to make every part of the teleOp an Action, which
 //is what roadrunner paths are, and then switch between those actions.
 //This will most likely be used if we want to make a TeleOp which is mostly automated
-@TeleOp(name = "RRTeleOp")
+@TeleOp(name = "RoadRunnerTeleOp")
 public class RoadRunnerTeleOp extends LinearOpMode {
-    private final DcMotor frontLeft = (DcMotorEx) hardwareMap.dcMotor.get("leftFront");
-    private final DcMotor backLeft = (DcMotorEx) hardwareMap.dcMotor.get("leftBack");
-    private final DcMotor frontRight = (DcMotorEx) hardwareMap.dcMotor.get("rightFront");
-    private final DcMotor backRight = (DcMotorEx) hardwareMap.dcMotor.get("rightBack");
-    private final IMU imu = hardwareMap.get(IMU.class, "imu");
-    private final Canon canon = new Canon(hardwareMap);
+    private DcMotor frontLeft;
+    private DcMotor backLeft;
+    private DcMotor frontRight;
+    private DcMotor backRight;
+    //private final IMU imu = hardwareMap.get(IMU.class, "imu");
+    private Outtake outtake;
+    private Intake intake;
     private Pose2d currentPose;
 
     //This is the roadrunner mecanum drive
@@ -42,8 +39,19 @@ public class RoadRunnerTeleOp extends LinearOpMode {
     //MANUAL CONTROLS BESIDES MOVEMENT IN HERE
     private class ManualControls implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
+
             if (gamepad1.a) {
                 telemetry.addLine("A pressed");
+            }
+
+            if (gamepad1.dpad_up) {
+                intake.startIntake();
+            }
+            if (gamepad1.dpad_down) {
+                intake.reverse();
+            }
+            if (gamepad1.dpad_right) {
+                intake.stop();
             }
 
             return true;
@@ -55,7 +63,8 @@ public class RoadRunnerTeleOp extends LinearOpMode {
     //It's structured as an Action however since this teleOp is based on roadrunner Actions
     private class FieldCentricMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
-            double botRot = imu.getRobotYawPitchRollAngles().getYaw(); //RADIANS
+            //double botRot = imu.getRobotYawPitchRollAngles().getYaw(); //RADIANS
+            double botRot = 0;
             telemetry.addData("Heading: ", botRot);
 
             double frPower = 0;
@@ -108,6 +117,13 @@ public class RoadRunnerTeleOp extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        frontLeft = hardwareMap.get(DcMotor.class, "front_left");
+        backLeft = hardwareMap.get(DcMotor.class, "back_left");
+        frontRight = hardwareMap.get(DcMotor.class, "front_right");
+        backRight = hardwareMap.get(DcMotor.class, "back_right");
+        outtake = new Outtake(hardwareMap);
+        intake = new Intake(hardwareMap);
+
         //FtcDashboard dash = FtcDashboard.getInstance();
         TelemetryPacket t = new TelemetryPacket();
 
@@ -115,9 +131,9 @@ public class RoadRunnerTeleOp extends LinearOpMode {
             new FieldCentricMovement(),
             new ManualControls()
         );
-        Action currentAction = null;
-        boolean isActionRunning = false;
+        Action currentAction = defaultAction;
 
+        waitForStart();
         while (opModeIsActive()) {
             //TODO: Replace this with the actual current location found with the odometry system
             currentPose = new Pose2d(0, 0, 0);
@@ -128,22 +144,21 @@ public class RoadRunnerTeleOp extends LinearOpMode {
             //These controls can always be accessed regardless of which action is currently running
             //Always use "WasPressed" controls for changing the running action
             if (gamepad1.bWasPressed()) { //Ends any running paths/actions and returns to manual mode
-                isActionRunning = false;
+                currentAction = defaultAction;
             }
-            /*if (gamepad1.dpadUpWasPressed()) {
-                currentAction = path1(currentPose);
-                isActionRunning = true;
+            if (gamepad1.aWasPressed()) {
+                currentAction = new ParallelAction(
+                    defaultAction,
+                    outtake.shootFar()
+                );
             }
-            if (gamepad1.dpadRightWasPressed()) {
-                currentAction = path2(currentPose);
-                isActionRunning = true;
-            }*/
 
-            if (isActionRunning) {
-                isActionRunning = currentAction.run(t);
-            } else {
-                defaultAction.run(t);
+            if (!currentAction.run(t)) {
+                currentAction = defaultAction;
             }
+
+            telemetry.addData("Canon powerR: ", outtake.canon.motorR.getPower());
+            telemetry.addData("Canon powerL: ", outtake.canon.motorL.getPower());
         }
 
 

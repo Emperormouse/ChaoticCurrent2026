@@ -6,21 +6,23 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import java.util.Set;
 
 public class Canon {
-    private DcMotorEx motorL;
-    private DcMotorEx motorR;
+    public DcMotorEx motorL;
+    public DcMotorEx motorR;
 
     public Canon(HardwareMap hardwareMap) {
         motorL = hardwareMap.get(DcMotorEx.class, "outtakeL");
         motorR = hardwareMap.get(DcMotorEx.class, "outtakeR");
+        motorL.setDirection(DcMotorSimple.Direction.REVERSE);
         //motorR = motorL;
     }
     
-    public void setSpeed(double p) {
+    public void setPower(double p) {
         motorL.setPower(-p);
         motorR.setPower(p);
     }
@@ -39,7 +41,7 @@ public class Canon {
             motorL.setPower(motorL.getPower() + (errorR*k));
 
             double speedL = motorL.getVelocity();
-            double errorL = (-targetSpeed) - speedL;
+            double errorL = targetSpeed - speedL;
             motorL.setPower(motorL.getPower() + (errorL*k));
 
             return Math.abs(errorR) > 20;
@@ -54,6 +56,7 @@ public class Canon {
             return true;
         }
     }
+
 
     private class ActionName implements Action { //Action Structure
         private int a;
