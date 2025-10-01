@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.code.Subsystems;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad2;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -69,10 +71,34 @@ public class Canon {
         }
     }
 
+    public class setPosition implements Action {
+        int intTarget;
+        public setPosition(int target)
+        {
+            intTarget = target;
+        }
+        public boolean run(@NonNull TelemetryPacket t) {
+            if (motor1.getCurrentPosition() < intTarget) {
+                motor1.setPower(1.0);
+            }
+            else {
+                motor1.setPower(-1.0);
+            }
+
+            return !(Math.abs(intTarget - motor1.getCurrentPosition()) < 50);
+        }
+    }
+
+
+
+
     public Action spinUp(double target) {
         return new SpinUp(target);
     }
     public Action maintainSpeed(double target) {
         return new MaintainSpeed(target);
     }
+
+
+
 }
