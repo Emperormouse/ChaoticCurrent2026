@@ -21,8 +21,6 @@ public class MainTeleOp extends LinearOpMode {
         DcMotor frontRight = hardwareMap.get(DcMotor.class, "front_right");
         DcMotor backRight = hardwareMap.get(DcMotor.class, "back_right");
         IMU imu = hardwareMap.get(IMU.class, "imu");
-
-
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 

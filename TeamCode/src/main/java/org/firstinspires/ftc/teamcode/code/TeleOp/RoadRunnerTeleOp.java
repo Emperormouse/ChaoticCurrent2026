@@ -11,12 +11,21 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.code.Subsystems.Canon;
+import org.firstinspires.ftc.teamcode.code.Subsystems.Gate;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Intake;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Outtake;
+import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
+import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
 
 //This is a teleOp that I'm working on which will be able to run RoadRunner paths in teleOp.
 //The best way that I figured out to do this is to make every part of the teleOp an Action, which
@@ -28,10 +37,13 @@ public class RoadRunnerTeleOp extends LinearOpMode {
     private DcMotor backLeft;
     private DcMotor frontRight;
     private DcMotor backRight;
-    //private final IMU imu = hardwareMap.get(IMU.class, "imu");
-    private Outtake outtake;
+    private IMU imu;
+    private Canon canon;
     private Intake intake;
+    private Outtake outtake;
+    private Gate gate;
     private Pose2d currentPose;
+    private final int CANON_SPEED = -1200;
 
     //This is the roadrunner mecanum drive
     //MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
@@ -44,14 +56,19 @@ public class RoadRunnerTeleOp extends LinearOpMode {
                 telemetry.addLine("A pressed");
             }
 
-            if (gamepad1.dpad_up) {
-                intake.startIntake();
-            }
-            if (gamepad1.dpad_down) {
+            if (gamepad1.left_bumper) {
+                intake.intake();
+            } else if (gamepad1.right_bumper) {
                 intake.reverse();
-            }
-            if (gamepad1.dpad_right) {
+            } else {
                 intake.stop();
+            }
+
+            if (gamepad1.a) {
+                gate.openManual();
+            }
+            if (gamepad1.b) {
+                gate.closeManual();
             }
 
             return true;
@@ -63,9 +80,8 @@ public class RoadRunnerTeleOp extends LinearOpMode {
     //It's structured as an Action however since this teleOp is based on roadrunner Actions
     private class FieldCentricMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
-            //double botRot = imu.getRobotYawPitchRollAngles().getYaw(); //RADIANS
-            double botRot = 0;
-            telemetry.addData("Heading: ", botRot);
+            double botRot = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            //double botRot = 0;
 
             double frPower = 0;
             double flPower = 0;
@@ -81,7 +97,7 @@ public class RoadRunnerTeleOp extends LinearOpMode {
             flPower -= rx;
             blPower -= rx;
 
-            //X-DIRECTION
+            //FORWARD-DIRECTION
             frPower += y * cos(botRot);
             brPower += y * cos(botRot);
             flPower += y * cos(botRot);
@@ -89,10 +105,10 @@ public class RoadRunnerTeleOp extends LinearOpMode {
 
             frPower -= y * sin(botRot);
             brPower += y * sin(botRot);
-            flPower += y * sin(botRot);
-            blPower -= y * sin(botRot);
+            flPower -= y * sin(botRot);
+            blPower += y * sin(botRot);
 
-            //Y-DIRECTION
+            //SIDEWAYS-DIRECTION
             frPower += x * sin(botRot);
             brPower += x * sin(botRot);
             flPower += x * sin(botRot);
@@ -100,8 +116,8 @@ public class RoadRunnerTeleOp extends LinearOpMode {
 
             frPower += x * cos(botRot);
             brPower -= x * cos(botRot);
-            flPower -= x * cos(botRot);
-            blPower += x * cos(botRot);
+            flPower += x * cos(botRot);
+            blPower -= x * cos(botRot);
 
             double denominator = max(1, max(max(max(abs(frPower), abs(brPower)), abs(flPower)), abs(blPower)));
 
@@ -121,8 +137,22 @@ public class RoadRunnerTeleOp extends LinearOpMode {
         backLeft = hardwareMap.get(DcMotor.class, "back_left");
         frontRight = hardwareMap.get(DcMotor.class, "front_right");
         backRight = hardwareMap.get(DcMotor.class, "back_right");
-        outtake = new Outtake(hardwareMap);
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        canon = new Canon(hardwareMap);
         intake = new Intake(hardwareMap);
+        gate = new Gate(hardwareMap);
+        outtake = new Outtake(hardwareMap);
+
+        imu = hardwareMap.get(IMU.class, "imu");
+        imu.initialize(new IMU.Parameters(
+            new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
+            )
+        ));
+        imu.resetYaw();
 
         //FtcDashboard dash = FtcDashboard.getInstance();
         TelemetryPacket t = new TelemetryPacket();
@@ -131,6 +161,10 @@ public class RoadRunnerTeleOp extends LinearOpMode {
             new FieldCentricMovement(),
             new ManualControls()
         );
+        /*Action currentAction = new ParallelAction(
+            defaultAction,
+            canon.maintainSpeed(CANON_SPEED)
+        );*/
         Action currentAction = defaultAction;
 
         waitForStart();
@@ -140,16 +174,21 @@ public class RoadRunnerTeleOp extends LinearOpMode {
             //dash.sendTelemetryPacket(t);
             telemetry.update();
 
-            //All of the controls for switching between roadrunner paths should go here.
-            //These controls can always be accessed regardless of which action is currently running
-            //Always use "WasPressed" controls for changing the running action
-            if (gamepad1.bWasPressed()) { //Ends any running paths/actions and returns to manual mode
-                currentAction = defaultAction;
+            if (gamepad1.dpadUpWasPressed()) {
+                if (Math.abs(canon.motor.getVelocity()) < 100) {
+                    currentAction = new ParallelAction(
+                        defaultAction,
+                        canon.maintainSpeed(CANON_SPEED)
+                    );
+                } else {
+                    canon.setPower(0);
+                    currentAction = defaultAction;
+                }
             }
-            if (gamepad1.aWasPressed()) {
+            if (gamepad1.xWasPressed()) {
                 currentAction = new ParallelAction(
-                    defaultAction,
-                    outtake.shootFar()
+                    shootFar(),
+                    new FieldCentricMovement()
                 );
             }
 
@@ -157,11 +196,29 @@ public class RoadRunnerTeleOp extends LinearOpMode {
                 currentAction = defaultAction;
             }
 
-            telemetry.addData("Canon powerR: ", outtake.canon.motorR.getPower());
-            telemetry.addData("Canon powerL: ", outtake.canon.motorL.getPower());
+            telemetry.addData("Canon power: ", canon.motor.getPower());
+            telemetry.addData("Canon speed: ", canon.motor.getVelocity());
+            telemetry.addData("Rotation: ", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
         }
+    }
 
-
+    public Action shootFar() {
+        return new SequentialAction(
+            gate.open(),
+            canon.spinUp(CANON_SPEED),
+            new EndAfterFirstParallel (
+                new SequentialAction(
+                    intake.spinForDuration(1.0),
+                    new Wait(2.0),
+                    intake.spinForDuration(1.0),
+                    new Wait(2.0),
+                    intake.spinForDuration(1.0),
+                    new Wait(2.0)
+                ),
+                canon.maintainSpeed(CANON_SPEED)
+            ),
+            gate.close()
+        );
     }
 
     //A roadrunner path
