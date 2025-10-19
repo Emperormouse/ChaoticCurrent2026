@@ -26,13 +26,19 @@ public class Intake {
     public class SpinForDuration implements Action {
         private long start;
         private double time;
-        public SpinForDuration(double time) {
+        private double speed;
+        private boolean firstLoop = true;
+        public SpinForDuration(double time, double speed) {
             this.time = time*1000;
-            start = System.currentTimeMillis();
+            this.speed = speed;
         }
         public boolean run(TelemetryPacket t) {
+            if (firstLoop) {
+                start = System.currentTimeMillis();
+                firstLoop = false;
+            }
             if (start + time > System.currentTimeMillis()) {
-                intake();
+                motor.setPower(speed);
                 return true;
             } else {
                 stop();
@@ -40,7 +46,7 @@ public class Intake {
             }
         }
     }
-    public Action spinForDuration(double time) {
-        return new SpinForDuration(time);
+    public Action spinForDuration(double time, double speed) {
+        return new SpinForDuration(time, speed);
     }
 }

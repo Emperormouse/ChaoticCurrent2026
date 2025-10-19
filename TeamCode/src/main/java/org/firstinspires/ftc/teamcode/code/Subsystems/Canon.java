@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Canon {
     public DcMotorEx motor;
+    public final int FAR_SPEED = -1200;
 
     public Canon(HardwareMap hardwareMap) {
         motor = hardwareMap.get(DcMotorEx.class, "left_launcher");
@@ -46,6 +47,15 @@ public class Canon {
         }
     }
 
+    public class StopInstant implements Action {
+        public boolean run(TelemetryPacket t) {
+            motor.setPower(0);
+            return false;
+        }
+    }
+
+
+
     private class ActionName implements Action { //Action Structure
         private int a;
         public ActionName() {
@@ -62,5 +72,8 @@ public class Canon {
     }
     public Action maintainSpeed(double target) {
         return new MaintainSpeed(target);
+    }
+    public Action stopInstant() {
+        return new StopInstant();
     }
 }

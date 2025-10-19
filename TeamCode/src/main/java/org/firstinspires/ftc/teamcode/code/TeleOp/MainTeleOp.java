@@ -5,6 +5,8 @@ import static java.lang.Math.cos;
 import static java.lang.Math.max;
 import static java.lang.Math.sin;
 
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 @TeleOp
 public class MainTeleOp extends LinearOpMode {
@@ -23,12 +26,15 @@ public class MainTeleOp extends LinearOpMode {
         IMU imu = hardwareMap.get(IMU.class, "imu");
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
         waitForStart();
         while(opModeIsActive()) {
-            double botRot = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            drive.updatePoseEstimate();
+            Pose2d pose = drive.localizer.getPose();
+
+            double botRot = pose.heading.toDouble();
             //double botRot = 0;
-            telemetry.addData("Heading: ", botRot);
 
             double frPower = 0;
             double flPower = 0;
@@ -44,7 +50,7 @@ public class MainTeleOp extends LinearOpMode {
             flPower -= rx;
             blPower -= rx;
 
-            //X-DIRECTION
+            //FORWARD-DIRECTION
             frPower += y * cos(botRot);
             brPower += y * cos(botRot);
             flPower += y * cos(botRot);
@@ -55,7 +61,7 @@ public class MainTeleOp extends LinearOpMode {
             flPower += y * sin(botRot);
             blPower -= y * sin(botRot);
 
-            //Y-DIRECTION
+            //SIDEWAYS-DIRECTION
             frPower += x * sin(botRot);
             brPower += x * sin(botRot);
             flPower += x * sin(botRot);
@@ -67,11 +73,18 @@ public class MainTeleOp extends LinearOpMode {
             blPower += x * cos(botRot);
 
             double denominator = max(1, max(max(max(abs(frPower), abs(brPower)), abs(flPower)), abs(blPower)));
+            if (gamepad1.left_bumper) {
+                denominator *= 2;
+            }
 
             frontLeft.setPower(flPower / denominator);
             frontRight.setPower(frPower / denominator);
             backLeft.setPower(blPower / denominator);
             backRight.setPower(brPower / denominator);
+
+            telemetry.addData("pos: ", pose.position);
+            telemetry.addData("r: ", pose.heading);
+            telemetry.update();
         }
     }
 }

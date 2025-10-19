@@ -4,14 +4,22 @@ import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.max;
 import static java.lang.Math.sin;
+import static java.lang.Math.toRadians;
 
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.AccelConstraint;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.AngularVelConstraint;
+import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.VelConstraint;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -20,12 +28,15 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Canon;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Gate;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Intake;
-import org.firstinspires.ftc.teamcode.code.Subsystems.Outtake;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
+
+import java.util.Arrays;
 
 //This is a teleOp that I'm working on which will be able to run RoadRunner paths in teleOp.
 //The best way that I figured out to do this is to make every part of the teleOp an Action, which
@@ -38,15 +49,13 @@ public class RoadRunnerTeleOp extends LinearOpMode {
     private DcMotor frontRight;
     private DcMotor backRight;
     private IMU imu;
-    private Canon canon;
-    private Intake intake;
-    private Outtake outtake;
-    private Gate gate;
+    private Bot bot;
     private Pose2d currentPose;
     private final int CANON_SPEED = -1200;
+    private boolean isGateOpen = false;
 
     //This is the roadrunner mecanum drive
-    //MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
+    MecanumDrive drive;
 
     //MANUAL CONTROLS BESIDES MOVEMENT IN HERE
     private class ManualControls implements Action {
@@ -57,18 +66,23 @@ public class RoadRunnerTeleOp extends LinearOpMode {
             }
 
             if (gamepad1.left_bumper) {
-                intake.intake();
+                bot.intake.intake();
             } else if (gamepad1.right_bumper) {
-                intake.reverse();
+                bot.intake.reverse();
             } else {
-                intake.stop();
+                bot.intake.stop();
             }
 
             if (gamepad1.a) {
-                gate.openManual();
+                isGateOpen = true;
             }
             if (gamepad1.b) {
-                gate.closeManual();
+                isGateOpen = false;
+            }
+            if (isGateOpen) {
+                bot.gate.open();
+            } else {
+                bot.gate.close();
             }
 
             return true;
@@ -105,8 +119,8 @@ public class RoadRunnerTeleOp extends LinearOpMode {
 
             frPower -= y * sin(botRot);
             brPower += y * sin(botRot);
-            flPower -= y * sin(botRot);
-            blPower += y * sin(botRot);
+            flPower += y * sin(botRot);
+            blPower -= y * sin(botRot);
 
             //SIDEWAYS-DIRECTION
             frPower += x * sin(botRot);
@@ -116,10 +130,13 @@ public class RoadRunnerTeleOp extends LinearOpMode {
 
             frPower += x * cos(botRot);
             brPower -= x * cos(botRot);
-            flPower += x * cos(botRot);
-            blPower -= x * cos(botRot);
+            flPower -= x * cos(botRot);
+            blPower += x * cos(botRot);
 
             double denominator = max(1, max(max(max(abs(frPower), abs(brPower)), abs(flPower)), abs(blPower)));
+            if (gamepad1.left_bumper) {
+                denominator *= 2;
+            }
 
             frontLeft.setPower(flPower / denominator);
             frontRight.setPower(frPower / denominator);
@@ -140,10 +157,7 @@ public class RoadRunnerTeleOp extends LinearOpMode {
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        canon = new Canon(hardwareMap);
-        intake = new Intake(hardwareMap);
-        gate = new Gate(hardwareMap);
-        outtake = new Outtake(hardwareMap);
+        bot = new Bot(hardwareMap);
 
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(new IMU.Parameters(
@@ -153,6 +167,9 @@ public class RoadRunnerTeleOp extends LinearOpMode {
             )
         ));
         imu.resetYaw();
+
+        drive = new MecanumDrive(hardwareMap, new Pose2d(60.1, -12.7, 0)); //The start position,
+        // which is on the left tile of the far launch zone, with the intake up against the wall.
 
         //FtcDashboard dash = FtcDashboard.getInstance();
         TelemetryPacket t = new TelemetryPacket();
@@ -169,69 +186,63 @@ public class RoadRunnerTeleOp extends LinearOpMode {
 
         waitForStart();
         while (opModeIsActive()) {
-            //TODO: Replace this with the actual current location found with the odometry system
-            currentPose = new Pose2d(0, 0, 0);
+            drive.updatePoseEstimate();
+            currentPose = drive.localizer.getPose();
             //dash.sendTelemetryPacket(t);
             telemetry.update();
 
             if (gamepad1.dpadUpWasPressed()) {
-                if (Math.abs(canon.motor.getVelocity()) < 100) {
+                if (Math.abs(bot.canon.motor.getVelocity()) < 100) {
                     currentAction = new ParallelAction(
                         defaultAction,
-                        canon.maintainSpeed(CANON_SPEED)
+                        bot.canon.maintainSpeed(CANON_SPEED)
                     );
                 } else {
-                    canon.setPower(0);
+                    bot.canon.setPower(0);
                     currentAction = defaultAction;
                 }
             }
             if (gamepad1.xWasPressed()) {
                 currentAction = new ParallelAction(
-                    shootFar(),
+                    bot.shootFar(),
                     new FieldCentricMovement()
                 );
+            }
+            if (gamepad1.yWasPressed()) {
+                currentAction = pathToLaunchPos(currentPose);
             }
 
             if (!currentAction.run(t)) {
                 currentAction = defaultAction;
             }
 
-            telemetry.addData("Canon power: ", canon.motor.getPower());
-            telemetry.addData("Canon speed: ", canon.motor.getVelocity());
+            telemetry.addData("Canon power: ", bot.canon.motor.getPower());
+            telemetry.addData("Canon speed: ", bot.canon.motor.getVelocity());
+            telemetry.addData("Pos: ", currentPose);
             telemetry.addData("Rotation: ", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
         }
     }
 
-    public Action shootFar() {
-        return new SequentialAction(
-            gate.open(),
-            canon.spinUp(CANON_SPEED),
-            new EndAfterFirstParallel (
-                new SequentialAction(
-                    intake.spinForDuration(1.0),
-                    new Wait(2.0),
-                    intake.spinForDuration(1.0),
-                    new Wait(2.0),
-                    intake.spinForDuration(1.0),
-                    new Wait(2.0)
-                ),
-                canon.maintainSpeed(CANON_SPEED)
-            ),
-            gate.close()
-        );
-    }
+
 
     //A roadrunner path
-    /*public Action path1(Pose2d startPose) {
+    public Action pathToLaunchPos(Pose2d startPose) {
         //A path which moves to the point
         return drive.actionBuilder(startPose)
-                .strafeTo(new Vector2d(20, 10))
-                .turn(Math.toRadians(90.0))
-                .build();
+            .strafeToLinearHeading(new Vector2d(49, -10.5), Math.toRadians(20))
+            .build();
     }
 
+    /*public class PathToLaunch implements Action {
+
+        public boolean run(TelemetryPacket t) {
+
+            return (Math.abs(currentPose - 0))
+        }
+    }*/
+
     //A roadrunner path
-    public Action path2(Pose2d startPose) {
+    /*public Action path2(Pose2d startPose) {
         //A path which moves to the point
         return drive.actionBuilder(startPose)
             .strafeTo(new Vector2d(50, 20))
