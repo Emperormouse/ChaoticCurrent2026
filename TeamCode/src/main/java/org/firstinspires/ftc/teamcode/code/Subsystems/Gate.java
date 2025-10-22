@@ -12,6 +12,7 @@ public class Gate {
     public Gate(HardwareMap hardwareMap) {
         left = hardwareMap.get(Servo.class, "axon_gate");
         right = hardwareMap.get(Servo.class, "axon_gate2");
+        closeManual();
     }
 
     public void openManual() {

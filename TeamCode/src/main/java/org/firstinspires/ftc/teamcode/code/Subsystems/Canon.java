@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Canon {
     public DcMotorEx motor;
-    public final int FAR_SPEED = -1200;
+    public int FAR_SPEED = -1100;
 
     public Canon(HardwareMap hardwareMap) {
         motor = hardwareMap.get(DcMotorEx.class, "left_launcher");
@@ -22,7 +22,7 @@ public class Canon {
 
     private class SpinUp implements Action {
         private double targetSpeed;
-        private final double ki = (1.0 / 20_000);
+        private final double ki = (1.0 / 15_000);
 
         public SpinUp(double target) {
             targetSpeed = target;
@@ -73,6 +73,7 @@ public class Canon {
     public Action maintainSpeed(double target) {
         return new MaintainSpeed(target);
     }
+
     public Action stopInstant() {
         return new StopInstant();
     }
