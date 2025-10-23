@@ -6,11 +6,16 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 public class Intake {
     private DcMotorEx motor;
+    private Bot bot;
 
-    public Intake(HardwareMap hardwareMap) {
+    public Intake(HardwareMap hardwareMap, Bot bot) {
         motor = hardwareMap.get(DcMotorEx.class, "intake");
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.bot = bot;
     }
 
     public void intake() {
@@ -46,7 +51,22 @@ public class Intake {
             }
         }
     }
+    public class IntakeUntilBallShot implements  Action {
+        public boolean run(TelemetryPacket t) {
+            intake();
+            if (bot.distanceSensor.getDistance(DistanceUnit.CM) < 3) {
+                stop();
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
     public Action spinForDuration(double time, double speed) {
         return new SpinForDuration(time, speed);
+    }
+    public Action intakeUntilBallShot() {
+        return new IntakeUntilBallShot();
     }
 }

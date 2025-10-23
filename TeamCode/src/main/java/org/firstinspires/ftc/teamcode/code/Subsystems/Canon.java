@@ -2,27 +2,31 @@ package org.firstinspires.ftc.teamcode.code.Subsystems;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Canon {
     public DcMotorEx motor;
+    public int CLOSE_SPEED = -1020;
     public int FAR_SPEED = -1100;
+    public double closePower = 0;
 
     public Canon(HardwareMap hardwareMap) {
         motor = hardwareMap.get(DcMotorEx.class, "left_launcher");
         motor.setDirection(DcMotorSimple.Direction.REVERSE);
-        //motorR = motor;
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     
     public void setPower(double p) {
-        motor.setPower(-p);
+        motor.setPower(p);
     }
 
     private class SpinUp implements Action {
         private double targetSpeed;
-        private final double ki = (1.0 / 15_000);
+        private final double ki = (1.0 / 25_000);
 
         public SpinUp(double target) {
             targetSpeed = target;
@@ -53,7 +57,6 @@ public class Canon {
             return false;
         }
     }
-
 
 
     private class ActionName implements Action { //Action Structure
