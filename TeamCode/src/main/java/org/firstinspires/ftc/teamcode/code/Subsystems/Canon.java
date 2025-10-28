@@ -7,9 +7,11 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import java.util.Set;
+
 public class Canon {
     public DcMotorEx motor;
-    public int CLOSE_SPEED = -1020;
+    public int CLOSE_SPEED = -1000;
     public int FAR_SPEED = -1100;
     public double closePower = 0;
 
@@ -37,7 +39,7 @@ public class Canon {
             double error = targetSpeed - speed;
             motor.setPower(motor.getPower() + (error *ki));
 
-            return Math.abs(error) > 20;
+            return Math.abs(error) > 40;
         }
     }
 
@@ -51,9 +53,13 @@ public class Canon {
         }
     }
 
-    public class StopInstant implements Action {
+    public class SetPowerInstant implements Action {
+        private double power;
+        public SetPowerInstant(double pow) {
+            power = pow;
+        }
         public boolean run(TelemetryPacket t) {
-            motor.setPower(0);
+            motor.setPower(power);
             return false;
         }
     }
@@ -77,7 +83,7 @@ public class Canon {
         return new MaintainSpeed(target);
     }
 
-    public Action stopInstant() {
-        return new StopInstant();
+    public Action setPowerInstant(double power) {
+        return new SetPowerInstant(power);
     }
 }

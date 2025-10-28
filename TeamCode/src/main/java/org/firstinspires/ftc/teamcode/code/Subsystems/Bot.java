@@ -23,19 +23,14 @@ public class Bot {
 
     public Action shootClose() {
         return new SequentialAction(
+            canon.spinUp(canon.CLOSE_SPEED),
             gate.open(),
             new Wait(0.3),
             new EndAfterFirstParallel(
-                new SequentialAction(
-                    intake.intakeUntilBallShot(),
-                    new Wait(2.0),
-                    intake.intakeUntilBallShot(),
-                    new Wait(2.0),
-                    intake.intakeUntilBallShot()
-                ),
-                canon.maintainSpeed(canon.CLOSE_SPEED)
+                new Wait(7),
+                intake.intakeWhenAtSpeed()
             ),
-            canon.stopInstant(),
+            canon.setPowerInstant(0),
             gate.close()
         );
     }

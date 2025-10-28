@@ -181,7 +181,8 @@ public class RoadRunnerTeleOp extends LinearOpMode {
         ));
         imu.resetYaw();
 
-        drive = new MecanumDrive(hardwareMap, new Pose2d(60.1, -12.7, 0)); //The start position,
+        Pose2d startPose = new Pose2d(60.1, -12.7, 0);
+        drive = new MecanumDrive(hardwareMap, startPose); //The start position,
         // which is on the left tile of the far launch zone, with the intake up against the wall.
 
         TelemetryPacket t = new TelemetryPacket();
@@ -189,7 +190,7 @@ public class RoadRunnerTeleOp extends LinearOpMode {
         Actions.runBlocking(new SequentialAction(
             bot.canon.spinUp(bot.canon.CLOSE_SPEED),
             new EndAfterFirstParallel(
-                new Wait(4.0),
+                new Wait(7.0),
                 bot.canon.maintainSpeed(bot.canon.CLOSE_SPEED)
             )
         ));
@@ -217,20 +218,46 @@ public class RoadRunnerTeleOp extends LinearOpMode {
             }*/
 
             if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()) {
-                if (!isOuttaking) {
-                    isOuttaking = true;
-                    bot.canon.setPower(bot.canon.closePower);
-                } else {
+                if (isOuttaking || Math.abs(bot.canon.motor.getVelocity())>800) {
                     isOuttaking = false;
                     bot.canon.setPower(0);
                     bot.gate.close();
+                } else {
+                    isOuttaking = true;
+                    bot.canon.setPower(bot.canon.closePower);
                 }
             }
             if (gamepad1.xWasPressed()) {
-                currentAction = pathToLaunchPosClose(currentPose);
+                currentAction = new SequentialAction(
+                    new ParallelAction(
+                        pathToLaunchPosClose(currentPose),
+                        new SequentialAction(
+                            bot.gate.open(),
+                            new Wait(0.3),
+                            bot.gate.close(),
+                            new Wait(0.3),
+                            bot.canon.spinUp(bot.canon.CLOSE_SPEED)
+                        )
+                    ),
+                    bot.shootClose()
+                );
             }
             if (gamepad1.yWasPressed()) {
                 currentAction = pathToLaunchPos(currentPose);
+            }
+            if (gamepad1.dpadRightWasPressed()) {
+                currentAction = new ParallelAction(
+                    currentAction,
+                    bot.shootClose(),
+                    new FieldCentricMovement()
+                );
+            }
+            if (gamepad1.dpadDownWasPressed()) {
+                currentAction = pathToPos(currentPose, startPose);
+            }
+            if (gamepad1.bWasPressed()) {
+                bot.canon.setPower(0);
+                currentAction = defaultAction;
             }
 
             if (!currentAction.run(t)) {
@@ -259,14 +286,20 @@ public class RoadRunnerTeleOp extends LinearOpMode {
     public Action pathToLaunchPosClose(Pose2d startPose) {
         //A path which moves to the point
         return drive.actionBuilder(startPose)
-            .strafeToSplineHeading(new Vector2d(-20, -20), Math.toRadians(45))
+            .strafeToSplineHeading(new Vector2d(-6, -9), Math.toRadians(43.7))
+            .build();
+    }
+
+    public Action pathToPos(Pose2d startPose, Pose2d target) {
+        return drive.actionBuilder(startPose)
+            .strafeToSplineHeading(target.position, target.heading.toDouble())
             .build();
     }
 
     //A roadrunner path
     /*public Action path2(Pose2d startPose) {
         //A path which moves to the point
-        return drive.actionBuilder(startPose)
+        return drive.actionBuilder(startPose)o
             .strafeTo(new Vector2d(50, 20))
             .turn(Math.toRadians(360.0))
             .turn(Math.toRadians(-360))

@@ -51,22 +51,21 @@ public class Intake {
             }
         }
     }
-    public class IntakeUntilBallShot implements  Action {
+    public class IntakeWhenAtSpeed implements  Action {
         public boolean run(TelemetryPacket t) {
-            intake();
-            if (bot.distanceSensor.getDistance(DistanceUnit.CM) < 3) {
-                stop();
-                return false;
+            if (Math.abs(bot.canon.motor.getVelocity()) >= Math.abs(bot.canon.CLOSE_SPEED)) {
+                intake();
             } else {
-                return true;
+                stop();
             }
+            return true;
         }
     }
 
     public Action spinForDuration(double time, double speed) {
         return new SpinForDuration(time, speed);
     }
-    public Action intakeUntilBallShot() {
-        return new IntakeUntilBallShot();
+    public Action intakeWhenAtSpeed() {
+        return new IntakeWhenAtSpeed();
     }
 }
