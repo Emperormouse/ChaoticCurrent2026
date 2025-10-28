@@ -43,7 +43,9 @@ public class AprilTag extends LinearOpMode {
                 case 23: pattern = Pattern.PPG; break;
             }
 
+            telemetry.addData("Number: ", aprilTags.get(aprilTags.size()-1).id);
             telemetry.addData("Pattern: ", pattern);
+            telemetry.addData("Size: ", aprilTags.size());
             telemetry.update();
         }
 
