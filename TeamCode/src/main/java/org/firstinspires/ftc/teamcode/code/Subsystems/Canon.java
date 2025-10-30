@@ -19,6 +19,7 @@ public class Canon {
         motor = hardwareMap.get(DcMotorEx.class, "left_launcher");
         motor.setDirection(DcMotorSimple.Direction.REVERSE);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         //motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     
