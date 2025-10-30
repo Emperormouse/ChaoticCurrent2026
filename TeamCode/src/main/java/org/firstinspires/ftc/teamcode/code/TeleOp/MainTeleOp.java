@@ -52,6 +52,9 @@ public class MainTeleOp extends LinearOpMode {
     private Pose2d currentPose;
     private boolean isOuttaking = false;
     private double pow = 0.0;
+    private boolean useAprilTag = true;
+
+    private Pose2d launchPose = new Pose2d(-6, -9, Math.toRadians(43.7));
 
     //This is the roadrunner mecanum drive
     MecanumDrive drive;
@@ -71,9 +74,9 @@ public class MainTeleOp extends LinearOpMode {
                 bot.intake.stop();
             }
 
-            if (gamepad1.a || gamepad2.a) {
+            if (gamepad2.a) {
                 bot.gate.openManual();
-            } else if (gamepad1.b || gamepad2.b) {
+            } else if (gamepad2.b) {
                 bot.gate.closeManual();
             } else {
                 bot.gate.holdManual();
@@ -143,11 +146,16 @@ public class MainTeleOp extends LinearOpMode {
         waitForStart();
         while (opModeIsActive()) {
             telemetry.update();
-            telemetry.addData("Localer: ", drive.localizer.getPose());
+            telemetry.addData("LocalizerX: ", drive.localizer.getPose().position.x);
+            telemetry.addData("LocalizerY: ", drive.localizer.getPose().position.y);
+            telemetry.addData("LocalizerR: ", Math.toDegrees(drive.localizer.getPose().heading.toDouble()));
+            telemetry.addData("Using April Tag: ", useAprilTag);
+            telemetry.addLine();
+
             aprilTagTelementary();
 
             Pose2d aprilPose = getPoseFromAprilTag();
-            if (aprilPose != null) {
+            if (aprilPose != null && useAprilTag) {
                 drive.localizer.setPose(aprilPose);
             }
             drive.updatePoseEstimate();
@@ -172,33 +180,33 @@ public class MainTeleOp extends LinearOpMode {
             if (gamepad1.xWasPressed()) {
                 currentAction = new SequentialAction(
                     new ParallelAction(
-                        pathToLaunchPosClose(currentPose),
-                        new SequentialAction(
-                            bot.gate.open(),
-                            new Wait(0.3),
-                            bot.gate.close(),
-                            new Wait(0.3),
-                            bot.canon.spinUp(bot.canon.CLOSE_SPEED)
-                        )
+                        pathToPos(currentPose, launchPose),
+                        bot.canon.spinUp(bot.canon.CLOSE_SPEED)
+                    ),
+                    bot.shootClose()
+                );
+            }
+            if (gamepad1.aWasPressed()) {
+                currentAction = new SequentialAction(
+                    new ParallelAction(
+                        bot.moveTo(launchPose),
+                        bot.canon.spinUp(bot.canon.CLOSE_SPEED)
                     ),
                     bot.shootClose()
                 );
             }
             if (gamepad1.yWasPressed()) {
-                currentAction = pathToLaunchPos(currentPose);
+                currentAction = pathToPos(currentPose, new Pose2d(0, 0, Math.toRadians(45)));
             }
             if (gamepad1.dpadRightWasPressed()) {
-                currentAction = new ParallelAction(
-                    currentAction,
-                    bot.shootClose(),
-                    new FieldCentricMovement()
-                );
+                useAprilTag = !useAprilTag;
             }
             if (gamepad1.dpadDownWasPressed()) {
                 currentAction = pathToPos(currentPose, startPose);
             }
             if (gamepad1.bWasPressed()) {
                 bot.canon.setPower(0);
+                bot.gate.close();
                 currentAction = defaultAction;
             }
 
@@ -254,13 +262,6 @@ public class MainTeleOp extends LinearOpMode {
         //A path which moves to the point
         return drive.actionBuilder(startPose)
             .strafeToSplineHeading(new Vector2d(44, -9), Math.toRadians(24.5))
-            .build();
-    }
-
-    public Action pathToLaunchPosClose(Pose2d startPose) {
-        //A path which moves to the point
-        return drive.actionBuilder(startPose)
-            .strafeToSplineHeading(new Vector2d(-6, -9), Math.toRadians(43.7))
             .build();
     }
 

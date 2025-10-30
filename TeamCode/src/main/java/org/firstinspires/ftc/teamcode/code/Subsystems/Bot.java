@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.Localizer;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
+import org.firstinspires.ftc.teamcode.code.utility.Actions.PIDController;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
 public class Bot {
     public Canon canon;
@@ -71,7 +72,7 @@ public class Bot {
         double brPower = 0;
         double blPower = 0;
 
-        double botRot = localizer.getPose().heading.toDouble();
+        double botRot = localizer.getPose().heading.toDouble() + Math.toRadians(90);
 
         frPower += r;
         brPower += r;
@@ -111,12 +112,15 @@ public class Bot {
 
     //drives to location
     public class MoveTo implements Action {
-        private final double pRotational = 0.3;
-        private final double pTranslational = 0.1;
+        private final double pRotational = 1.3;
+        private final double pX = 0.08;
+        private final double pY = 0.05;
         private Pose2d targetPose;
+        //private PIDController pidX;
 
         public MoveTo(Pose2d targetPose) {
             this.targetPose = targetPose;
+            //pidX = new PIDController(pTranslational, 0, 0);
         }
 
         public boolean run(TelemetryPacket t) {
@@ -125,9 +129,17 @@ public class Bot {
             double diffY = targetPose.position.y - currentPose.position.y;
             double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
 
-            moveFieldCentric(diffX*pTranslational, diffY*pTranslational, diffR*pRotational);
+            moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, 0.8);
 
-            return Math.abs(diffX)>1.0 || Math.abs(diffY)>1.0 || Math.abs(diffR)>Math.toRadians(1.0);
+            if (Math.abs(diffX)>1.3 || Math.abs(diffY)>1.3 || Math.abs(diffR)>Math.toRadians(1.2)) {
+                return true;
+            } else {
+                frontLeft.setPower(0);
+                frontRight.setPower(0);
+                backLeft.setPower(0);
+                backRight.setPower(0);
+                return false;
+            }
         }
     }
 
