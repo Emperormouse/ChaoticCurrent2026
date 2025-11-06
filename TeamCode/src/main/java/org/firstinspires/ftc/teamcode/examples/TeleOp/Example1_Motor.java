@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.examples.TeleOp;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+@Disabled
 @TeleOp
 public class Example1_Motor extends LinearOpMode {
     //This opMode sets a motor to full speed forward if the 'a' button is pressed, full speed backwards

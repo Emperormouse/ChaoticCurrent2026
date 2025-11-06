@@ -10,55 +10,98 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.Quaternion;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.Localizer;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
-import org.firstinspires.ftc.teamcode.code.utility.Actions.PIDController;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import java.util.List;
+
 public class Bot {
     public Canon canon;
     public Gate gate;
     public Intake intake;
     public DistanceSensor distanceSensor;
     public Localizer localizer;
-    private DcMotorEx frontLeft;
-    private DcMotorEx backLeft;
-    private DcMotorEx frontRight;
-    private DcMotorEx backRight;
 
-    public Bot(HardwareMap hardwareMap, Localizer localizer) {
+    public AprilTagProcessor aprilTag;
+    public VisionPortal visionPortal;
+    public Position cameraPosition = new Position(DistanceUnit.INCH, 0, 0, 0, 0);
+    public YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 0, -90, 0, 0);
+    
+    private DcMotor frontLeft;
+    private DcMotor backLeft;
+    private DcMotor frontRight;
+    private DcMotor backRight;
+
+    public boolean useAprilTag = true;
+    Pose2d lastPose = new Pose2d(0, 0, 0);
+    
+    Telemetry telemetry;
+    HardwareMap hardwareMap;
+
+    public Bot(HardwareMap hardwareMap, Localizer localizer, Telemetry telemetry) {
         canon = new Canon(hardwareMap);
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap, this);
         this.localizer = localizer;
+        this.telemetry = telemetry;
+        this.hardwareMap = hardwareMap;
 
-        frontLeft = hardwareMap.get(DcMotorEx.class, "front_left");
-        backLeft = hardwareMap.get(DcMotorEx.class, "back_left");
-        frontRight = hardwareMap.get(DcMotorEx.class, "front_right");
-        backRight = hardwareMap.get(DcMotorEx.class, "back_right");
+        frontLeft = (DcMotor) hardwareMap.get(DcMotor.class, "front_left");
+        backLeft = (DcMotor)hardwareMap.get(DcMotor.class, "back_left");
+        frontRight = (DcMotor)hardwareMap.get(DcMotor.class, "front_right");
+        backRight = (DcMotor)hardwareMap.get(DcMotor.class, "back_right");
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         //distanceSensor = hardwareMap.get(DistanceSensor.class, "distance_sensor");
     }
+    
+    public void initialize() {
+        initAprilTag();
+
+        /*Actions.runBlocking(new SequentialAction(
+            canon.spinUp(canon.CLOSE_SPEED),
+            new EndAfterFirstParallel(
+                new Wait(7.0),
+                canon.maintainSpeed(canon.CLOSE_SPEED)
+            )
+        ));
+        canon.closePower = canon.motor.getPower();
+        canon.setPower(0);*/
+    }
 
     public Action shootClose() {
-        return new SequentialAction(
-            canon.spinUp(canon.CLOSE_SPEED),
-            gate.open(),
-            new EndAfterFirstParallel(
-                new Wait(10),
-                intake.intakeWhenAtSpeed()
-            ),
-            canon.setPowerInstant(0),
-            gate.close()
+        return new ParallelAction(
+            new KeepRunning(canon.setVelInstant(canon.CLOSE_SPEED)),
+            new SequentialAction(
+                gate.open(),
+                new EndAfterFirstParallel(
+                    new Wait(10),
+                    intake.intakeWhenAtSpeed()
+                ),
+                canon.setPowerInstant(0),
+                gate.close()
+            )
         );
     }
 
@@ -69,11 +112,10 @@ public class Bot {
             new Wait(0.5),
 
             intake.intakeUntilBallShot(),
-            new Wait(1.5),
+            new Wait(1.0),
             intake.intakeUntilBallShot(),
-            new Wait(1.5),
+            new Wait(1.0),
             intake.intakeUntilBallShot(),
-            new Wait(1.5),
 
             canon.setPowerInstant(0),
             gate.close()
@@ -83,7 +125,7 @@ public class Bot {
     public void moveFieldCentric(double x, double y, double r) {
         moveFieldCentric(x, y, r, 1.0);
     }
-
+    
     public void moveFieldCentric(double x, double y, double r, double speed) {
         double frPower = 0;
         double flPower = 0;
@@ -131,14 +173,13 @@ public class Bot {
     //drives to location
     public class MoveTo implements Action {
         private final double pRotational = 1.3;
-        private final double pX = 0.08;
-        private final double pY = 0.05;
+        private final double pX = 0.1;
+        private final double pY = 0.1;
         private Pose2d targetPose;
         private long lastTimeMoved = 0;
 
         public MoveTo(Pose2d targetPose) {
             this.targetPose = targetPose;
-            //pidX = new PIDController(pTranslational, 0, 0);
         }
 
         public boolean run(TelemetryPacket t) {
@@ -149,16 +190,13 @@ public class Bot {
 
             moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, 0.8);
 
-            if (frontLeft.getVelocity() != 0
-                || frontRight.getVelocity() != 0
-                || backLeft.getVelocity() != 0
-                || backRight.getVelocity() != 0 )
-            {
+            if (Math.abs(diffX) > 3 || Math.abs(diffY) > 3 || Math.abs(diffR) > Math.toRadians(2.5)) {
                 lastTimeMoved = System.currentTimeMillis();
             }
+            lastPose = localizer.getPose();
 
-            if ((Math.abs(diffX)>1.4 || Math.abs(diffY)>1.4 || Math.abs(diffR)>Math.toRadians(1.2)) &&
-                System.currentTimeMillis() - lastTimeMoved < 500)
+            if ((Math.abs(diffX)>1.5 || Math.abs(diffY)>1.5 || Math.abs(diffR)>Math.toRadians(1.3)) &&
+                System.currentTimeMillis() - lastTimeMoved < 1000)
             {
                 return true;
             } else {
@@ -192,5 +230,130 @@ public class Bot {
             settle(targetPose)
         );
     }
+
+    
+    // ===== APRIL TAG =====
+
+    public void updatePoseUsingAprilTag() {
+        if (useAprilTag) {
+            Pose2d aprilPose = getPoseFromAprilTag();
+            if (aprilPose != null) {
+                localizer.setPose(aprilPose);
+            }
+        }
+    }
+
+    public Pose2d getPoseFromAprilTag() {
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null) {
+                if (detection.id == 20 || detection.id == 24) {
+                    return new Pose2d(
+                        detection.robotPose.getPosition().x,
+                        detection.robotPose.getPosition().y,
+                        detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS) - Math.toRadians(90)
+                    );
+                }
+            }
+        }
+        return null;
+    }
+
+    public void aprilTagTelementary() {
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null) {
+                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
+                    detection.robotPose.getPosition().x,
+                    detection.robotPose.getPosition().y,
+                    detection.robotPose.getPosition().z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
+                    detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES),
+                    detection.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),
+                    detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)-90));
+            }
+        }
+    }
+
+    public static AprilTagLibrary getDecodeTagLibrary(){
+        return new AprilTagLibrary.Builder()
+            .addTag(20, "BlueTarget",
+                6.5, new VectorF(-58.3727f, -55.6425f, 29.5f), DistanceUnit.INCH,
+                new Quaternion(0.2182149f, -0.2182149f, -0.6725937f, 0.6725937f, 0))
+            .addTag(21, "Obelisk_GPP",
+                6.5, DistanceUnit.INCH)
+            .addTag(22, "Obelisk_PGP",
+                6.5, DistanceUnit.INCH)
+            .addTag(23, "Obelisk_PPG",
+                6.5, DistanceUnit.INCH)
+            .addTag(24, "RedTarget",
+                6.5, new VectorF(-58.3727f, 55.6425f, 29.5f), DistanceUnit.INCH,
+                new Quaternion(0.6725937f, -0.6725937f, -0.2182149f, 0.2182149f, 0))
+            .build();
+    }
+
+    public void initAprilTag() {
+
+        // Create the AprilTag processor.
+        aprilTag = new AprilTagProcessor.Builder()
+
+            // The following default settings are available to un-comment and edit as needed.
+            //.setDrawAxes(false)
+            //.setDrawCubeProjection(false)
+            //.setDrawTagOutline(true)
+            //.setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
+            .setTagLibrary(getDecodeTagLibrary())
+            //.setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
+            .setCameraPose(cameraPosition, cameraOrientation)
+
+            // == CAMERA CALIBRATION ==
+            // If you do not manually specify calibration parameters, the SDK will attempt
+            // to load a predefined calibration for your camera.
+            //.setLensIntrinsics(578.272, 578.272, 402.145, 221.506)
+            // ... these parameters are fx, fy, cx, cy.
+
+            .build();
+
+        // Adjust Image Decimation to trade-off detection-range for detection-rate.
+        // eg: Some typical detection data using a Logitech C920 WebCam
+        // Decimation = 1 ..  Detect 2" Tag from 10 feet away at 10 Frames per second
+        // Decimation = 2 ..  Detect 2" Tag from 6  feet away at 22 Frames per second
+        // Decimation = 3 ..  Detect 2" Tag from 4  feet away at 30 Frames Per Second (default)
+        // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second (default)
+        // Note: Decimation can be changed on-the-fly to adapt during a match.
+        //aprilTag.setDecimation(3);
+
+        // Create the vision portal by using a builder.
+        VisionPortal.Builder builder = new VisionPortal.Builder();
+
+        // Set the camera (webcam vs. built-in RC phone camera).
+        builder.setCamera(hardwareMap.get(WebcamName.class, "camera"));
+
+        // Choose a camera resolution. Not all cameras support all resolutions.
+        //builder.setCameraResolution(new Size(640, 480));
+
+        // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
+        //builder.enableLiveView(true);
+
+        // Set the stream format; MJPEG uses less bandwidth than default YUY2.
+        //builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
+
+        // Choose whether or not LiveView stops if no processors are enabled.
+        // If set "true", monitor shows solid orange screen if no processors enabled.
+        // If set "false", monitor shows camera view without annotations.
+        //builder.setAutoStopLiveView(false);
+
+        // Set and enable the processor.
+        builder.addProcessor(aprilTag);
+
+        // Build the Vision Portal, using the above settings.
+        visionPortal = builder.build();
+
+        // Disable or re-enable the aprilTag processor at any time.
+        //visionPortal.setProcessorEnabled(aprilTag, true);
+
+    }   // end method initAprilTag()
 
 }

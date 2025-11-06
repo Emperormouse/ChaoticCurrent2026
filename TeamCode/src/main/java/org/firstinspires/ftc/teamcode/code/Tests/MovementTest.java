@@ -6,6 +6,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.sin;
 
 import com.acmerobotics.roadrunner.Pose2d;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,6 +15,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
+@Disabled
 @TeleOp(name = "MovementTest")
 public class MovementTest extends LinearOpMode {
     public void runOpMode() {

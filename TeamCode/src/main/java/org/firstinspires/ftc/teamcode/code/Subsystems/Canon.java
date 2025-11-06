@@ -11,7 +11,7 @@ import java.util.Set;
 
 public class Canon {
     public DcMotorEx motor;
-    public int CLOSE_SPEED = -980;
+    public int CLOSE_SPEED = -960;
     public int FAR_SPEED = -1100;
     public double closePower = 0;
 
@@ -39,9 +39,10 @@ public class Canon {
         public boolean run(TelemetryPacket t) {
             double speed = motor.getVelocity();
             double error = targetSpeed - speed;
-            motor.setPower(motor.getPower() + (error *ki));
+            //motor.setPower(motor.getPower() + (error *ki));
+            motor.setVelocity(targetSpeed);
 
-            return Math.abs(error) > 80;
+            return Math.abs(error) > 100;
         }
     }
 
@@ -62,6 +63,17 @@ public class Canon {
         }
         public boolean run(TelemetryPacket t) {
             motor.setPower(power);
+            return false;
+        }
+    }
+
+    public class SetVelInstant implements Action {
+        private double vel;
+        public SetVelInstant(double vel) {
+            this.vel = vel;
+        }
+        public boolean run(TelemetryPacket t) {
+            motor.setVelocity(vel);
             return false;
         }
     }
@@ -87,5 +99,9 @@ public class Canon {
 
     public Action setPowerInstant(double power) {
         return new SetPowerInstant(power);
+    }
+
+    public Action setVelInstant(double vel) {
+        return new SetVelInstant(vel);
     }
 }

@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.code.Tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
+@Disabled
 @Autonomous
 public class MotorSpeed extends LinearOpMode {
     public void runOpMode() {

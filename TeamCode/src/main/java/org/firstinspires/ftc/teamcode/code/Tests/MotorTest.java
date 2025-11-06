@@ -2,12 +2,14 @@ package org.firstinspires.ftc.teamcode.code.Tests;
 
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ftc.Actions;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.code.Subsystems.Canon;
 
+@Disabled
 @TeleOp
 public class MotorTest extends LinearOpMode {
     public void runOpMode() {
