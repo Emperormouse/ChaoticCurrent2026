@@ -11,7 +11,7 @@ import java.util.Set;
 
 public class Canon {
     public DcMotorEx motor;
-    public int CLOSE_SPEED = -1000;
+    public int CLOSE_SPEED = -980;
     public int FAR_SPEED = -1100;
     public double closePower = 0;
 
@@ -19,6 +19,7 @@ public class Canon {
         motor = hardwareMap.get(DcMotorEx.class, "left_launcher");
         motor.setDirection(DcMotorSimple.Direction.REVERSE);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //motor.setVe
 
         //motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
@@ -40,7 +41,7 @@ public class Canon {
             double error = targetSpeed - speed;
             motor.setPower(motor.getPower() + (error *ki));
 
-            return Math.abs(error) > 40;
+            return Math.abs(error) > 80;
         }
     }
 

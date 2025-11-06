@@ -43,10 +43,6 @@ import java.util.List;
 //This will most likely be used if we want to make a TeleOp which is mostly automated
 @TeleOp(name = "MainTeleOp")
 public class MainTeleOp extends LinearOpMode {
-    private DcMotor frontLeft;
-    private DcMotor backLeft;
-    private DcMotor frontRight;
-    private DcMotor backRight;
     private IMU imu;
     private Bot bot;
     private Pose2d currentPose;
@@ -54,7 +50,7 @@ public class MainTeleOp extends LinearOpMode {
     private double pow = 0.0;
     private boolean useAprilTag = true;
 
-    private Pose2d launchPose = new Pose2d(-6, -9, Math.toRadians(43.7));
+    private Pose2d launchPose = new Pose2d(-16.5, -14, Math.toRadians(48.5));
 
     //This is the roadrunner mecanum drive
     MecanumDrive drive;
@@ -98,7 +94,7 @@ public class MainTeleOp extends LinearOpMode {
             if (isOuttaking)
                 rx /= 3;
 
-            double speed = (gamepad1.left_bumper) ? 0.6 : 1.0;
+            double speed = (gamepad1.left_bumper) ? 0.8 : 1.0;
 
             bot.moveFieldCentric(x, y, rx, speed);
             return true;
@@ -161,13 +157,7 @@ public class MainTeleOp extends LinearOpMode {
             drive.updatePoseEstimate();
             currentPose = drive.localizer.getPose();
 
-            /*if (Math.abs(bot.canon.motor.getVelocity() - bot.canon.CLOSE_SPEED) <= 20) {
-                gamepad1.setLedColor(0, 255, 0, 1);
-            } else {
-                gamepad1.setLedColor(255, 0, 0, 1);
-            }*/
-
-            if (gamepad1.dpadUpWasPressed() || gamepad2.dpadUpWasPressed()) {
+            if (gamepad2.dpadUpWasPressed()) {
                 if (isOuttaking || Math.abs(bot.canon.motor.getVelocity())>800) {
                     isOuttaking = false;
                     bot.canon.setPower(0);
@@ -177,16 +167,8 @@ public class MainTeleOp extends LinearOpMode {
                     bot.canon.setPower(bot.canon.closePower);
                 }
             }
+
             if (gamepad1.xWasPressed()) {
-                currentAction = new SequentialAction(
-                    new ParallelAction(
-                        pathToPos(currentPose, launchPose),
-                        bot.canon.spinUp(bot.canon.CLOSE_SPEED)
-                    ),
-                    bot.shootClose()
-                );
-            }
-            if (gamepad1.aWasPressed()) {
                 currentAction = new SequentialAction(
                     new ParallelAction(
                         bot.moveTo(launchPose),
@@ -195,9 +177,17 @@ public class MainTeleOp extends LinearOpMode {
                     bot.shootClose()
                 );
             }
-            if (gamepad1.yWasPressed()) {
-                currentAction = pathToPos(currentPose, new Pose2d(0, 0, Math.toRadians(45)));
+
+            if (gamepad1.aWasPressed()) {
+                currentAction = new SequentialAction(
+                    new ParallelAction(
+                        bot.moveTo(launchPose),
+                        bot.canon.spinUp(bot.canon.CLOSE_SPEED)
+                    ),
+                    bot.shootCloseNew()
+                );
             }
+
             if (gamepad1.dpadRightWasPressed()) {
                 useAprilTag = !useAprilTag;
             }
@@ -206,7 +196,7 @@ public class MainTeleOp extends LinearOpMode {
             }
             if (gamepad1.bWasPressed()) {
                 bot.canon.setPower(0);
-                bot.gate.close();
+                bot.gate.closeManual();
                 currentAction = defaultAction;
             }
 
@@ -229,8 +219,8 @@ public class MainTeleOp extends LinearOpMode {
             if (detection.metadata != null) {
                 if (detection.id == 20 || detection.id == 24) {
                     return new Pose2d(
-                        detection.robotPose.getPosition().x + 5.0,
-                        detection.robotPose.getPosition().y - 8.1,
+                        detection.robotPose.getPosition().x,
+                        detection.robotPose.getPosition().y,
                         detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS) - Math.toRadians(90)
                     );
                 }
@@ -246,8 +236,8 @@ public class MainTeleOp extends LinearOpMode {
             if (detection.metadata != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
-                    detection.robotPose.getPosition().x+5.0,
-                    detection.robotPose.getPosition().y-8.1,
+                    detection.robotPose.getPosition().x,
+                    detection.robotPose.getPosition().y,
                     detection.robotPose.getPosition().z));
                 telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
                     detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES),

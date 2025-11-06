@@ -12,6 +12,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -28,10 +29,10 @@ public class Bot {
     public Intake intake;
     public DistanceSensor distanceSensor;
     public Localizer localizer;
-    private DcMotor frontLeft;
-    private DcMotor backLeft;
-    private DcMotor frontRight;
-    private DcMotor backRight;
+    private DcMotorEx frontLeft;
+    private DcMotorEx backLeft;
+    private DcMotorEx frontRight;
+    private DcMotorEx backRight;
 
     public Bot(HardwareMap hardwareMap, Localizer localizer) {
         canon = new Canon(hardwareMap);
@@ -39,10 +40,10 @@ public class Bot {
         intake = new Intake(hardwareMap, this);
         this.localizer = localizer;
 
-        frontLeft = hardwareMap.get(DcMotor.class, "front_left");
-        backLeft = hardwareMap.get(DcMotor.class, "back_left");
-        frontRight = hardwareMap.get(DcMotor.class, "front_right");
-        backRight = hardwareMap.get(DcMotor.class, "back_right");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "front_left");
+        backLeft = hardwareMap.get(DcMotorEx.class, "back_left");
+        frontRight = hardwareMap.get(DcMotorEx.class, "front_right");
+        backRight = hardwareMap.get(DcMotorEx.class, "back_right");
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         //distanceSensor = hardwareMap.get(DistanceSensor.class, "distance_sensor");
@@ -52,11 +53,28 @@ public class Bot {
         return new SequentialAction(
             canon.spinUp(canon.CLOSE_SPEED),
             gate.open(),
-            new Wait(0.3),
             new EndAfterFirstParallel(
-                new Wait(7),
+                new Wait(10),
                 intake.intakeWhenAtSpeed()
             ),
+            canon.setPowerInstant(0),
+            gate.close()
+        );
+    }
+
+    public Action shootCloseNew() {
+        return new SequentialAction(
+            canon.spinUp(canon.CLOSE_SPEED),
+            gate.open(),
+            new Wait(0.5),
+
+            intake.intakeUntilBallShot(),
+            new Wait(1.5),
+            intake.intakeUntilBallShot(),
+            new Wait(1.5),
+            intake.intakeUntilBallShot(),
+            new Wait(1.5),
+
             canon.setPowerInstant(0),
             gate.close()
         );
@@ -116,7 +134,7 @@ public class Bot {
         private final double pX = 0.08;
         private final double pY = 0.05;
         private Pose2d targetPose;
-        //private PIDController pidX;
+        private long lastTimeMoved = 0;
 
         public MoveTo(Pose2d targetPose) {
             this.targetPose = targetPose;
@@ -131,7 +149,17 @@ public class Bot {
 
             moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, 0.8);
 
-            if (Math.abs(diffX)>1.3 || Math.abs(diffY)>1.3 || Math.abs(diffR)>Math.toRadians(1.2)) {
+            if (frontLeft.getVelocity() != 0
+                || frontRight.getVelocity() != 0
+                || backLeft.getVelocity() != 0
+                || backRight.getVelocity() != 0 )
+            {
+                lastTimeMoved = System.currentTimeMillis();
+            }
+
+            if ((Math.abs(diffX)>1.4 || Math.abs(diffY)>1.4 || Math.abs(diffR)>Math.toRadians(1.2)) &&
+                System.currentTimeMillis() - lastTimeMoved < 500)
+            {
                 return true;
             } else {
                 frontLeft.setPower(0);
