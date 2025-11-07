@@ -42,7 +42,7 @@ public class Canon {
             //motor.setPower(motor.getPower() + (error *ki));
             motor.setVelocity(targetSpeed);
 
-            return Math.abs(error) > 100;
+            return Math.abs(error) > 60;
         }
     }
 

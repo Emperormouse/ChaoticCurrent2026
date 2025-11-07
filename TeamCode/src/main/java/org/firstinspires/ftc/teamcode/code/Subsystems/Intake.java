@@ -54,7 +54,7 @@ public class Intake {
 
     public class IntakeWhenAtSpeed implements  Action {
         public boolean run(TelemetryPacket t) {
-            if (Math.abs(bot.canon.motor.getVelocity()) + 60 >= Math.abs(bot.canon.CLOSE_SPEED)) {
+            if (Math.abs(bot.canon.motor.getVelocity()) + 40 >= Math.abs(bot.canon.CLOSE_SPEED)) {
                 intake();
             } else {
                 stop();
@@ -65,7 +65,7 @@ public class Intake {
 
     public class IntakeUntilBallShot implements  Action {
         public boolean run(TelemetryPacket t) {
-            if (Math.abs(bot.canon.motor.getVelocity()) + 100 >= Math.abs(bot.canon.CLOSE_SPEED)) {
+            if (Math.abs(bot.canon.motor.getVelocity()) + 40 >= Math.abs(bot.canon.CLOSE_SPEED)) {
                 intake();
                 return true;
             } else {
