@@ -26,7 +26,8 @@ public class MainAuto extends LinearOpMode {
         bot = new Bot(hardwareMap, drive.localizer, telemetry);
 
         bot.initialize();
-        while(!opModeIsActive()) {
+        long startTime = System.currentTimeMillis();
+        while(System.currentTimeMillis() < startTime + 5000) { //Scan for april tag for 5 seconds
             bot.updatePoseUsingAprilTag();
             bot.aprilTagTelementary();
             telemetry.update();
@@ -91,6 +92,9 @@ public class MainAuto extends LinearOpMode {
             .build();
 
         Action chosenPath = pgp;
+        waitForStart();
+
+        //END OF INIT
 
         Actions.runBlocking(chosenPath);
     }

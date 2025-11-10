@@ -234,13 +234,15 @@ public class Bot {
     
     // ===== APRIL TAG =====
 
-    public void updatePoseUsingAprilTag() {
+    public boolean updatePoseUsingAprilTag() {
         if (useAprilTag) {
             Pose2d aprilPose = getPoseFromAprilTag();
             if (aprilPose != null) {
                 localizer.setPose(aprilPose);
+                return true;
             }
         }
+        return false;
     }
 
     public Pose2d getPoseFromAprilTag() {
