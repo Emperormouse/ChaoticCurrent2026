@@ -11,7 +11,8 @@ import java.util.Set;
 
 public class Canon {
     public DcMotorEx motor;
-    public int CLOSE_SPEED = -960;
+    public int CLOSE_SPEED = -1060;
+    public int CLOSE_SPEED_LAST = -955;
     public int FAR_SPEED = -1100;
     public double closePower = 0;
 
@@ -23,14 +24,14 @@ public class Canon {
 
         //motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
-    
+
     public void setPower(double p) {
         motor.setPower(p);
     }
 
     private class SpinUp implements Action {
         private double targetSpeed;
-        private final double ki = (1.0 / 25_000);
+        //private final double ki = (1.0 / 25_000);
 
         public SpinUp(double target) {
             targetSpeed = target;
@@ -42,7 +43,7 @@ public class Canon {
             //motor.setPower(motor.getPower() + (error *ki));
             motor.setVelocity(targetSpeed);
 
-            return Math.abs(error) > 60;
+            return Math.abs(error) > 40;
         }
     }
 

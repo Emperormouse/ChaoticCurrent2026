@@ -29,6 +29,8 @@ import org.firstinspires.ftc.teamcode.Localizer;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
+import org.firstinspires.ftc.teamcode.code.utility.Op;
+import org.firstinspires.ftc.teamcode.code.utility.Side;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
@@ -47,25 +49,32 @@ public class Bot {
     public VisionPortal visionPortal;
     public Position cameraPosition = new Position(DistanceUnit.INCH, 0, 0, 0, 0);
     public YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 0, -90, 0, 0);
-    
+
     private DcMotor frontLeft;
     private DcMotor backLeft;
     private DcMotor frontRight;
     private DcMotor backRight;
 
     public boolean useAprilTag = true;
-    Pose2d lastPose = new Pose2d(0, 0, 0);
-    
+    public Side side;
+
+    public Pose2d launchPose;
+
     Telemetry telemetry;
     HardwareMap hardwareMap;
 
-    public Bot(HardwareMap hardwareMap, Localizer localizer, Telemetry telemetry) {
+    public Bot(HardwareMap hardwareMap, Localizer localizer, Side side, Telemetry telemetry) {
         canon = new Canon(hardwareMap);
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap, this);
         this.localizer = localizer;
         this.telemetry = telemetry;
         this.hardwareMap = hardwareMap;
+        this.side = side;
+        if (side == Side.BLUE)
+            launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(52.5));
+        else
+            launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-41));
 
         frontLeft = (DcMotor) hardwareMap.get(DcMotor.class, "front_left");
         backLeft = (DcMotor)hardwareMap.get(DcMotor.class, "back_left");
@@ -75,7 +84,7 @@ public class Bot {
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         //distanceSensor = hardwareMap.get(DistanceSensor.class, "distance_sensor");
     }
-    
+
     public void initialize() {
         initAprilTag();
 
@@ -91,48 +100,52 @@ public class Bot {
     }
 
     public Action shootClose() {
-        return new ParallelAction(
-            new KeepRunning(canon.setVelInstant(canon.CLOSE_SPEED)),
+        return new EndAfterFirstParallel(
             new SequentialAction(
                 gate.open(),
+                //new Wait(1.0),
                 new EndAfterFirstParallel(
-                    new Wait(10),
+                    new Wait(4.2),
                     intake.intakeWhenAtSpeed()
                 ),
-                canon.setPowerInstant(0),
+                //canon.setPowerInstant(0),
                 gate.close()
-            )
+            ),
+            new KeepRunning(canon.setVelInstant(canon.CLOSE_SPEED))
         );
     }
 
     public Action shootCloseNew() {
         return new SequentialAction(
-            canon.spinUp(canon.CLOSE_SPEED),
+            canon.spinUp(canon.CLOSE_SPEED + 10),
             gate.open(),
-            new Wait(0.5),
+            new Wait(1.0),
 
             intake.intakeUntilBallShot(),
             new Wait(1.0),
             intake.intakeUntilBallShot(),
             new Wait(1.0),
-            intake.intakeUntilBallShot(),
+            intake.intakeUntilBallShotLAST(),
 
             canon.setPowerInstant(0),
             gate.close()
         );
     }
 
-    public void moveFieldCentric(double x, double y, double r) {
-        moveFieldCentric(x, y, r, 1.0);
+    public void moveFieldCentric(double x, double y, double r, Op opmode) {
+        moveFieldCentric(x, y, r, 1.0, opmode);
     }
-    
-    public void moveFieldCentric(double x, double y, double r, double speed) {
+
+    public void moveFieldCentric(double x, double y, double r, double speed, Op opmode) {
         double frPower = 0;
         double flPower = 0;
         double brPower = 0;
         double blPower = 0;
 
         double botRot = localizer.getPose().heading.toDouble() + Math.toRadians(90);
+        if (side == Side.RED && opmode == Op.TELE) {
+            botRot += Math.toRadians(180);
+        }
 
         frPower += r;
         brPower += r;
@@ -172,31 +185,33 @@ public class Bot {
 
     //drives to location
     public class MoveTo implements Action {
-        private final double pRotational = 1.3;
-        private final double pX = 0.1;
-        private final double pY = 0.1;
+        private final double pRotational = 0.9;
+        private final double pX = 0.05;
+        private final double pY = 0.05;
         private Pose2d targetPose;
         private long lastTimeMoved = 0;
+        private double speed;
 
-        public MoveTo(Pose2d targetPose) {
+        public MoveTo(Pose2d targetPose, double speed) {
             this.targetPose = targetPose;
+            this.speed = speed;
         }
 
         public boolean run(TelemetryPacket t) {
+            localizer.update();
             Pose2d currentPose = localizer.getPose();
             double diffX = targetPose.position.x - currentPose.position.x;
             double diffY = targetPose.position.y - currentPose.position.y;
             double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
 
-            moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, 0.8);
+            moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, speed, Op.AUTO);
 
-            if (Math.abs(diffX) > 3 || Math.abs(diffY) > 3 || Math.abs(diffR) > Math.toRadians(2.5)) {
+            if (Math.abs(diffX) > 2.0 || Math.abs(diffY) > 2.0 || Math.abs(diffR) > Math.toRadians(1.8)) {
                 lastTimeMoved = System.currentTimeMillis();
             }
-            lastPose = localizer.getPose();
 
-            if ((Math.abs(diffX)>1.5 || Math.abs(diffY)>1.5 || Math.abs(diffR)>Math.toRadians(1.3)) &&
-                System.currentTimeMillis() - lastTimeMoved < 1000)
+            if ((Math.abs(diffX)>1.3 || Math.abs(diffY)>1.3 || Math.abs(diffR)>Math.toRadians(1.1)) &&
+                System.currentTimeMillis() - lastTimeMoved < 1600)
             {
                 return true;
             } else {
@@ -208,20 +223,55 @@ public class Bot {
             }
         }
     }
-
     public Action moveTo(Pose2d targetPose) {
-        return new MoveTo(targetPose);
+        return new MoveTo(targetPose, 1.0);
     }
-    public Action moveTo(Pose2d targetPose, double time) {
-        return new SequentialAction(
-            new MoveTo(targetPose),
-            settle(targetPose, time)
-        );
+    public Action moveTo(Pose2d targetPose, double speed) {
+        return new MoveTo(targetPose, speed);
+    }
+
+    public class MoveToImprecise implements Action {
+        private final double pRotational = 1.0;
+        private final double pX = 0.08;
+        private final double pY = 0.08;
+        private Pose2d targetPose;
+        private double speed;
+
+        public MoveToImprecise(Pose2d targetPose, double speed) {
+            this.targetPose = targetPose;
+            this.speed = speed;
+        }
+
+        public boolean run(TelemetryPacket t) {
+            localizer.update();
+            Pose2d currentPose = localizer.getPose();
+            double diffX = targetPose.position.x - currentPose.position.x;
+            double diffY = targetPose.position.y - currentPose.position.y;
+            double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
+
+            moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, speed, Op.AUTO);
+
+            if (Math.abs(diffX)>2.0 || Math.abs(diffY)>2.0 || Math.abs(diffR)>Math.toRadians(2.5)) {
+                return true;
+            } else {
+                frontLeft.setPower(0);
+                frontRight.setPower(0);
+                backLeft.setPower(0);
+                backRight.setPower(0);
+                return false;
+            }
+        }
+    }
+    public Action moveToImprecise(Pose2d targetPose) {
+        return new MoveToImprecise(targetPose, 1.0);
+    }
+    public Action moveToImprecise(Pose2d targetPose, double speed) {
+        return new MoveToImprecise(targetPose, speed);
     }
 
     //infinitely settles
     public Action settle(Pose2d targetPose) {
-        return new KeepRunning(new MoveTo(targetPose));
+        return new KeepRunning(new MoveTo(targetPose, 1.0));
     }
     //settles for amount of time in seconds
     public Action settle(Pose2d targetPose, double time) {
@@ -231,18 +281,26 @@ public class Bot {
         );
     }
 
-    
+
     // ===== APRIL TAG =====
 
-    public boolean updatePoseUsingAprilTag() {
+    public void updatePoseUsingAprilTag() {
         if (useAprilTag) {
             Pose2d aprilPose = getPoseFromAprilTag();
             if (aprilPose != null) {
                 localizer.setPose(aprilPose);
-                return true;
             }
         }
-        return false;
+    }
+
+    public class UpdatePoseUsingAprilTagAction implements Action {
+        public boolean run(TelemetryPacket t) {
+            updatePoseUsingAprilTag();
+            return true;
+        }
+    }
+    public Action updatePoseUsingAprilTagAction() {
+        return new UpdatePoseUsingAprilTagAction();
     }
 
     public Pose2d getPoseFromAprilTag() {

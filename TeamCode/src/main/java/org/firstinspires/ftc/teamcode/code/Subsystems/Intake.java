@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import java.util.Set;
+
 public class Intake {
     private DcMotorEx motor;
     private Bot bot;
@@ -26,6 +28,9 @@ public class Intake {
     }
     public void stop() {
         motor.setPower(0.0);
+    }
+    public void setPowerManual(double pow) {
+        motor.setPower(pow);
     }
 
     public class SpinForDuration implements Action {
@@ -54,7 +59,7 @@ public class Intake {
 
     public class IntakeWhenAtSpeed implements  Action {
         public boolean run(TelemetryPacket t) {
-            if (Math.abs(bot.canon.motor.getVelocity()) + 40 >= Math.abs(bot.canon.CLOSE_SPEED)) {
+            if (Math.abs(bot.canon.motor.getVelocity()) + 30 >= Math.abs(bot.canon.CLOSE_SPEED)) {
                 intake();
             } else {
                 stop();
@@ -63,15 +68,39 @@ public class Intake {
         }
     }
 
+
     public class IntakeUntilBallShot implements  Action {
         public boolean run(TelemetryPacket t) {
-            if (Math.abs(bot.canon.motor.getVelocity()) + 40 >= Math.abs(bot.canon.CLOSE_SPEED)) {
+            if (Math.abs(bot.canon.motor.getVelocity()) + 30 >= Math.abs(bot.canon.CLOSE_SPEED)) {
                 intake();
                 return true;
             } else {
                 stop();
                 return false;
             }
+        }
+    }
+
+    public class IntakeUntilBallShotLAST implements  Action {
+        public boolean run(TelemetryPacket t) {
+            if (Math.abs(bot.canon.motor.getVelocity()) + 30 >= Math.abs(bot.canon.CLOSE_SPEED_LAST)) {
+                intake();
+                return true;
+            } else {
+                stop();
+                return false;
+            }
+        }
+    }
+
+    public class SetPowerAction implements Action {
+        private double pow;
+        public SetPowerAction(double p) {
+            pow = p;
+        }
+        public boolean run(TelemetryPacket t) {
+            setPowerManual(pow);
+            return false;
         }
     }
 
@@ -83,5 +112,11 @@ public class Intake {
     }
     public Action intakeUntilBallShot() {
         return new IntakeUntilBallShot();
+    }
+    public Action intakeUntilBallShotLAST() {
+        return new IntakeUntilBallShotLAST();
+    }
+    public Action setPower(double pow) {
+        return new SetPowerAction(pow);
     }
 }

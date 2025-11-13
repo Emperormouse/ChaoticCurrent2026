@@ -19,6 +19,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
+import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
+import org.firstinspires.ftc.teamcode.code.utility.Op;
+import org.firstinspires.ftc.teamcode.code.utility.Side;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
@@ -26,8 +29,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 //The best way that I figured out to do this is to make every part of the teleOp an Action, which
 //is what roadrunner paths are, and then switch between those actions.
 //This will most likely be used if we want to make a TeleOp which is mostly automated
-@TeleOp(name = "MainTeleOp")
-public class MainTeleOp extends LinearOpMode {
+@TeleOp
+public class TeleOpBLUE extends LinearOpMode {
     private Bot bot;
     private Pose2d currentPose;
     private boolean isOuttaking = false;
@@ -38,7 +41,7 @@ public class MainTeleOp extends LinearOpMode {
     private Position cameraPosition = new Position(DistanceUnit.INCH, 0, 0, 0, 0);
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 0, -90, 0, 0);
 
-    private Pose2d launchPose = new Pose2d(-16.5, -14, Math.toRadians(47.5));
+    Side side = Side.BLUE;
 
     //This is the roadrunner mecanum drive
     MecanumDrive drive;
@@ -66,6 +69,22 @@ public class MainTeleOp extends LinearOpMode {
                 bot.gate.holdManual();
             }
 
+            if (gamepad2.dpad_up) {
+                isOuttaking = true;
+                bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
+            }
+            if (gamepad2.dpad_down) {
+                isOuttaking = false;
+                bot.canon.motor.setPower(0);
+            }
+            if (gamepad2.dpad_right) {
+                isOuttaking = false;
+                bot.canon.motor.setPower(-bot.canon.CLOSE_SPEED);
+            }
+            if (gamepad2.y) {
+                bot.canon.setPower(-1.0);
+            }
+
             return true;
         }
     }
@@ -84,7 +103,7 @@ public class MainTeleOp extends LinearOpMode {
 
             double speed = (gamepad1.left_bumper) ? 0.8 : 1.0;
 
-            bot.moveFieldCentric(x, y, rx, speed);
+            bot.moveFieldCentric(x, y, rx, speed, Op.TELE);
             return true;
         }
     }
@@ -92,11 +111,11 @@ public class MainTeleOp extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d startPose = new Pose2d(60.1, -12.7, 0);
-        drive = new MecanumDrive(hardwareMap, startPose); //The start position,
+        //Pose2d startPose = new Pose2d(60.1, -12.7, 0);
+        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0)); //The start position,
         // which is on the left tile of the far launch zone, with the intake up against the wall.
 
-        bot = new Bot(hardwareMap, drive.localizer, telemetry);
+        bot = new Bot(hardwareMap, drive.localizer, side, telemetry);
         bot.initialize();
 
         TelemetryPacket t = new TelemetryPacket();
@@ -123,46 +142,34 @@ public class MainTeleOp extends LinearOpMode {
             drive.updatePoseEstimate();
             currentPose = drive.localizer.getPose();
 
-            if (gamepad2.dpadUpWasPressed()) {
-                if (isOuttaking || Math.abs(bot.canon.motor.getVelocity())>800) {
-                    isOuttaking = false;
-                    bot.canon.setPower(0);
-                    bot.gate.close();
-                } else {
-                    isOuttaking = true;
-                    bot.canon.setPower(bot.canon.closePower);
-                }
-            }
-
             if (gamepad1.xWasPressed()) {
                 currentAction = new SequentialAction(
                     new ParallelAction(
-                        bot.moveTo(launchPose),
+                        bot.moveTo(bot.launchPose),
                         bot.canon.spinUp(bot.canon.CLOSE_SPEED)
                     ),
+                    new Wait(0.7),
                     bot.shootClose()
                 );
             }
 
-            if (gamepad1.aWasPressed()) {
+            /*if (gamepad1.aWasPressed()) {
                 currentAction = new SequentialAction(
                     new ParallelAction(
-                        bot.moveTo(launchPose),
+                        bot.moveTo(bot.launchPose),
                         bot.canon.spinUp(bot.canon.CLOSE_SPEED)
                     ),
                     bot.shootCloseNew()
                 );
-            }
+            }*/
 
             if (gamepad1.dpadRightWasPressed()) {
                 useAprilTag = !useAprilTag;
             }
-            if (gamepad1.dpadDownWasPressed()) {
-                currentAction = pathToPos(currentPose, startPose);
-            }
             if (gamepad1.bWasPressed()) {
                 bot.canon.setPower(0);
                 bot.gate.closeManual();
+                isOuttaking = false;
                 currentAction = defaultAction;
             }
 
@@ -170,7 +177,7 @@ public class MainTeleOp extends LinearOpMode {
                 currentAction = defaultAction;
             }
 
-            telemetry.addData("Target Speed: ", bot.canon.FAR_SPEED);
+            telemetry.addData("Target Speed: ", bot.canon.CLOSE_SPEED);
             telemetry.addData("Canon power: ", bot.canon.motor.getPower());
             telemetry.addData("Canon speed: ", bot.canon.motor.getVelocity());
             telemetry.addData("Pos: ", currentPose);
