@@ -15,6 +15,7 @@ import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterEitherParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
+import org.firstinspires.ftc.teamcode.code.utility.Op;
 import org.firstinspires.ftc.teamcode.code.utility.Side;
 
 @Autonomous
@@ -23,7 +24,7 @@ public class AutoRED extends LinearOpMode {
     Bot bot;
 
     public void runOpMode() {
-        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
+        drive = new MecanumDrive(hardwareMap, new Pose2d(-56.86, 47, Math.toRadians(-56.25)));
         bot = new Bot(hardwareMap, drive.localizer, Side.RED, telemetry);
 
         bot.initialize();
@@ -41,46 +42,33 @@ public class AutoRED extends LinearOpMode {
         Action pgp = new SequentialAction(
             bot.moveTo(bot.launchPose),
             new Wait(0.5),
-            bot.shootClose(),
+            bot.shootClose(Op.AUTO),
 
             bot.intake.setPower(-1.0),
-            bot.moveToImprecise(new Pose2d(-12, 12, toRadians(85))),
+            bot.moveToImprecise(new Pose2d(-11, 14, toRadians(90))),
             new EndAfterEitherParallel(
                 new Wait(2.2),
-                bot.moveToImprecise(new Pose2d(-12, 54, toRadians(85)), 1.0)
+                bot.moveToImprecise(new Pose2d(-11, 55, toRadians(90)), 1.0)
             ),
             new Wait(0.6),
             bot.intake.setPower(0),
 
-            new ParallelAction(
-                bot.moveTo(bot.launchPose),
-                new SequentialAction(
-                    bot.intake.setPower(0.8),
-                    new Wait(0.3),
-                    bot.intake.setPower(0.0)
-                )
-            ),
-            bot.shootClose(),
+            bot.moveTo(bot.launchPose),
+            bot.shootClose(Op.AUTO),
 
             bot.intake.setPower(-1.0),
-            bot.moveToImprecise(new Pose2d(9, 12, toRadians(85))),
+            bot.moveToImprecise(new Pose2d(10.5, 12, toRadians(90))),
             new EndAfterEitherParallel(
-                new Wait(2.8),
-                bot.moveToImprecise(new Pose2d(9, 59, toRadians(85)), 1.0)
+                new Wait(3.0),
+                bot.moveToImprecise(new Pose2d(10.5, 62, toRadians(90)), 1.0)
             ),
-            new Wait(0.5),
-            bot.moveToImprecise(new Pose2d(15, 25, toRadians(85))),
+            new Wait(0.7),
+            bot.moveToImprecise(new Pose2d(10, 40, toRadians(90))),
             bot.intake.setPower(0),
 
-            new ParallelAction(
-                bot.moveTo(bot.launchPose),
-                new SequentialAction(
-                    bot.intake.setPower(0.8),
-                    new Wait(0.3),
-                    bot.intake.setPower(0.0)
-                )
-            ),
-            bot.shootClose()
+            bot.moveTo(bot.launchPose),
+            bot.shootClose(Op.AUTO),
+            bot.moveToImprecise(new Pose2d(-35, 14.8, Math.toRadians(-41)))
         );
 
 

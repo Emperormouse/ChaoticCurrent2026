@@ -61,6 +61,10 @@ public class TeleOpBLUE extends LinearOpMode {
                 bot.intake.stop();
             }
 
+            if (Math.abs(gamepad1.left_trigger) > 0.1) {
+                bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
+            }
+
             if (gamepad2.a) {
                 bot.gate.openManual();
             } else if (gamepad2.b) {
@@ -76,10 +80,6 @@ public class TeleOpBLUE extends LinearOpMode {
             if (gamepad2.dpad_down) {
                 isOuttaking = false;
                 bot.canon.motor.setPower(0);
-            }
-            if (gamepad2.dpad_right) {
-                isOuttaking = false;
-                bot.canon.motor.setPower(-bot.canon.CLOSE_SPEED);
             }
             if (gamepad2.y) {
                 bot.canon.setPower(-1.0);
@@ -122,7 +122,8 @@ public class TeleOpBLUE extends LinearOpMode {
 
         Action defaultAction = new ParallelAction(
             new FieldCentricMovement(),
-            new ManualControls()
+            new ManualControls(),
+            bot.canon.setCloseSpeed(-1020)
         );
         Action currentAction = defaultAction;
 
@@ -149,7 +150,7 @@ public class TeleOpBLUE extends LinearOpMode {
                         bot.canon.spinUp(bot.canon.CLOSE_SPEED)
                     ),
                     new Wait(0.7),
-                    bot.shootClose()
+                    bot.shootClose(Op.TELE)
                 );
             }
 
@@ -166,10 +167,11 @@ public class TeleOpBLUE extends LinearOpMode {
             if (gamepad1.dpadRightWasPressed()) {
                 useAprilTag = !useAprilTag;
             }
-            if (gamepad1.bWasPressed()) {
+            if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
                 bot.canon.setPower(0);
                 bot.gate.closeManual();
                 isOuttaking = false;
+                bot.canon.setCloseSpeed(-1020);
                 currentAction = defaultAction;
             }
 

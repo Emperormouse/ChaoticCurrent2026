@@ -15,6 +15,7 @@ import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterEitherParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
+import org.firstinspires.ftc.teamcode.code.utility.Op;
 import org.firstinspires.ftc.teamcode.code.utility.Side;
 
 @Autonomous
@@ -23,7 +24,7 @@ public class AutoBLUE extends LinearOpMode {
     Bot bot;
 
     public void runOpMode() {
-        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
+        drive = new MecanumDrive(hardwareMap, new Pose2d(-49.5, -50, Math.toRadians(56)));
         bot = new Bot(hardwareMap, drive.localizer, Side.BLUE, telemetry);
 
         bot.initialize();
@@ -41,7 +42,7 @@ public class AutoBLUE extends LinearOpMode {
         Action pgp = new SequentialAction(
             bot.moveTo(bot.launchPose),
             new Wait(0.5),
-            bot.shootClose(),
+            bot.shootClose(Op.AUTO),
 
             /*drive.actionBuilder(launchPose)
                 //.setTangent(toRadians(180))
@@ -52,10 +53,10 @@ public class AutoBLUE extends LinearOpMode {
             bot.intake.setPower(-1.0),
             bot.moveToImprecise(new Pose2d(-11, -12, toRadians(-85))),
             new EndAfterEitherParallel(
-                new Wait(2.2),
+                new Wait(2.3),
                 bot.moveToImprecise(new Pose2d(-11, -52.5, toRadians(-85)), 1.0)
             ),
-            new Wait(0.6),
+            new Wait(0.8),
             /*drive.actionBuilder(launchPose)
                 //.setTangent(toRadians(180))
                 .strafeToLinearHeading(new Vector2d(-11, -12), toRadians(-90))
@@ -71,7 +72,7 @@ public class AutoBLUE extends LinearOpMode {
                     bot.intake.setPower(0.0)
                 )
             ),
-            bot.shootClose(),
+            bot.shootClose(Op.AUTO),
 
             bot.intake.setPower(-1.0),
             bot.moveToImprecise(new Pose2d(14, -12, toRadians(-85))),
@@ -94,7 +95,8 @@ public class AutoBLUE extends LinearOpMode {
                     bot.intake.setPower(0.0)
                 )
             ),
-            bot.shootClose()
+            bot.shootClose(Op.AUTO),
+            bot.moveTo(new Pose2d(-34.3, -9.8, Math.toRadians(54)))
         );
 
 

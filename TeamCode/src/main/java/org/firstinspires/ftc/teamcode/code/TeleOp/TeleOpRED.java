@@ -85,6 +85,10 @@ public class TeleOpRED extends LinearOpMode {
                 bot.canon.setPower(-1.0);
             }
 
+            if (Math.abs(gamepad1.left_trigger) >= 0.1) {
+                bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
+            }
+
             return true;
         }
     }
@@ -101,7 +105,7 @@ public class TeleOpRED extends LinearOpMode {
             if (isOuttaking)
                 rx /= 3;
 
-            double speed = (gamepad1.left_bumper) ? 0.8 : 1.0;
+            double speed = (gamepad1.left_bumper) ? 1.0 : 1.0;
 
             bot.moveFieldCentric(x, y, rx, speed, Op.TELE);
             return true;
@@ -123,6 +127,7 @@ public class TeleOpRED extends LinearOpMode {
         Action defaultAction = new ParallelAction(
             new FieldCentricMovement(),
             new ManualControls()
+            //bot.canon.setCloseSpeed(-1060)
         );
         Action currentAction = defaultAction;
 
@@ -149,7 +154,7 @@ public class TeleOpRED extends LinearOpMode {
                         bot.canon.spinUp(bot.canon.CLOSE_SPEED)
                     ),
                     new Wait(0.7),
-                    bot.shootClose()
+                    bot.shootClose(Op.TELE)
                 );
             }
 
@@ -170,6 +175,7 @@ public class TeleOpRED extends LinearOpMode {
                 bot.canon.setPower(0);
                 bot.gate.closeManual();
                 isOuttaking = false;
+                bot.canon.setCloseSpeed(-1020);
                 currentAction = defaultAction;
             }
 

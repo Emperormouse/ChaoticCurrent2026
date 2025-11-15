@@ -72,9 +72,9 @@ public class Bot {
         this.hardwareMap = hardwareMap;
         this.side = side;
         if (side == Side.BLUE)
-            launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(52.5));
+            launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(54));
         else
-            launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-41));
+            launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-42.3));
 
         frontLeft = (DcMotor) hardwareMap.get(DcMotor.class, "front_left");
         backLeft = (DcMotor)hardwareMap.get(DcMotor.class, "back_left");
@@ -99,17 +99,19 @@ public class Bot {
         canon.setPower(0);*/
     }
 
-    public Action shootClose() {
+    public Action shootClose(Op opmode) {
+        double time = (opmode == Op.AUTO) ? 4.3 : 10;
         return new EndAfterFirstParallel(
             new SequentialAction(
                 gate.open(),
                 //new Wait(1.0),
                 new EndAfterFirstParallel(
-                    new Wait(4.2),
+                    new Wait(time),
                     intake.intakeWhenAtSpeed()
                 ),
                 //canon.setPowerInstant(0),
-                gate.close()
+                gate.close(),
+                canon.setCloseSpeed(-1020)
             ),
             new KeepRunning(canon.setVelInstant(canon.CLOSE_SPEED))
         );
@@ -185,9 +187,9 @@ public class Bot {
 
     //drives to location
     public class MoveTo implements Action {
-        private final double pRotational = 0.9;
-        private final double pX = 0.05;
-        private final double pY = 0.05;
+        private final double pRotational = 1.0;
+        private final double pX = 0.06;
+        private final double pY = 0.06;
         private Pose2d targetPose;
         private long lastTimeMoved = 0;
         private double speed;
@@ -210,7 +212,7 @@ public class Bot {
                 lastTimeMoved = System.currentTimeMillis();
             }
 
-            if ((Math.abs(diffX)>1.3 || Math.abs(diffY)>1.3 || Math.abs(diffR)>Math.toRadians(1.1)) &&
+            if ((Math.abs(diffX)>1.4 || Math.abs(diffY)>1.4 || Math.abs(diffR)>Math.toRadians(1.4)) &&
                 System.currentTimeMillis() - lastTimeMoved < 1600)
             {
                 return true;
@@ -267,6 +269,45 @@ public class Bot {
     }
     public Action moveToImprecise(Pose2d targetPose, double speed) {
         return new MoveToImprecise(targetPose, speed);
+    }
+
+    public class MoveToContinuous implements Action {
+        private final double pRotational = 10.0;
+        private final double pX = 0.8;
+        private final double pY = 0.8;
+        private Pose2d targetPose;
+        private double speed;
+
+        public MoveToContinuous(Pose2d targetPose, double speed) {
+            this.targetPose = targetPose;
+            this.speed = speed;
+        }
+
+        public boolean run(TelemetryPacket t) {
+            localizer.update();
+            Pose2d currentPose = localizer.getPose();
+            double diffX = targetPose.position.x - currentPose.position.x;
+            double diffY = targetPose.position.y - currentPose.position.y;
+            double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
+
+            moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, speed, Op.AUTO);
+
+            if (Math.abs(diffX)>2.0 || Math.abs(diffY)>2.3 || Math.abs(diffR)>Math.toRadians(3.0)) {
+                return true;
+            } else {
+                frontLeft.setPower(0);
+                frontRight.setPower(0);
+                backLeft.setPower(0);
+                backRight.setPower(0);
+                return false;
+            }
+        }
+    }
+    public Action moveToContinuous(Pose2d targetPose) {
+        return new MoveToContinuous(targetPose, 1.0);
+    }
+    public Action moveToContinuous(Pose2d targetPose, double speed) {
+        return new MoveToContinuous(targetPose, speed);
     }
 
     //infinitely settles
