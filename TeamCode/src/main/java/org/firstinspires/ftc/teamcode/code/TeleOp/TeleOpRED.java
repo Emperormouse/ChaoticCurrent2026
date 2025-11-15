@@ -175,7 +175,6 @@ public class TeleOpRED extends LinearOpMode {
                 bot.canon.setPower(0);
                 bot.gate.closeManual();
                 isOuttaking = false;
-                bot.canon.setCloseSpeed(-1020);
                 currentAction = defaultAction;
             }
 

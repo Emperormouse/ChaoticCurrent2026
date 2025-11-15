@@ -79,17 +79,6 @@ public class Canon {
         }
     }
 
-    public class SetCloseSpeed implements Action {
-        private int vel;
-        public SetCloseSpeed(int vel) {
-            this.vel = vel;
-        }
-        public boolean run(TelemetryPacket t) {
-            CLOSE_SPEED = vel;
-            return false;
-        }
-    }
-
     private class ActionName implements Action { //Action Structure
         private int a;
         public ActionName() {
@@ -114,8 +103,5 @@ public class Canon {
 
     public Action setVelInstant(double vel) {
         return new SetVelInstant(vel);
-    }
-    public Action setCloseSpeed(int vel) {
-        return new SetCloseSpeed(vel);
     }
 }

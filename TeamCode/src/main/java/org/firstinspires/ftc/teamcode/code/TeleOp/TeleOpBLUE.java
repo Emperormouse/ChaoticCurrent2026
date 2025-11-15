@@ -122,8 +122,7 @@ public class TeleOpBLUE extends LinearOpMode {
 
         Action defaultAction = new ParallelAction(
             new FieldCentricMovement(),
-            new ManualControls(),
-            bot.canon.setCloseSpeed(-1020)
+            new ManualControls()
         );
         Action currentAction = defaultAction;
 
@@ -171,7 +170,6 @@ public class TeleOpBLUE extends LinearOpMode {
                 bot.canon.setPower(0);
                 bot.gate.closeManual();
                 isOuttaking = false;
-                bot.canon.setCloseSpeed(-1020);
                 currentAction = defaultAction;
             }
 

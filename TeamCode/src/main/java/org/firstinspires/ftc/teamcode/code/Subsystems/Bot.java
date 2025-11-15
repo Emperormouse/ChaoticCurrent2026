@@ -110,8 +110,7 @@ public class Bot {
                     intake.intakeWhenAtSpeed()
                 ),
                 //canon.setPowerInstant(0),
-                gate.close(),
-                canon.setCloseSpeed(-1020)
+                gate.close()
             ),
             new KeepRunning(canon.setVelInstant(canon.CLOSE_SPEED))
         );
