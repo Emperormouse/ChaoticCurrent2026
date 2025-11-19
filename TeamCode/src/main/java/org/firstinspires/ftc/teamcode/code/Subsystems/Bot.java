@@ -30,6 +30,7 @@ import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
 import org.firstinspires.ftc.teamcode.code.utility.Op;
+import org.firstinspires.ftc.teamcode.code.utility.PIDController;
 import org.firstinspires.ftc.teamcode.code.utility.Side;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -72,7 +73,7 @@ public class Bot {
         this.hardwareMap = hardwareMap;
         this.side = side;
         if (side == Side.BLUE)
-            launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(54));
+            launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(51.5));
         else
             launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-42.3));
 
@@ -104,7 +105,7 @@ public class Bot {
         return new EndAfterFirstParallel(
             new SequentialAction(
                 gate.open(),
-                //new Wait(1.0),
+                new Wait(0.8),
                 new EndAfterFirstParallel(
                     new Wait(time),
                     intake.intakeWhenAtSpeed()
@@ -184,11 +185,43 @@ public class Bot {
         backRight.setPower(brPower / denominator);
     }
 
+    public void moveRelative(double x, double y, double r, double speed) {
+        double frPower = 0;
+        double flPower = 0;
+        double brPower = 0;
+        double blPower = 0;
+
+        frPower += r;
+        brPower += r;
+        flPower -= r;
+        blPower -= r;
+
+        //FORWARD-DIRECTION
+        frPower += y;
+        brPower += y;
+        flPower += y;
+        blPower += y;
+
+        //SIDEWAYS-DIRECTION
+        frPower += x;
+        brPower -= x;
+        flPower -= x;
+        blPower += x;
+
+        double denominator = max(1, max(max(max(abs(frPower), abs(brPower)), abs(flPower)), abs(blPower)));
+        denominator /= speed;
+
+        frontLeft.setPower(flPower / denominator);
+        frontRight.setPower(frPower / denominator);
+        backLeft.setPower(blPower / denominator);
+        backRight.setPower(brPower / denominator);
+    }
+
     //drives to location
     public class MoveTo implements Action {
         private final double pRotational = 1.0;
-        private final double pX = 0.06;
-        private final double pY = 0.06;
+        private final double pX = 0.065;
+        private final double pY = 0.065;
         private Pose2d targetPose;
         private long lastTimeMoved = 0;
         private double speed;
@@ -207,12 +240,12 @@ public class Bot {
 
             moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, speed, Op.AUTO);
 
-            if (Math.abs(diffX) > 2.0 || Math.abs(diffY) > 2.0 || Math.abs(diffR) > Math.toRadians(1.8)) {
+            if (Math.abs(diffX) > 3.0 || Math.abs(diffY) > 3.0 || Math.abs(diffR) > Math.toRadians(2.8)) {
                 lastTimeMoved = System.currentTimeMillis();
             }
 
-            if ((Math.abs(diffX)>1.4 || Math.abs(diffY)>1.4 || Math.abs(diffR)>Math.toRadians(1.4)) &&
-                System.currentTimeMillis() - lastTimeMoved < 1600)
+            if ((Math.abs(diffX)>1.7 || Math.abs(diffY)>1.7 || Math.abs(diffR)>Math.toRadians(1.5)) &&
+                System.currentTimeMillis() - lastTimeMoved < 2000)
             {
                 return true;
             } else {
@@ -364,6 +397,7 @@ public class Bot {
         telemetry.addData("# AprilTags Detected", currentDetections.size());
         for (AprilTagDetection detection : currentDetections) {
             if (detection.metadata != null) {
+                telemetry.addData("Offset of April Tag: ", detection.center);
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
                     detection.robotPose.getPosition().x,
@@ -375,6 +409,36 @@ public class Bot {
                     detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)-90));
             }
         }
+    }
+
+    public void goToLaunchPos(Side side) {
+        double kp = (1.0 / 400);
+        double y = 0;
+        double x = 0;
+        double r = 0;
+
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        int targetId;
+        if (side == Side.RED)
+            targetId = 24;
+        else
+            targetId = 20;
+
+        for (AprilTagDetection aprilTag : currentDetections) {
+            if (aprilTag.metadata != null) {
+                if (aprilTag.id == targetId) {
+                    double offset = -aprilTag.center.x + 300;
+                    r = offset * kp;
+
+                    double y1 = aprilTag.ftcPose.y;
+                    double y2 = aprilTag.rawPose.y;
+                    telemetry.addData("y1: ", y1);
+                    telemetry.addData("y2: ", y2);
+                }
+            }
+        }
+
+        moveRelative(x, y, r, 1.0);
     }
 
     public static AprilTagLibrary getDecodeTagLibrary(){
