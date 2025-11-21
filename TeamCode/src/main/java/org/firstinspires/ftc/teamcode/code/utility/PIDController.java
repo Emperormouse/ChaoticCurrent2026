@@ -6,7 +6,7 @@ public class PIDController {
     private double kd;
 
     private double integral = 0.0;
-    private double lastError;
+    private double lastError = 0.0;
 
     public PIDController(double kp, double ki, double kd) {
         this.kp = kp;

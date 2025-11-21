@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.max;
 import static java.lang.Math.sin;
+import static java.lang.Math.tan;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
@@ -15,6 +16,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -411,8 +413,10 @@ public class Bot {
         }
     }
 
-    public void goToLaunchPos(Side side) {
-        double kp = (1.0 / 400);
+    /*public void goToLaunchPos(Side side, Gamepad gamepad1) {
+        double targetDistance = 60;
+        double ky = (1.0 / 40);
+        double kr = (1.0 / 400);
         double y = 0;
         double x = 0;
         double r = 0;
@@ -428,17 +432,93 @@ public class Bot {
             if (aprilTag.metadata != null) {
                 if (aprilTag.id == targetId) {
                     double offset = -aprilTag.center.x + 300;
-                    r = offset * kp;
+                    r = offset * kr;
 
-                    double y1 = aprilTag.ftcPose.y;
-                    double y2 = aprilTag.rawPose.y;
-                    telemetry.addData("y1: ", y1);
-                    telemetry.addData("y2: ", y2);
+                    double distance = aprilTag.ftcPose.y;
+                    double distanceDiff = (targetDistance - distance);
+                    y = distanceDiff * ky;
+
+                    x = gamepad1.left_stick_x * 0.75;
+
+                    telemetry.addData("Distance: ", distance);
                 }
             }
         }
 
         moveRelative(x, y, r, 1.0);
+    }*/
+
+    public class MoveToLaunchPos implements Action {
+        double targetDistance = 60;
+        double ky = (1.0 / 40);
+        double kr = (1.0 / 350);
+        double kr2 = (1.0 / 50);
+
+        double distanceDiff = 0;
+        double offset = 0;
+
+        public boolean run(TelemetryPacket telemetryPacket) {
+            double y = 0;
+            double r = 0;
+
+            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+            int targetId;
+            if (side == Side.RED)
+                targetId = 24;
+            else
+                targetId = 20;
+
+            boolean found = false;
+            for (AprilTagDetection aprilTag : currentDetections) {
+                if (aprilTag.metadata != null) {
+                    if (aprilTag.id == targetId) {
+                        found = true;
+                        offset = -aprilTag.center.x + 300;
+                        r = offset * kr;
+
+                        double distance = aprilTag.ftcPose.y;
+                        distanceDiff = targetDistance - distance;
+                        y = distanceDiff * ky;
+
+                        telemetry.addData("Distance: ", distance);
+                    }
+                }
+            }
+
+            Pose2d botPose = localizer.getPose();
+            double dx = -1 * (-58.3727f - botPose.position.x);
+            double dy = -55.6425f - botPose.position.y;
+            double targetAngle = Math.atan2(dx, dy) - Math.PI/2;
+            double r2 = Math.toDegrees(targetAngle - botPose.heading.toDouble()) * kr2;
+
+            double distance2 = Math.sqrt(dx*dx + dy*dy);
+            double distanceDiff2 = targetDistance - distance2;
+            double y2 = distanceDiff2 * ky;
+
+            telemetry.addData("targetAngle: ", Math.toDegrees(targetAngle));
+            telemetry.addData("dx: ", dx);
+            telemetry.addData("dy: ", dy);
+            telemetry.addData("r2: ", r2);
+
+            if (found)
+                moveRelative(0, y, r, 1.0);
+            else
+                moveRelative(0, y2, r2, 1.0);
+
+
+            if (!found || Math.abs(distanceDiff) > 4 || Math.abs(offset) > 20) {
+                return true;
+            } else {
+                frontLeft.setPower(0);
+                frontRight.setPower(0);
+                backLeft.setPower(0);
+                backRight.setPower(0);
+                return false;
+            }
+        }
+    }
+    public Action moveToLaunchPos() {
+        return new MoveToLaunchPos();
     }
 
     public static AprilTagLibrary getDecodeTagLibrary(){

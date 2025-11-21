@@ -40,7 +40,10 @@ public class AutoRED extends LinearOpMode {
         telemetry.update();
 
         Action pgp = new SequentialAction(
-            bot.moveTo(bot.launchPose),
+            new EndAfterEitherParallel(
+                new Wait(5.5),
+                bot.moveTo(bot.launchPose)
+            ),
             new Wait(0.5),
             bot.shootClose(Op.AUTO),
 
@@ -48,25 +51,31 @@ public class AutoRED extends LinearOpMode {
             bot.moveToImprecise(new Pose2d(-11, 14, toRadians(90))),
             new EndAfterEitherParallel(
                 new Wait(2.2),
-                bot.moveToImprecise(new Pose2d(-11, 55, toRadians(90)), 1.0)
+                bot.moveToImprecise(new Pose2d(-11, 55.5, toRadians(90)), 1.0)
             ),
             new Wait(0.6),
             bot.intake.setPower(0),
 
-            bot.moveTo(bot.launchPose),
+            new EndAfterEitherParallel(
+                new Wait(3.5),
+                bot.moveTo(bot.launchPose)
+            ),
             bot.shootClose(Op.AUTO),
 
             bot.intake.setPower(-1.0),
-            bot.moveToImprecise(new Pose2d(10.5, 12, toRadians(90))),
+            bot.moveToImprecise(new Pose2d(11, 12, toRadians(90))),
             new EndAfterEitherParallel(
                 new Wait(3.0),
-                bot.moveToImprecise(new Pose2d(10.5, 62, toRadians(90)), 1.0)
+                bot.moveToImprecise(new Pose2d(11, 62.5, toRadians(90)), 1.0)
             ),
             new Wait(0.7),
-            bot.moveToImprecise(new Pose2d(10, 40, toRadians(90))),
+            bot.moveToImprecise(new Pose2d(10, 47, toRadians(90))),
             bot.intake.setPower(0),
 
-            bot.moveTo(bot.launchPose),
+            new EndAfterEitherParallel(
+                new Wait(3.5),
+                bot.moveTo(bot.launchPose)
+            ),
             bot.shootClose(Op.AUTO),
             bot.moveToImprecise(new Pose2d(-35, 14.8, Math.toRadians(-41)))
         );

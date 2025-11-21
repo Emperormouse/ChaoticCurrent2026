@@ -63,12 +63,9 @@ public class Intake {
         public boolean run(TelemetryPacket t) {
             if (firstTime) {
                 firstTime = false;
-                bot.canon.CLOSE_SPEED = -1020;
                 start = System.currentTimeMillis();
             }
             if (Math.abs(bot.canon.motor.getVelocity()) + 30 >= Math.abs(bot.canon.CLOSE_SPEED)) {
-                if (System.currentTimeMillis() > start + 2400)
-                    bot.canon.CLOSE_SPEED = -960;
                 intake();
             } else {
                 stop();

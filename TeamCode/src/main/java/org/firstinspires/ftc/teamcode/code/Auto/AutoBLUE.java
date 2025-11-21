@@ -23,6 +23,11 @@ public class AutoBLUE extends LinearOpMode {
     MecanumDrive drive;
     Bot bot;
 
+    public void waitSeconds(double time) {
+        long startTime = System.currentTimeMillis();
+        while(System.currentTimeMillis() < startTime + time*1000);
+    }
+
     public void runOpMode() {
         drive = new MecanumDrive(hardwareMap, new Pose2d(-49.5, -50, Math.toRadians(56)));
         bot = new Bot(hardwareMap, drive.localizer, Side.BLUE, telemetry);
@@ -40,7 +45,10 @@ public class AutoBLUE extends LinearOpMode {
         telemetry.update();
 
         Action pgp = new SequentialAction(
-            bot.moveTo(bot.launchPose),
+            new EndAfterEitherParallel(
+                new Wait(5.5),
+                bot.moveTo(bot.launchPose)
+            ),
             new Wait(0.5),
             bot.shootClose(Op.AUTO),
 
@@ -54,7 +62,7 @@ public class AutoBLUE extends LinearOpMode {
             bot.moveToImprecise(new Pose2d(-11, -12, toRadians(-85))),
             new EndAfterEitherParallel(
                 new Wait(2.3),
-                bot.moveToImprecise(new Pose2d(-11, -52.5, toRadians(-85)), 1.0)
+                bot.moveToImprecise(new Pose2d(-11, -53.5, toRadians(-85)), 1.0)
             ),
             new Wait(0.8),
             /*drive.actionBuilder(launchPose)
@@ -64,36 +72,29 @@ public class AutoBLUE extends LinearOpMode {
                 .build(),*/
             bot.intake.setPower(0),
 
-            new ParallelAction(
-                bot.moveTo(bot.launchPose),
-                new SequentialAction(
-                    bot.intake.setPower(0.8),
-                    new Wait(0.3),
-                    bot.intake.setPower(0.0)
-                )
+            new EndAfterEitherParallel(
+                new Wait(4.5),
+                bot.moveTo(bot.launchPose)
             ),
             bot.shootClose(Op.AUTO),
 
             bot.intake.setPower(-1.0),
-            bot.moveToImprecise(new Pose2d(14, -12, toRadians(-85))),
+            bot.moveToImprecise(new Pose2d(13, -12, toRadians(-85))),
             new EndAfterEitherParallel(
                 new Wait(2.8),
-                bot.moveToImprecise(new Pose2d(15, -57, toRadians(-85)), 1.0)
+                bot.moveToImprecise(new Pose2d(13, -57.5, toRadians(-85)), 1.0)
             ),
             new Wait(0.5),
-            bot.moveToImprecise(new Pose2d(15, -25, toRadians(-85))),
+            bot.moveToImprecise(new Pose2d(13, -40, toRadians(-85))),
             /*drive.actionBuilder(launchPose)
                 .strafeToLinearHeading(new Vector2d(13, -12), toRadians(-90))
                 .strafeToLinearHeading(new Vector2d(13, -50), toRadians(-90))
-                .build(),*/            bot.intake.setPower(0),
+                .build(),*/
+            bot.intake.setPower(0),
 
-            new ParallelAction(
-                bot.moveTo(bot.launchPose),
-                new SequentialAction(
-                    bot.intake.setPower(0.8),
-                    new Wait(0.3),
-                    bot.intake.setPower(0.0)
-                )
+            new EndAfterEitherParallel(
+                new Wait(4.5),
+                bot.moveTo(bot.launchPose)
             ),
             bot.shootClose(Op.AUTO),
             bot.moveTo(new Pose2d(-34.3, -9.8, Math.toRadians(54)))

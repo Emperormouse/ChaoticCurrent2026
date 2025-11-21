@@ -61,7 +61,7 @@ public class TeleOpBLUE extends LinearOpMode {
                 bot.intake.stop();
             }
 
-            if (Math.abs(gamepad1.left_trigger) > 0.1) {
+            if (Math.abs(gamepad1.left_trigger) > 0.2) {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
             }
 
@@ -85,6 +85,17 @@ public class TeleOpBLUE extends LinearOpMode {
                 bot.canon.setPower(-1.0);
             }
 
+            if (gamepad2.dpadRightWasPressed()) {
+                bot.canon.CLOSE_SPEED_ORIG -= 20;
+                bot.canon.CLOSE_SPEED_LAST -= 20;
+                bot.canon.CLOSE_SPEED -= 20;
+            }
+            if (gamepad2.dpadLeftWasPressed()) {
+                bot.canon.CLOSE_SPEED_ORIG += 20;
+                bot.canon.CLOSE_SPEED_LAST += 20;
+                bot.canon.CLOSE_SPEED += 20;
+            }
+
             return true;
         }
     }
@@ -101,9 +112,10 @@ public class TeleOpBLUE extends LinearOpMode {
             if (isOuttaking)
                 rx /= 3;
 
-            double speed = (gamepad1.left_bumper) ? 0.8 : 1.0;
+            double speed = (Math.abs(gamepad1.right_trigger) > 0.2) ? 0.33 : 1.0;
 
             bot.moveFieldCentric(x, y, rx, speed, Op.TELE);
+
             return true;
         }
     }
@@ -153,19 +165,18 @@ public class TeleOpBLUE extends LinearOpMode {
                 );
             }
 
-            /*if (gamepad1.aWasPressed()) {
+            if (gamepad1.aWasPressed()) {
                 currentAction = new SequentialAction(
-                    new ParallelAction(
-                        bot.moveTo(bot.launchPose),
-                        bot.canon.spinUp(bot.canon.CLOSE_SPEED)
-                    ),
-                    bot.shootCloseNew()
+                    bot.canon.spinUp(bot.canon.CLOSE_SPEED),
+                    new Wait(0.7),
+                    bot.shootClose(Op.TELE)
                 );
-            }*/
-
-            if (gamepad1.dpadRightWasPressed()) {
-                useAprilTag = !useAprilTag;
             }
+
+            if (gamepad1.yWasPressed()) {
+                currentAction = bot.moveToLaunchPos();
+            }
+
             if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
                 bot.canon.setPower(0);
                 bot.gate.closeManual();
