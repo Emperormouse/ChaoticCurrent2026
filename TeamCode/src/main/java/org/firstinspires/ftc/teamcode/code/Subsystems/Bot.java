@@ -4,19 +4,15 @@ import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.max;
 import static java.lang.Math.sin;
-import static java.lang.Math.tan;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -32,7 +28,6 @@ import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
 import org.firstinspires.ftc.teamcode.code.utility.Op;
-import org.firstinspires.ftc.teamcode.code.utility.PIDController;
 import org.firstinspires.ftc.teamcode.code.utility.Side;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -305,45 +300,6 @@ public class Bot {
         return new MoveToImprecise(targetPose, speed);
     }
 
-    public class MoveToContinuous implements Action {
-        private final double pRotational = 10.0;
-        private final double pX = 0.8;
-        private final double pY = 0.8;
-        private Pose2d targetPose;
-        private double speed;
-
-        public MoveToContinuous(Pose2d targetPose, double speed) {
-            this.targetPose = targetPose;
-            this.speed = speed;
-        }
-
-        public boolean run(TelemetryPacket t) {
-            localizer.update();
-            Pose2d currentPose = localizer.getPose();
-            double diffX = targetPose.position.x - currentPose.position.x;
-            double diffY = targetPose.position.y - currentPose.position.y;
-            double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
-
-            moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, speed, Op.AUTO);
-
-            if (Math.abs(diffX)>2.0 || Math.abs(diffY)>2.3 || Math.abs(diffR)>Math.toRadians(3.0)) {
-                return true;
-            } else {
-                frontLeft.setPower(0);
-                frontRight.setPower(0);
-                backLeft.setPower(0);
-                backRight.setPower(0);
-                return false;
-            }
-        }
-    }
-    public Action moveToContinuous(Pose2d targetPose) {
-        return new MoveToContinuous(targetPose, 1.0);
-    }
-    public Action moveToContinuous(Pose2d targetPose, double speed) {
-        return new MoveToContinuous(targetPose, speed);
-    }
-
     //infinitely settles
     public Action settle(Pose2d targetPose) {
         return new KeepRunning(new MoveTo(targetPose, 1.0));
@@ -354,6 +310,89 @@ public class Bot {
             new Wait(time),
             settle(targetPose)
         );
+    }
+
+
+    public class MoveToLaunchArc implements Action {
+        double targetDistance = 60;
+        double ky = (1.0 / 40);
+        double kr = (1.0 / 350);
+        double kr2 = (1.0 / 50);
+
+
+
+        public boolean run(TelemetryPacket telemetryPacket) {
+            double y = 0;
+            double r = 0;
+
+            double distanceDiff = 0;
+            double offset = 0;
+            double angleDiff = 0;
+
+            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+            int targetId;
+            Vector2d goalVec;
+            if (side == Side.RED) {
+                targetId = 24;
+                goalVec = new Vector2d(-58.3727f, 55.6425f);
+            } else {
+                targetId = 20;
+                goalVec = new Vector2d(-58.3727f, -55.6425f);
+            }
+
+            Pose2d botPose = localizer.getPose();
+            double dx = botPose.position.x - goalVec.x;
+            double dy = botPose.position.y - goalVec.y;
+
+            boolean found = false;
+            for (AprilTagDetection aprilTag : currentDetections) {
+                if (aprilTag.metadata != null) {
+                    if (aprilTag.id == targetId) {
+                        found = true;
+                        offset = -aprilTag.center.x + 300;
+                        r = offset * kr;
+
+                        double distance = aprilTag.ftcPose.y;
+                        distanceDiff = targetDistance - distance;
+                        y = distanceDiff * ky;
+
+                        telemetry.addData("Distance: ", distance);
+                    }
+                }
+            }
+
+            if (!found) {
+                double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
+                angleDiff = targetAngle - botPose.heading.toDouble();
+                r = Math.toDegrees(angleDiff) * kr2;
+
+                double distance = Math.sqrt(dx*dx + dy*dy);
+                distanceDiff = targetDistance - distance;
+                y = distanceDiff * ky;
+
+                telemetry.addData("targetAngle: ", Math.toDegrees(targetAngle));
+                telemetry.addData("dx: ", dx);
+                telemetry.addData("dy: ", dy);
+                telemetry.addData("r2: ", r);
+            }
+
+
+
+            moveRelative(0, y, r, 1.0);
+
+            if (!found || Math.abs(distanceDiff) > 4 || Math.abs(offset) > 20) {
+                return true;
+            } else {
+                frontLeft.setPower(0);
+                frontRight.setPower(0);
+                backLeft.setPower(0);
+                backRight.setPower(0);
+                return false;
+            }
+        }
+    }
+    public Action moveToLaunchArc() {
+        return new MoveToLaunchArc();
     }
 
 
@@ -411,114 +450,6 @@ public class Bot {
                     detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)-90));
             }
         }
-    }
-
-    /*public void goToLaunchPos(Side side, Gamepad gamepad1) {
-        double targetDistance = 60;
-        double ky = (1.0 / 40);
-        double kr = (1.0 / 400);
-        double y = 0;
-        double x = 0;
-        double r = 0;
-
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        int targetId;
-        if (side == Side.RED)
-            targetId = 24;
-        else
-            targetId = 20;
-
-        for (AprilTagDetection aprilTag : currentDetections) {
-            if (aprilTag.metadata != null) {
-                if (aprilTag.id == targetId) {
-                    double offset = -aprilTag.center.x + 300;
-                    r = offset * kr;
-
-                    double distance = aprilTag.ftcPose.y;
-                    double distanceDiff = (targetDistance - distance);
-                    y = distanceDiff * ky;
-
-                    x = gamepad1.left_stick_x * 0.75;
-
-                    telemetry.addData("Distance: ", distance);
-                }
-            }
-        }
-
-        moveRelative(x, y, r, 1.0);
-    }*/
-
-    public class MoveToLaunchPos implements Action {
-        double targetDistance = 60;
-        double ky = (1.0 / 40);
-        double kr = (1.0 / 350);
-        double kr2 = (1.0 / 50);
-
-        double distanceDiff = 0;
-        double offset = 0;
-
-        public boolean run(TelemetryPacket telemetryPacket) {
-            double y = 0;
-            double r = 0;
-
-            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-            int targetId;
-            if (side == Side.RED)
-                targetId = 24;
-            else
-                targetId = 20;
-
-            boolean found = false;
-            for (AprilTagDetection aprilTag : currentDetections) {
-                if (aprilTag.metadata != null) {
-                    if (aprilTag.id == targetId) {
-                        found = true;
-                        offset = -aprilTag.center.x + 300;
-                        r = offset * kr;
-
-                        double distance = aprilTag.ftcPose.y;
-                        distanceDiff = targetDistance - distance;
-                        y = distanceDiff * ky;
-
-                        telemetry.addData("Distance: ", distance);
-                    }
-                }
-            }
-
-            Pose2d botPose = localizer.getPose();
-            double dx = -1 * (-58.3727f - botPose.position.x);
-            double dy = -55.6425f - botPose.position.y;
-            double targetAngle = Math.atan2(dx, dy) - Math.PI/2;
-            double r2 = Math.toDegrees(targetAngle - botPose.heading.toDouble()) * kr2;
-
-            double distance2 = Math.sqrt(dx*dx + dy*dy);
-            double distanceDiff2 = targetDistance - distance2;
-            double y2 = distanceDiff2 * ky;
-
-            telemetry.addData("targetAngle: ", Math.toDegrees(targetAngle));
-            telemetry.addData("dx: ", dx);
-            telemetry.addData("dy: ", dy);
-            telemetry.addData("r2: ", r2);
-
-            if (found)
-                moveRelative(0, y, r, 1.0);
-            else
-                moveRelative(0, y2, r2, 1.0);
-
-
-            if (!found || Math.abs(distanceDiff) > 4 || Math.abs(offset) > 20) {
-                return true;
-            } else {
-                frontLeft.setPower(0);
-                frontRight.setPower(0);
-                backLeft.setPower(0);
-                backRight.setPower(0);
-                return false;
-            }
-        }
-    }
-    public Action moveToLaunchPos() {
-        return new MoveToLaunchPos();
     }
 
     public static AprilTagLibrary getDecodeTagLibrary(){

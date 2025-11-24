@@ -100,27 +100,6 @@ public class TeleOpBLUE extends LinearOpMode {
         }
     }
 
-    //This is code for field-centric movement, which means that the robot will move the same
-    //way regardless of the direction that its facing. It's meant to be called many times in a loop
-    //It's structured as an Action however since this teleOp is based on roadrunner Actions
-    private class FieldCentricMovement implements Action {
-        public boolean run(@NonNull TelemetryPacket t) {
-            double y = -gamepad1.left_stick_y;
-            double x = -gamepad1.left_stick_x * 1.1;
-            double rx = -gamepad1.right_stick_x;
-
-            if (isOuttaking)
-                rx /= 3;
-
-            double speed = (Math.abs(gamepad1.right_trigger) > 0.2) ? 0.33 : 1.0;
-
-            bot.moveFieldCentric(x, y, rx, speed, Op.TELE);
-
-            return true;
-        }
-    }
-    //END OF MANUAL CONTROLS
-
     @Override
     public void runOpMode() {
         //Pose2d startPose = new Pose2d(60.1, -12.7, 0);
@@ -174,7 +153,7 @@ public class TeleOpBLUE extends LinearOpMode {
             }
 
             if (gamepad1.yWasPressed()) {
-                currentAction = bot.moveToLaunchPos();
+                currentAction = bot.moveToLaunchArc();
             }
 
             if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
@@ -192,6 +171,26 @@ public class TeleOpBLUE extends LinearOpMode {
             telemetry.addData("Canon power: ", bot.canon.motor.getPower());
             telemetry.addData("Canon speed: ", bot.canon.motor.getVelocity());
             telemetry.addData("Pos: ", currentPose);
+        }
+    }
+
+    //This is code for field-centric movement, which means that the robot will move the same
+    //way regardless of the direction that its facing. It's meant to be called many times in a loop
+    //It's structured as an Action however since this teleOp is based on roadrunner Actions
+    private class FieldCentricMovement implements Action {
+        public boolean run(@NonNull TelemetryPacket t) {
+            double y = -gamepad1.left_stick_y;
+            double x = -gamepad1.left_stick_x * 1.1;
+            double rx = -gamepad1.right_stick_x;
+
+            if (isOuttaking)
+                rx /= 3;
+
+            double speed = (Math.abs(gamepad1.right_trigger) > 0.2) ? 0.33 : 1.0;
+
+            bot.moveFieldCentric(x, y, rx, speed, Op.TELE);
+
+            return true;
         }
     }
 
