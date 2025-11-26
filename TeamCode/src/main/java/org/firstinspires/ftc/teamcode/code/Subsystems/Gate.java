@@ -17,11 +17,11 @@ public class Gate {
 
     public void openManual() {
         left.setPosition(0.3);
-        right.setPosition(0.05);
+        right.setPosition(0.08);
     }
     public void closeManual() {
         left.setPosition(0.05);
-        right.setPosition(0.25);
+        right.setPosition(0.275);
     }
     public void holdManual() {
         left.setPosition(left.getPosition());

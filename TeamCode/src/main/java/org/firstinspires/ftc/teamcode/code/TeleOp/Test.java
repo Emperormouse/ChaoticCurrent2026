@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 public class Test extends LinearOpMode {
     public void runOpMode() {
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
-        Bot bot = new Bot(hardwareMap, drive.localizer, Side.BLUE, telemetry);
+        Bot bot = new Bot(hardwareMap, drive, Side.BLUE, telemetry);
         bot.initialize();
 
         waitForStart();

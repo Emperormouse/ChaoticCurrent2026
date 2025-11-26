@@ -130,7 +130,7 @@ public class TeleOpRED extends LinearOpMode {
         drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0)); //The start position,
         // which is on the left tile of the far launch zone, with the intake up against the wall.
 
-        bot = new Bot(hardwareMap, drive.localizer, side, telemetry);
+        bot = new Bot(hardwareMap, drive, side, telemetry);
         bot.initialize();
 
         TelemetryPacket t = new TelemetryPacket();

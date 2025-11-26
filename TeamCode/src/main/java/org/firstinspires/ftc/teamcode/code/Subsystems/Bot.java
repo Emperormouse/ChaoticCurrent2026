@@ -24,6 +24,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Quaternion;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.Localizer;
+import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
@@ -41,6 +42,7 @@ public class Bot {
     public Gate gate;
     public Intake intake;
     public DistanceSensor distanceSensor;
+    MecanumDrive drive;
     public Localizer localizer;
 
     public AprilTagProcessor aprilTag;
@@ -61,11 +63,12 @@ public class Bot {
     Telemetry telemetry;
     HardwareMap hardwareMap;
 
-    public Bot(HardwareMap hardwareMap, Localizer localizer, Side side, Telemetry telemetry) {
+    public Bot(HardwareMap hardwareMap, MecanumDrive drive, Side side, Telemetry telemetry) {
         canon = new Canon(hardwareMap);
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap, this);
-        this.localizer = localizer;
+        this.drive = drive;
+        this.localizer = drive.localizer;
         this.telemetry = telemetry;
         this.hardwareMap = hardwareMap;
         this.side = side;
@@ -110,7 +113,11 @@ public class Bot {
                 //canon.setPowerInstant(0),
                 gate.close()
             ),
-            new KeepRunning(canon.setVelInstant(canon.CLOSE_SPEED))
+            new SequentialAction(
+                canon.setVelInstant(canon.CLOSE_SPEED_FIRST),
+                new Wait(3.0),
+                canon.setVelInstant(canon.CLOSE_SPEED)
+            )
         );
     }
 
@@ -246,10 +253,7 @@ public class Bot {
             {
                 return true;
             } else {
-                frontLeft.setPower(0);
-                frontRight.setPower(0);
-                backLeft.setPower(0);
-                backRight.setPower(0);
+                stop();
                 return false;
             }
         }
@@ -285,10 +289,7 @@ public class Bot {
             if (Math.abs(diffX)>2.0 || Math.abs(diffY)>2.0 || Math.abs(diffR)>Math.toRadians(2.5)) {
                 return true;
             } else {
-                frontLeft.setPower(0);
-                frontRight.setPower(0);
-                backLeft.setPower(0);
-                backRight.setPower(0);
+                stop();
                 return false;
             }
         }
@@ -314,7 +315,7 @@ public class Bot {
 
 
     public class MoveToLaunchArc implements Action {
-        double targetDistance = 60;
+        double targetDistance = 58;
         double ky = (1.0 / 40);
         double kr = (1.0 / 350);
         double kr2 = (1.0 / 50);
@@ -322,6 +323,7 @@ public class Bot {
 
 
         public boolean run(TelemetryPacket telemetryPacket) {
+            double x = 0;
             double y = 0;
             double r = 0;
 
@@ -376,17 +378,23 @@ public class Bot {
                 telemetry.addData("r2: ", r);
             }
 
+            double angle2 = Math.toDegrees(Math.atan2(Math.abs(dy), Math.abs(dx)));
+            double targetAngle2 = 70;
+            double targetAngle2Diff = targetAngle2 - angle2;
 
+            x = targetAngle2Diff * (1.0 / 20);
 
-            moveRelative(0, y, r, 1.0);
+            moveRelative(x, y, r, 1.0);
 
-            if (!found || Math.abs(distanceDiff) > 4 || Math.abs(offset) > 20) {
+            telemetry.addData("found: ", found);
+            telemetry.addData("distanceDiff: ", distanceDiff);
+            telemetry.addData("offset: ", offset);
+            telemetry.addData("angle2: ", angle2);
+
+            if (!found || Math.abs(distanceDiff) > 4 || Math.abs(offset) > 16 || angle2 < 63 || angle2 > 77) {
                 return true;
             } else {
-                frontLeft.setPower(0);
-                frontRight.setPower(0);
-                backLeft.setPower(0);
-                backRight.setPower(0);
+                stop();
                 return false;
             }
         }
@@ -395,6 +403,12 @@ public class Bot {
         return new MoveToLaunchArc();
     }
 
+    public void stop() {
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
+    }
 
     // ===== APRIL TAG =====
 
@@ -405,6 +419,7 @@ public class Bot {
                 localizer.setPose(aprilPose);
             }
         }
+        drive.updatePoseEstimate();
     }
 
     public class UpdatePoseUsingAprilTagAction implements Action {

@@ -25,7 +25,7 @@ public class AutoRED extends LinearOpMode {
 
     public void runOpMode() {
         drive = new MecanumDrive(hardwareMap, new Pose2d(-56.86, 47, Math.toRadians(-56.25)));
-        bot = new Bot(hardwareMap, drive.localizer, Side.RED, telemetry);
+        bot = new Bot(hardwareMap, drive, Side.RED, telemetry);
 
         bot.initialize();
         long startTime = System.currentTimeMillis();

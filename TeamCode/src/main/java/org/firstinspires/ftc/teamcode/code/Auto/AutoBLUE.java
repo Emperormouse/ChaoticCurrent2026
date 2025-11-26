@@ -30,7 +30,7 @@ public class AutoBLUE extends LinearOpMode {
 
     public void runOpMode() {
         drive = new MecanumDrive(hardwareMap, new Pose2d(-49.5, -50, Math.toRadians(56)));
-        bot = new Bot(hardwareMap, drive.localizer, Side.BLUE, telemetry);
+        bot = new Bot(hardwareMap, drive, Side.BLUE, telemetry);
 
         bot.initialize();
         long startTime = System.currentTimeMillis();
@@ -47,7 +47,7 @@ public class AutoBLUE extends LinearOpMode {
         Action pgp = new SequentialAction(
             new EndAfterEitherParallel(
                 new Wait(5.5),
-                bot.moveTo(bot.launchPose)
+                bot.moveToLaunchArc()
             ),
             new Wait(0.5),
             bot.shootClose(Op.AUTO),
@@ -74,7 +74,7 @@ public class AutoBLUE extends LinearOpMode {
 
             new EndAfterEitherParallel(
                 new Wait(4.5),
-                bot.moveTo(bot.launchPose)
+                bot.moveToLaunchArc()
             ),
             bot.shootClose(Op.AUTO),
 
@@ -94,7 +94,7 @@ public class AutoBLUE extends LinearOpMode {
 
             new EndAfterEitherParallel(
                 new Wait(4.5),
-                bot.moveTo(bot.launchPose)
+                bot.moveToLaunchArc()
             ),
             bot.shootClose(Op.AUTO),
             bot.moveTo(new Pose2d(-34.3, -9.8, Math.toRadians(54)))
@@ -149,8 +149,7 @@ public class AutoBLUE extends LinearOpMode {
 
         Actions.runBlocking(new ParallelAction(
                 chosenPath,
-                bot.updatePoseUsingAprilTagAction(),
-                new KeepRunning(bot.canon.setVelInstant(bot.canon.CLOSE_SPEED))
+                bot.updatePoseUsingAprilTagAction()
             )
         );
     }

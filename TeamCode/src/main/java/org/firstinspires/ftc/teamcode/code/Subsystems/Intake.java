@@ -60,12 +60,31 @@ public class Intake {
     public class IntakeWhenAtSpeed implements  Action {
         private long start;
         private boolean firstTime = true;
+        //15 length
+        private boolean[] arr = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+        private long lastTime = 0;
+
         public boolean run(TelemetryPacket t) {
+            boolean isAtSpeed = Math.abs(bot.canon.motor.getVelocity() - bot.canon.targetVel) <= 40;
+
+            if (System.currentTimeMillis() > lastTime + 20) {
+                lastTime = System.currentTimeMillis();
+                for (int i = arr.length-1; i >= 1; i--) {
+                    arr[i] = arr[i-1];
+                }
+                arr[0] = isAtSpeed;
+            }
+
             if (firstTime) {
                 firstTime = false;
                 start = System.currentTimeMillis();
             }
-            if (Math.abs(bot.canon.motor.getVelocity()) + 30 >= Math.abs(bot.canon.CLOSE_SPEED)) {
+
+            boolean lastFiveChecksWereTrue = true;
+            for (boolean b : arr) {
+                lastFiveChecksWereTrue &= b;
+            }
+            if (lastFiveChecksWereTrue) {
                 intake();
             } else {
                 stop();
