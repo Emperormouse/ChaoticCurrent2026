@@ -101,7 +101,7 @@ public class Bot {
     }
 
     public Action shootClose(Op opmode) {
-        double time = (opmode == Op.AUTO) ? 4.3 : 10;
+        double time = (opmode == Op.AUTO) ? 6.5 : 10;
         return new EndAfterFirstParallel(
             new SequentialAction(
                 gate.open(),
@@ -115,7 +115,7 @@ public class Bot {
             ),
             new SequentialAction(
                 canon.setVelInstant(canon.CLOSE_SPEED_FIRST),
-                new Wait(3.0),
+                new Wait(2.4),
                 canon.setVelInstant(canon.CLOSE_SPEED)
             )
         );
@@ -365,6 +365,9 @@ public class Bot {
 
             if (!found) {
                 double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
+                if (targetAngle < 0) {
+                    targetAngle += 2*Math.PI;
+                }
                 angleDiff = targetAngle - botPose.heading.toDouble();
                 r = Math.toDegrees(angleDiff) * kr2;
 
@@ -373,6 +376,8 @@ public class Bot {
                 y = distanceDiff * ky;
 
                 telemetry.addData("targetAngle: ", Math.toDegrees(targetAngle));
+                telemetry.addData("actAngle: ", botPose.heading.toDouble());
+                telemetry.addData("r: ", r);
                 telemetry.addData("dx: ", dx);
                 telemetry.addData("dy: ", dy);
                 telemetry.addData("r2: ", r);
@@ -384,7 +389,11 @@ public class Bot {
 
             x = targetAngle2Diff * (1.0 / 20);
 
-            moveRelative(x, y, r, 1.0);
+            if (found || Math.abs(Math.toDegrees(angleDiff)) < 45) {
+                moveRelative(x, y, r, 1.0);
+            } else {
+                moveRelative(0, 0, r, 1.0);
+            }
 
             telemetry.addData("found: ", found);
             telemetry.addData("distanceDiff: ", distanceDiff);

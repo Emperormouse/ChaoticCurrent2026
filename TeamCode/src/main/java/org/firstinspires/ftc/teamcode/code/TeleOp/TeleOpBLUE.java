@@ -20,6 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
+import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
 import org.firstinspires.ftc.teamcode.code.utility.Op;
 import org.firstinspires.ftc.teamcode.code.utility.Side;
@@ -146,13 +147,20 @@ public class TeleOpBLUE extends LinearOpMode {
 
             if (gamepad1.xWasPressed()) {
                 currentAction = new SequentialAction(
-                    bot.moveToLaunchArc(),
+                    new EndAfterFirstParallel(
+                        bot.moveToLaunchArc(),
+                        bot.canon.setVelInstant(bot.canon.CLOSE_SPEED_FIRST)
+                    ),
+                    new Wait(0.5),
                     bot.shootClose(Op.TELE)
                 );
             }
 
             if (gamepad1.yWasPressed()) {
-                currentAction = bot.moveToLaunchArc();
+                currentAction = new EndAfterFirstParallel(
+                    bot.moveToLaunchArc(),
+                    bot.canon.setVelInstant(bot.canon.CLOSE_SPEED_FIRST)
+                );
             }
 
             if (gamepad1.aWasPressed()) {

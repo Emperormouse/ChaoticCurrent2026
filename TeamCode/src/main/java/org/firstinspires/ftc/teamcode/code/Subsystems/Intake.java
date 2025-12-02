@@ -6,10 +6,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-import java.util.Set;
-
 public class Intake {
     private DcMotorEx motor;
     private Bot bot;
@@ -67,7 +63,7 @@ public class Intake {
         public boolean run(TelemetryPacket t) {
             boolean isAtSpeed = Math.abs(bot.canon.motor.getVelocity() - bot.canon.targetVel) <= 40;
 
-            if (System.currentTimeMillis() > lastTime + 20) {
+            if (System.currentTimeMillis() > lastTime + 15) {
                 lastTime = System.currentTimeMillis();
                 for (int i = arr.length-1; i >= 1; i--) {
                     arr[i] = arr[i-1];
@@ -80,11 +76,12 @@ public class Intake {
                 start = System.currentTimeMillis();
             }
 
-            boolean lastFiveChecksWereTrue = true;
+            int numFalse = 0;
             for (boolean b : arr) {
-                lastFiveChecksWereTrue &= b;
+                if (!b)
+                    numFalse++;
             }
-            if (lastFiveChecksWereTrue) {
+            if (numFalse <= 3) {
                 intake();
             } else {
                 stop();

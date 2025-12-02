@@ -12,7 +12,7 @@ import java.util.Set;
 public class Canon {
     public DcMotorEx motor;
 
-    public int CLOSE_SPEED_ORIG = -2040;
+    public int CLOSE_SPEED_ORIG = -2050;
     public int CLOSE_SPEED_FIRST = -2080;
     public int CLOSE_SPEED_LAST = -980;
     public int CLOSE_SPEED = CLOSE_SPEED_ORIG;

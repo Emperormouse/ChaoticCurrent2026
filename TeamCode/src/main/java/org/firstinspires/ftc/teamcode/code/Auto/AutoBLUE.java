@@ -46,7 +46,7 @@ public class AutoBLUE extends LinearOpMode {
 
         Action pgp = new SequentialAction(
             new EndAfterEitherParallel(
-                new Wait(5.5),
+                new Wait(3.0),
                 bot.moveToLaunchArc()
             ),
             new Wait(0.5),
@@ -59,13 +59,14 @@ public class AutoBLUE extends LinearOpMode {
                 .strafeToSplineHeading(new Vector2d(30, -15), toRadians(30))
                 .build(),*/
             bot.intake.setPower(-1.0),
-            bot.moveToImprecise(new Pose2d(-11, -12, toRadians(-85))),
+            bot.moveToImprecise(new Pose2d(-11, -12, toRadians(-90))),
             new EndAfterEitherParallel(
                 new Wait(2.3),
-                bot.moveToImprecise(new Pose2d(-11, -53.5, toRadians(-85)), 1.0)
+                bot.moveToImprecise(new Pose2d(-11, -53, toRadians(-90)), 1.0)
             ),
             new Wait(0.8),
             /*drive.actionBuilder(launchPose)
+
                 //.setTangent(toRadians(180))
                 .strafeToLinearHeading(new Vector2d(-11, -12), toRadians(-90))
                 .strafeToLinearHeading(new Vector2d(-11, -50), toRadians(-90))
@@ -76,19 +77,19 @@ public class AutoBLUE extends LinearOpMode {
                 new Wait(4.5),
                 bot.moveToLaunchArc()
             ),
+            new Wait(0.5),
             bot.shootClose(Op.AUTO),
 
             bot.intake.setPower(-1.0),
-            bot.moveToImprecise(new Pose2d(13, -12, toRadians(-85))),
+            bot.moveToImprecise(new Pose2d(32.5, -6, toRadians(-85))),
             new EndAfterEitherParallel(
                 new Wait(2.8),
-                bot.moveToImprecise(new Pose2d(13, -57.5, toRadians(-85)), 1.0)
+                bot.moveToImprecise(new Pose2d(32.5, -57.5, toRadians(-85)), 1.0)
             ),
             new Wait(0.5),
-            bot.moveToImprecise(new Pose2d(13, -40, toRadians(-85))),
+            //bot.moveToImprecise(new Pose2d(25, -40, toRadians(-85))),
             /*drive.actionBuilder(launchPose)
-                .strafeToLinearHeading(new Vector2d(13, -12), toRadians(-90))
-                .strafeToLinearHeading(new Vector2d(13, -50), toRadians(-90))
+                .strafeToLinearHeading(new Vector2d(13, -12), toRadians(-90))                .strafeToLinearHeading(new Vector2d(13, -50), toRadians(-90))
                 .build(),*/
             bot.intake.setPower(0),
 
@@ -96,8 +97,9 @@ public class AutoBLUE extends LinearOpMode {
                 new Wait(4.5),
                 bot.moveToLaunchArc()
             ),
-            bot.shootClose(Op.AUTO),
-            bot.moveTo(new Pose2d(-34.3, -9.8, Math.toRadians(54)))
+            new Wait(0.5),
+            bot.shootClose(Op.AUTO)
+            //bot.moveTo(new Pose2d(-34.3, -9.8, Math.toRadians(54)))
         );
 
 
