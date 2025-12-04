@@ -7,27 +7,17 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import java.util.Set;
-
 public class Canon {
     public DcMotorEx motor;
 
-    public int CLOSE_SPEED_ORIG = -2050;
     public int CLOSE_SPEED_FIRST = -2080;
-    public int CLOSE_SPEED_LAST = -980;
-    public int CLOSE_SPEED = CLOSE_SPEED_ORIG;
+    public int CLOSE_SPEED = -2060;
     public int targetVel = CLOSE_SPEED;
-
-    public int FAR_SPEED = -1100;
-    public double closePower = 0;
 
     public Canon(HardwareMap hardwareMap) {
         motor = hardwareMap.get(DcMotorEx.class, "left_launcher");
         motor.setDirection(DcMotorSimple.Direction.REVERSE);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        //motor.setVe
-
-        //motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void setPower(double p) {
@@ -36,7 +26,6 @@ public class Canon {
 
     private class SpinUp implements Action {
         private double targetSpeed;
-        //private final double ki = (1.0 / 25_000);
 
         public SpinUp(double target) {
             targetSpeed = target;
@@ -62,9 +51,9 @@ public class Canon {
         }
     }
 
-    public class SetPowerInstant implements Action {
+    public class SetPowerAction implements Action {
         private double power;
-        public SetPowerInstant(double pow) {
+        public SetPowerAction(double pow) {
             power = pow;
         }
         public boolean run(TelemetryPacket t) {
@@ -73,15 +62,22 @@ public class Canon {
         }
     }
 
-    public class SetVelInstant implements Action {
+    public class SetVelAction implements Action {
         private double vel;
-        public SetVelInstant(double vel) {
+        public SetVelAction(double vel) {
             this.vel = vel;
         }
         public boolean run(TelemetryPacket t) {
             motor.setVelocity(vel);
             targetVel = (int)vel;
             return false;
+        }
+    }
+
+    public class WaitUntilAtSpeed implements  Action {
+        public boolean run(TelemetryPacket t) {
+            boolean isAtSpeed = Math.abs(motor.getVelocity() - targetVel) <= 40;
+            return !isAtSpeed;
         }
     }
 
@@ -102,12 +98,13 @@ public class Canon {
     public Action maintainSpeed(double target) {
         return new MaintainSpeed(target);
     }
-
-    public Action setPowerInstant(double power) {
-        return new SetPowerInstant(power);
+    public Action setPowerAction(double pow) {
+        return new SetPowerAction(pow);
     }
-
-    public Action setVelInstant(double vel) {
-        return new SetVelInstant(vel);
+    public Action waitUntilAtSpeed() {
+        return new WaitUntilAtSpeed();
+    }
+    public Action setVelAction(double vel) {
+        return new SetVelAction(vel);
     }
 }

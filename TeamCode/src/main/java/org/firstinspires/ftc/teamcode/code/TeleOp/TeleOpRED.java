@@ -61,6 +61,10 @@ public class TeleOpRED extends LinearOpMode {
                 bot.intake.stop();
             }
 
+            if (Math.abs(gamepad1.left_trigger) > 0.2) {
+                bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
+            }
+
             if (gamepad2.a) {
                 bot.gate.openManual();
             } else if (gamepad2.b) {
@@ -69,35 +73,25 @@ public class TeleOpRED extends LinearOpMode {
                 bot.gate.holdManual();
             }
 
-            if (gamepad2.dpad_up) {
-                isOuttaking = true;
-                bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
+            if (gamepad2.dpadUpWasPressed()) {
+                /*isOuttaking = true;
+                bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);*/
+                bot.canon.CLOSE_SPEED_FIRST -= 10;
             }
-            if (gamepad2.dpad_down) {
-                isOuttaking = false;
-                bot.canon.motor.setPower(0);
-            }
-            if (gamepad2.dpad_right) {
-                isOuttaking = false;
-                bot.canon.motor.setPower(-bot.canon.CLOSE_SPEED);
+            if (gamepad2.dpadDownWasPressed()) {
+                /*isOuttaking = false;
+                bot.canon.motor.setPower(0);*/
+                bot.canon.CLOSE_SPEED_FIRST += 10;
             }
             if (gamepad2.y) {
-                bot.canon.setPower(-1.0);
-            }
-
-            if (Math.abs(gamepad1.left_trigger) >= 0.2) {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
             }
 
             if (gamepad2.dpadRightWasPressed()) {
-                bot.canon.CLOSE_SPEED_ORIG -= 20;
-                bot.canon.CLOSE_SPEED_LAST -= 20;
-                bot.canon.CLOSE_SPEED -= 20;
+                bot.canon.CLOSE_SPEED -= 10;
             }
             if (gamepad2.dpadLeftWasPressed()) {
-                bot.canon.CLOSE_SPEED_ORIG += 20;
-                bot.canon.CLOSE_SPEED_LAST += 20;
-                bot.canon.CLOSE_SPEED += 20;
+                bot.canon.CLOSE_SPEED += 10;
             }
 
             return true;

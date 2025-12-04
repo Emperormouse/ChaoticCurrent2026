@@ -101,7 +101,7 @@ public class Bot {
     }
 
     public Action shootClose(Op opmode) {
-        double time = (opmode == Op.AUTO) ? 6.5 : 10;
+        double time = (opmode == Op.AUTO) ? 5.5 : 10;
         return new EndAfterFirstParallel(
             new SequentialAction(
                 gate.open(),
@@ -114,14 +114,14 @@ public class Bot {
                 gate.close()
             ),
             new SequentialAction(
-                canon.setVelInstant(canon.CLOSE_SPEED_FIRST),
+                canon.setVelAction(canon.CLOSE_SPEED_FIRST),
                 new Wait(2.4),
-                canon.setVelInstant(canon.CLOSE_SPEED)
+                canon.setVelAction(canon.CLOSE_SPEED)
             )
         );
     }
 
-    public Action shootCloseNew() {
+    /*public Action shootCloseNew() {
         return new SequentialAction(
             canon.spinUp(canon.CLOSE_SPEED + 10),
             gate.open(),
@@ -136,7 +136,7 @@ public class Bot {
             canon.setPowerInstant(0),
             gate.close()
         );
-    }
+    }*/
 
     public void moveFieldCentric(double x, double y, double r, Op opmode) {
         moveFieldCentric(x, y, r, 1.0, opmode);
@@ -313,14 +313,12 @@ public class Bot {
         );
     }
 
+    public double targetDistance = 52.0;
 
     public class MoveToLaunchArc implements Action {
-        double targetDistance = 58;
         double ky = (1.0 / 40);
         double kr = (1.0 / 350);
-        double kr2 = (1.0 / 50);
-
-
+        double kr2 = (1.0 / 70);
 
         public boolean run(TelemetryPacket telemetryPacket) {
             double x = 0;
@@ -365,7 +363,7 @@ public class Bot {
 
             if (!found) {
                 double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
-                if (targetAngle < 0) {
+                if (targetAngle < -Math.PI) {
                     targetAngle += 2*Math.PI;
                 }
                 angleDiff = targetAngle - botPose.heading.toDouble();

@@ -57,14 +57,21 @@ public class Intake {
         private long start;
         private boolean firstTime = true;
         //15 length
-        private boolean[] arr = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+        private int arrLen = 10;
+        private boolean[] arr = new boolean[arrLen];
         private long lastTime = 0;
+
+        public IntakeWhenAtSpeed() {
+            for (int i=0; i<arr.length; i++) {
+                arr[i] = false;
+            }
+        }
 
         public boolean run(TelemetryPacket t) {
             boolean isAtSpeed = Math.abs(bot.canon.motor.getVelocity() - bot.canon.targetVel) <= 40;
-
-            if (System.currentTimeMillis() > lastTime + 15) {
+            if (System.currentTimeMillis() > lastTime + 10) {
                 lastTime = System.currentTimeMillis();
+                //Shift everything right one place
                 for (int i = arr.length-1; i >= 1; i--) {
                     arr[i] = arr[i-1];
                 }
@@ -78,13 +85,20 @@ public class Intake {
 
             int numFalse = 0;
             for (boolean b : arr) {
-                if (!b)
-                    numFalse++;
+                if (!b) numFalse++;
             }
-            if (numFalse <= 3) {
+
+            boolean allTrueInFirstHalf = true;
+            for (int i=0; i<arr.length/2; i++) {
+                allTrueInFirstHalf &= arr[i];
+            }
+
+            if (allTrueInFirstHalf) {
                 intake();
-            } else {
+            } else if (numFalse >= 3) {
                 stop();
+            } else {
+                intake();
             }
             return true;
         }
@@ -94,20 +108,8 @@ public class Intake {
     public class IntakeUntilBallShot implements  Action {
         public boolean run(TelemetryPacket t) {
             if (Math.abs(bot.canon.motor.getVelocity()) + 30 >= Math.abs(bot.canon.CLOSE_SPEED)) {
-                //intake();
-                motor.setPower(-1.0);
-                return true;
-            } else {
-                stop();
-                return false;
-            }
-        }
-    }
-
-    public class IntakeUntilBallShotLAST implements  Action {
-        public boolean run(TelemetryPacket t) {
-            if (Math.abs(bot.canon.motor.getVelocity()) + 30 >= Math.abs(bot.canon.CLOSE_SPEED_LAST)) {
                 intake();
+                motor.setPower(-1.0);
                 return true;
             } else {
                 stop();
@@ -135,9 +137,6 @@ public class Intake {
     }
     public Action intakeUntilBallShot() {
         return new IntakeUntilBallShot();
-    }
-    public Action intakeUntilBallShotLAST() {
-        return new IntakeUntilBallShotLAST();
     }
     public Action setPower(double pow) {
         return new SetPowerAction(pow);

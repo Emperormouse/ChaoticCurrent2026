@@ -16,7 +16,7 @@ public class Gate {
     }
 
     public void openManual() {
-        left.setPosition(0.3);
+        left.setPosition(0.25);
         right.setPosition(0.08);
     }
     public void closeManual() {

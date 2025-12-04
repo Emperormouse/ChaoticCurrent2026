@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.dashboard.SendFun;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
@@ -21,6 +22,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
+import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
 import org.firstinspires.ftc.teamcode.code.utility.Op;
 import org.firstinspires.ftc.teamcode.code.utility.Side;
@@ -89,15 +91,20 @@ public class TeleOpBLUE extends LinearOpMode {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
             }
 
-            if (gamepad2.dpadRightWasPressed()) {
-                bot.canon.CLOSE_SPEED_ORIG -= 10;
-                bot.canon.CLOSE_SPEED_LAST -= 10;
-                bot.canon.CLOSE_SPEED -= 10;
-            }
-            if (gamepad2.dpadLeftWasPressed()) {
-                bot.canon.CLOSE_SPEED_ORIG += 10;
-                bot.canon.CLOSE_SPEED_LAST += 10;
-                bot.canon.CLOSE_SPEED += 10;
+            if (gamepad2.right_bumper) {
+                if (gamepad2.dpadRightWasPressed()) {
+                    bot.targetDistance += 1;
+                }
+                if (gamepad2.dpadLeftWasPressed()) {
+                    bot.targetDistance -= 1;
+                }
+            } else {
+                if (gamepad2.dpadRightWasPressed()) {
+                    bot.canon.CLOSE_SPEED -= 10;
+                }
+                if (gamepad2.dpadLeftWasPressed()) {
+                    bot.canon.CLOSE_SPEED += 10;
+                }
             }
 
             return true;
@@ -128,7 +135,8 @@ public class TeleOpBLUE extends LinearOpMode {
             telemetry.update();
 
             double currentVoltage = voltageSensor.getVoltage();
-            telemetry.addData("Battery Voltage", "%.2fV", currentVoltage);
+
+            telemetry.addData("Target Distance: ", bot.targetDistance);
             telemetry.addData("Target Speed: ", bot.canon.CLOSE_SPEED);
             telemetry.addData("Target Speed First: ", bot.canon.CLOSE_SPEED_FIRST);
 
@@ -149,17 +157,23 @@ public class TeleOpBLUE extends LinearOpMode {
                 currentAction = new SequentialAction(
                     new EndAfterFirstParallel(
                         bot.moveToLaunchArc(),
-                        bot.canon.setVelInstant(bot.canon.CLOSE_SPEED_FIRST)
+                        bot.canon.setVelAction(bot.canon.CLOSE_SPEED_FIRST)
                     ),
-                    new Wait(0.5),
-                    bot.shootClose(Op.TELE)
+                    new EndAfterFirstParallel(
+                        new SequentialAction(
+                            new Wait(0.5),
+                            bot.shootClose(Op.TELE)
+                        ),
+                        new KeepRunning(bot.moveToLaunchArc())
+                    )
+
                 );
             }
 
             if (gamepad1.yWasPressed()) {
                 currentAction = new EndAfterFirstParallel(
                     bot.moveToLaunchArc(),
-                    bot.canon.setVelInstant(bot.canon.CLOSE_SPEED_FIRST)
+                    bot.canon.setVelAction(bot.canon.CLOSE_SPEED_FIRST)
                 );
             }
 
