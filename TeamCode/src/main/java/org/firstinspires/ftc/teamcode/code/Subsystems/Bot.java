@@ -101,7 +101,7 @@ public class Bot {
     }
 
     public Action shootClose(Op opmode) {
-        double time = (opmode == Op.AUTO) ? 5.5 : 10;
+        double time = (opmode == Op.AUTO) ? 5 : 10;
         return new EndAfterFirstParallel(
             new SequentialAction(
                 gate.open(),
@@ -220,6 +220,23 @@ public class Bot {
         backLeft.setPower(blPower / denominator);
         backRight.setPower(brPower / denominator);
     }
+    public class MoveRelativeAction implements Action {
+        double x, y, r, speed;
+        public MoveRelativeAction(double x, double y, double r, double speed) {
+            this.x = x;
+            this.y = y;
+            this.r = r;
+            this.speed = speed;
+        }
+
+        public boolean run(TelemetryPacket t) {
+            moveRelative(x, y, r, speed);
+            return false;
+        }
+    }
+    public Action moveRelativeAction(double x,double y, double r, double speed) {
+        return new MoveRelativeAction(x, y, r, speed);
+    }
 
     //drives to location
     public class MoveTo implements Action {
@@ -317,8 +334,8 @@ public class Bot {
 
     public class MoveToLaunchArc implements Action {
         double ky = (1.0 / 40);
-        double kr = (1.0 / 350);
-        double kr2 = (1.0 / 70);
+        double kr = (1.0 / 450);
+        double kr2 = (1.0 / 80);
 
         public boolean run(TelemetryPacket telemetryPacket) {
             double x = 0;
@@ -382,23 +399,21 @@ public class Bot {
             }
 
             double angle2 = Math.toDegrees(Math.atan2(Math.abs(dy), Math.abs(dx)));
-            double targetAngle2 = 70;
+            double targetAngle2 = 50;
             double targetAngle2Diff = targetAngle2 - angle2;
 
-            x = targetAngle2Diff * (1.0 / 20);
+            x = targetAngle2Diff * (1.0 / 24);
 
             if (found || Math.abs(Math.toDegrees(angleDiff)) < 45) {
                 moveRelative(x, y, r, 1.0);
             } else {
                 moveRelative(0, 0, r, 1.0);
             }
-
-            telemetry.addData("found: ", found);
             telemetry.addData("distanceDiff: ", distanceDiff);
             telemetry.addData("offset: ", offset);
             telemetry.addData("angle2: ", angle2);
 
-            if (!found || Math.abs(distanceDiff) > 4 || Math.abs(offset) > 16 || angle2 < 63 || angle2 > 77) {
+            if (!found || Math.abs(distanceDiff) > 6 || Math.abs(offset) > 23 || angle2 < Math.toDegrees(40) || angle2 > Math.toDegrees(60)) {
                 return true;
             } else {
                 stop();
@@ -415,6 +430,16 @@ public class Bot {
         frontRight.setPower(0);
         backLeft.setPower(0);
         backRight.setPower(0);
+    }
+
+    public class Stop implements Action {
+        public boolean run(TelemetryPacket t) {
+            stop();
+            return false;
+        }
+    }
+    public Action stopAction() {
+        return new Stop();
     }
 
     // ===== APRIL TAG =====
