@@ -68,7 +68,7 @@ public class Intake {
         }
 
         public boolean run(TelemetryPacket t) {
-            boolean isAtSpeed = Math.abs(bot.canon.motor.getVelocity() - bot.canon.targetVel) <= 40;
+            boolean isAtSpeed = Math.abs(bot.canon.motor.getVelocity() - bot.canon.targetVel) <= 60;
             if (System.currentTimeMillis() > lastTime + 10) {
                 lastTime = System.currentTimeMillis();
                 //Shift everything right one place

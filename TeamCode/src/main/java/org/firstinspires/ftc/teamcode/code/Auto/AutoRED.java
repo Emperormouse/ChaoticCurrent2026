@@ -128,9 +128,10 @@ public class AutoRED extends LinearOpMode {
         //END OF INIT
 
         Actions.runBlocking(new ParallelAction(
-                chosenPath,
+                //chosenPath,
                 bot.updatePoseUsingAprilTagAction(),
-                new KeepRunning(bot.canon.setVelAction(bot.canon.CLOSE_SPEED))
+                //new KeepRunning(bot.canon.setVelAction(bot.canon.CLOSE_SPEED))*/
+                new KeepRunning(bot.moveToLaunchArc())
             )
         );
     }

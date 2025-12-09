@@ -101,7 +101,7 @@ public class Bot {
     }
 
     public Action shootClose(Op opmode) {
-        double time = (opmode == Op.AUTO) ? 5 : 10;
+        double time = (opmode == Op.AUTO) ? 4.2 : 10;
         return new EndAfterFirstParallel(
             new SequentialAction(
                 gate.open(),
@@ -115,7 +115,7 @@ public class Bot {
             ),
             new SequentialAction(
                 canon.setVelAction(canon.CLOSE_SPEED_FIRST),
-                new Wait(2.4),
+                new Wait(2),
                 canon.setVelAction(canon.CLOSE_SPEED)
             )
         );
@@ -318,6 +318,39 @@ public class Bot {
         return new MoveToImprecise(targetPose, speed);
     }
 
+    public class MoveToVeryImprecise implements Action {
+        private final double pRotational = 1.0;
+        private final double pX = 0.08;
+        private final double pY = 0.08;
+        private Pose2d targetPose;
+        private double speed;
+
+        public MoveToVeryImprecise(Pose2d targetPose, double speed) {
+            this.targetPose = targetPose;
+            this.speed = speed;
+        }
+
+        public boolean run(TelemetryPacket t) {
+            localizer.update();
+            Pose2d currentPose = localizer.getPose();
+            double diffX = targetPose.position.x - currentPose.position.x;
+            double diffY = targetPose.position.y - currentPose.position.y;
+            double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
+
+            moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, speed, Op.AUTO);
+
+            if (Math.abs(diffX)>3.0 || Math.abs(diffY)>3.0 || Math.abs(diffR)>Math.toRadians(5)) {
+                return true;
+            } else {
+                stop();
+                return false;
+            }
+        }
+    }
+    public Action moveToVeryImprecise(Pose2d targetPose) {
+        return new MoveToVeryImprecise(targetPose, 1.0);
+    }
+
     //infinitely settles
     public Action settle(Pose2d targetPose) {
         return new KeepRunning(new MoveTo(targetPose, 1.0));
@@ -333,7 +366,7 @@ public class Bot {
     public double targetDistance = 52.0;
 
     public class MoveToLaunchArc implements Action {
-        double ky = (1.0 / 40);
+        double ky = (1.0 / 60);
         double kr = (1.0 / 450);
         double kr2 = (1.0 / 80);
 
@@ -368,10 +401,14 @@ public class Bot {
                         found = true;
                         offset = -aprilTag.center.x + 300;
                         r = offset * kr;
+                        if (side == Side.RED)
+                            r *= -1;
 
                         double distance = aprilTag.ftcPose.y;
                         distanceDiff = targetDistance - distance;
                         y = distanceDiff * ky;
+                        if (side == Side.RED)
+                            y *= -1;
 
                         telemetry.addData("Distance: ", distance);
                     }
@@ -391,29 +428,35 @@ public class Bot {
                 y = distanceDiff * ky;
 
                 telemetry.addData("targetAngle: ", Math.toDegrees(targetAngle));
-                telemetry.addData("actAngle: ", botPose.heading.toDouble());
-                telemetry.addData("r: ", r);
+                telemetry.addData("actAngle: ", Math.toDegrees(botPose.heading.toDouble()));
+
                 telemetry.addData("dx: ", dx);
                 telemetry.addData("dy: ", dy);
-                telemetry.addData("r2: ", r);
             }
 
             double angle2 = Math.toDegrees(Math.atan2(Math.abs(dy), Math.abs(dx)));
             double targetAngle2 = 50;
             double targetAngle2Diff = targetAngle2 - angle2;
 
-            x = targetAngle2Diff * (1.0 / 24);
+            x = targetAngle2Diff * (1.0 / 35);
+            if (side == Side.RED)
+                x *= -1;
 
             if (found || Math.abs(Math.toDegrees(angleDiff)) < 45) {
-                moveRelative(x, y, r, 1.0);
+                //moveRelative(x, y, r, 1.0);
             } else {
-                moveRelative(0, 0, r, 1.0);
+                //moveRelative(0, 0, r, 1.0);
             }
             telemetry.addData("distanceDiff: ", distanceDiff);
             telemetry.addData("offset: ", offset);
             telemetry.addData("angle2: ", angle2);
 
-            if (!found || Math.abs(distanceDiff) > 6 || Math.abs(offset) > 23 || angle2 < Math.toDegrees(40) || angle2 > Math.toDegrees(60)) {
+            telemetry.addData("x: ", x);
+            telemetry.addData("y: ", y);
+            telemetry.addData("r: ", r);
+            telemetry.update();
+
+            if (!found || Math.abs(distanceDiff) > 6 || Math.abs(offset) > 20 || angle2 < Math.toDegrees(40) || angle2 > Math.toDegrees(60)) {
                 return true;
             } else {
                 stop();

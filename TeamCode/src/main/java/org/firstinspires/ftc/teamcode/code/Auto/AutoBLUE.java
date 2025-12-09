@@ -54,13 +54,13 @@ public class AutoBLUE extends LinearOpMode {
             bot.canon.setPowerAction(0),
 
             //GRAB SECOND 3 BALLS
+            bot.moveToImprecise(new Pose2d(-14.5, -12, toRadians(-90))),
             bot.intake.setPower(-1.0),
-            bot.moveToImprecise(new Pose2d(-13, -12, toRadians(-90))),
             new EndAfterEitherParallel(
                 new Wait(2.3),
-                bot.moveToImprecise(new Pose2d(-13, -53, toRadians(-90)), 1.0)
+                bot.moveToImprecise(new Pose2d(-14.5, -55, toRadians(-90)), 1.0)
             ),
-            new Wait(0.6),
+            new Wait(0.5),
             bot.intake.setPower(0),
 
             bot.moveRelativeAction(0, -1.0, 0, 1.0),
@@ -75,16 +75,16 @@ public class AutoBLUE extends LinearOpMode {
             bot.canon.setPowerAction(0),
 
             //GRAB THIRD 3 BALLS
+            bot.moveToImprecise(new Pose2d(8.5, -6, toRadians(-85))),
             bot.intake.setPower(-1.0),
-            bot.moveToImprecise(new Pose2d(6, -6, toRadians(-80))),
             new EndAfterEitherParallel(
                 new Wait(2.3),
-                bot.moveToImprecise(new Pose2d(6, -56.5, toRadians(-80)), 1.0)
+                bot.moveToImprecise(new Pose2d(8.5, -56.5, toRadians(-85)), 1.0)
             ),
-            new Wait(0.5),
+            new Wait(0.3),
             bot.intake.setPower(0),
 
-            bot.moveRelativeAction(0, -1.0, 0, 1.0),
+            bot.moveRelativeAction(-0.2, -1.0, 0.5, 1.0),
             new Wait(0.6),
 
             //SHOOT THIRD 3 BALLS
@@ -103,8 +103,9 @@ public class AutoBLUE extends LinearOpMode {
                 new SequentialAction(
                     new EndAfterEitherParallel(
                         path,
-                        new Wait(29.3)
+                        new Wait(29.4)
                     ),
+                    bot.intake.setPower(0),
                     bot.moveRelativeAction(-1.0, 0, 0, 0.7)
                 ),
 
@@ -115,7 +116,7 @@ public class AutoBLUE extends LinearOpMode {
 
     public Action shootSequence() {
         return new SequentialAction(
-            bot.moveToImprecise(launchPose),
+            bot.moveToVeryImprecise(launchPose),
 
             new EndAfterFirstParallel(
                 bot.shootClose(Op.AUTO),
@@ -127,7 +128,8 @@ public class AutoBLUE extends LinearOpMode {
                     bot.stopAction()
                 )
             ),
-            bot.gate.close()
+            bot.gate.close(),
+            bot.intake.setPower(1.0)
         );
 
     }
