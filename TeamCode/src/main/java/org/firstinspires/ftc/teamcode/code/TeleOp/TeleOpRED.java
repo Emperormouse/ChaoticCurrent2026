@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.dashboard.SendFun;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
@@ -12,6 +13,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -19,6 +21,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
+import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterEitherParallel;
+import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
+import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
 import org.firstinspires.ftc.teamcode.code.utility.Op;
 import org.firstinspires.ftc.teamcode.code.utility.Side;
@@ -35,6 +40,7 @@ public class TeleOpRED extends LinearOpMode {
     private Pose2d currentPose;
     private boolean isOuttaking = false;
     private boolean useAprilTag = true;
+    Pose2d launchPose = new Pose2d(-22, 17, Math.toRadians(-50));
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
@@ -87,36 +93,25 @@ public class TeleOpRED extends LinearOpMode {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
             }
 
-            if (gamepad2.dpadRightWasPressed()) {
-                bot.canon.CLOSE_SPEED -= 10;
-            }
-            if (gamepad2.dpadLeftWasPressed()) {
-                bot.canon.CLOSE_SPEED += 10;
+            if (gamepad2.right_bumper) {
+                if (gamepad2.dpadRightWasPressed()) {
+                    bot.targetDistance += 1;
+                }
+                if (gamepad2.dpadLeftWasPressed()) {
+                    bot.targetDistance -= 1;
+                }
+            } else {
+                if (gamepad2.dpadRightWasPressed()) {
+                    bot.canon.CLOSE_SPEED -= 10;
+                }
+                if (gamepad2.dpadLeftWasPressed()) {
+                    bot.canon.CLOSE_SPEED += 10;
+                }
             }
 
             return true;
         }
     }
-
-    //This is code for field-centric movement, which means that the robot will move the same
-    //way regardless of the direction that its facing. It's meant to be called many times in a loop
-    //It's structured as an Action however since this teleOp is based on roadrunner Actions
-    private class FieldCentricMovement implements Action {
-        public boolean run(@NonNull TelemetryPacket t) {
-            double y = -gamepad1.left_stick_y;
-            double x = -gamepad1.left_stick_x * 1.1;
-            double rx = -gamepad1.right_stick_x;
-
-            if (isOuttaking)
-                rx /= 3;
-
-            double speed = (Math.abs(gamepad1.right_trigger) > 0.2) ? 0.5 : 1.0;
-
-            bot.moveFieldCentric(x, y, rx, speed, Op.TELE);
-            return true;
-        }
-    }
-    //END OF MANUAL CONTROLS
 
     @Override
     public void runOpMode() {
@@ -132,13 +127,21 @@ public class TeleOpRED extends LinearOpMode {
         Action defaultAction = new ParallelAction(
             new FieldCentricMovement(),
             new ManualControls()
-            //bot.canon.setCloseSpeed(-1060)
         );
         Action currentAction = defaultAction;
+
+        VoltageSensor voltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
 
         waitForStart();
         while (opModeIsActive()) {
             telemetry.update();
+
+            double currentVoltage = voltageSensor.getVoltage();
+
+            telemetry.addData("Target Distance: ", bot.targetDistance);
+            telemetry.addData("Target Speed: ", bot.canon.CLOSE_SPEED);
+            telemetry.addData("Target Speed First: ", bot.canon.CLOSE_SPEED_FIRST);
+
             telemetry.addData("LocalizerX: ", drive.localizer.getPose().position.x);
             telemetry.addData("LocalizerY: ", drive.localizer.getPose().position.y);
             telemetry.addData("LocalizerR: ", Math.toDegrees(drive.localizer.getPose().heading.toDouble()));
@@ -154,20 +157,31 @@ public class TeleOpRED extends LinearOpMode {
 
             if (gamepad1.xWasPressed()) {
                 currentAction = new SequentialAction(
-                    new ParallelAction(
-                        bot.moveTo(bot.launchPose),
-                        bot.canon.spinUp(bot.canon.CLOSE_SPEED)
+                    bot.moveToVeryImprecise(launchPose),
+                    new EndAfterFirstParallel(
+                        bot.shootClose(Op.TELE),
+                        new SequentialAction(
+                            new EndAfterFirstParallel(
+                                new Wait(1.3),
+                                new KeepRunning(bot.moveToLaunchArc())
+                            ),
+                            bot.stopAction()
+                        )
                     ),
-                    new Wait(0.7),
-                    bot.shootClose(Op.TELE)
+                    bot.gate.close()
+                );
+            }
+
+            if (gamepad1.yWasPressed()) {
+                currentAction = new EndAfterFirstParallel(
+                    bot.moveToLaunchArc(),
+                    bot.canon.setVelAction(bot.canon.CLOSE_SPEED_FIRST)
                 );
             }
 
             if (gamepad1.aWasPressed()) {
-                currentAction = new SequentialAction(
-                    bot.canon.spinUp(bot.canon.CLOSE_SPEED),
-                    bot.shootClose(Op.TELE)
-                );
+                stop();
+                currentAction = bot.shootClose(Op.TELE);
             }
 
             if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
@@ -181,10 +195,29 @@ public class TeleOpRED extends LinearOpMode {
                 currentAction = defaultAction;
             }
 
-            telemetry.addData("Target Speed: ", bot.canon.CLOSE_SPEED);
             telemetry.addData("Canon power: ", bot.canon.motor.getPower());
             telemetry.addData("Canon speed: ", bot.canon.motor.getVelocity());
             telemetry.addData("Pos: ", currentPose);
+        }
+    }
+
+    //This is code for field-centric movement, which means that the robot will move the same
+    //way regardless of the direction that its facing. It's meant to be called many times in a loop
+    //It's structured as an Action however since this teleOp is based on roadrunner Actions
+    private class FieldCentricMovement implements Action {
+        public boolean run(@NonNull TelemetryPacket t) {
+            double y = -gamepad1.left_stick_y;
+            double x = -gamepad1.left_stick_x * 1.1;
+            double rx = -gamepad1.right_stick_x;
+
+            if (isOuttaking)
+                rx /= 3;
+
+            double speed = (Math.abs(gamepad1.right_trigger) > 0.2) ? 0.33 : 1.0;
+
+            bot.moveFieldCentric(x, y, rx, speed, Op.TELE);
+
+            return true;
         }
     }
 

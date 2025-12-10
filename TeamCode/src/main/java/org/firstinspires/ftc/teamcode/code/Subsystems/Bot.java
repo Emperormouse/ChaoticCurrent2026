@@ -115,7 +115,7 @@ public class Bot {
             ),
             new SequentialAction(
                 canon.setVelAction(canon.CLOSE_SPEED_FIRST),
-                new Wait(2),
+                new Wait(1.6),
                 canon.setVelAction(canon.CLOSE_SPEED)
             )
         );
@@ -401,14 +401,10 @@ public class Bot {
                         found = true;
                         offset = -aprilTag.center.x + 300;
                         r = offset * kr;
-                        if (side == Side.RED)
-                            r *= -1;
 
                         double distance = aprilTag.ftcPose.y;
                         distanceDiff = targetDistance - distance;
                         y = distanceDiff * ky;
-                        if (side == Side.RED)
-                            y *= -1;
 
                         telemetry.addData("Distance: ", distance);
                     }
@@ -443,9 +439,9 @@ public class Bot {
                 x *= -1;
 
             if (found || Math.abs(Math.toDegrees(angleDiff)) < 45) {
-                //moveRelative(x, y, r, 1.0);
+                moveRelative(x, y, r, 1.0);
             } else {
-                //moveRelative(0, 0, r, 1.0);
+                moveRelative(0, 0, r, 1.0);
             }
             telemetry.addData("distanceDiff: ", distanceDiff);
             telemetry.addData("offset: ", offset);
