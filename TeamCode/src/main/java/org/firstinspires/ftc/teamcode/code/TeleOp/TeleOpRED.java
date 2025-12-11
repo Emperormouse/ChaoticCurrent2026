@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.SendFun;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
@@ -21,7 +20,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
-import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterEitherParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
@@ -155,33 +153,42 @@ public class TeleOpRED extends LinearOpMode {
             drive.updatePoseEstimate();
             currentPose = drive.localizer.getPose();
 
-            if (gamepad1.xWasPressed()) {
+            /*if (gamepad1.xWasPressed()) {
                 currentAction = new SequentialAction(
                     bot.moveToVeryImprecise(launchPose),
                     new EndAfterFirstParallel(
                         bot.shootClose(Op.TELE),
                         new SequentialAction(
                             new EndAfterFirstParallel(
-                                new Wait(1.3),
-                                new KeepRunning(bot.moveToLaunchArc())
+                                new Wait(1.5),
+                                new KeepRunning(bot.moveToLaunchSubArc())
                             ),
                             bot.stopAction()
                         )
                     ),
                     bot.gate.close()
                 );
-            }
+            }*/
 
             if (gamepad1.yWasPressed()) {
-                currentAction = new EndAfterFirstParallel(
-                    bot.moveToLaunchArc(),
-                    bot.canon.setVelAction(bot.canon.CLOSE_SPEED_FIRST)
+                currentAction = new SequentialAction(
+                    bot.stopAction(),
+                    bot.shootClose(Op.TELE)
+                );
+            }
+
+            if (gamepad1.xWasPressed()) {
+                currentAction = new ParallelAction(
+                    bot.canon.setVelAction(bot.canon.CLOSE_SPEED_FIRST),
+                    bot.moveToLaunchSubArc()
                 );
             }
 
             if (gamepad1.aWasPressed()) {
-                stop();
-                currentAction = bot.shootClose(Op.TELE);
+                currentAction = new ParallelAction(
+                    bot.canon.setVelAction(bot.canon.CLOSE_SPEED_FIRST),
+                    bot.moveToLaunchArc()
+                );
             }
 
             if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {

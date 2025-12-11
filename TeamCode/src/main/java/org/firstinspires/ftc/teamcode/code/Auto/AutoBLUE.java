@@ -6,7 +6,6 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -63,8 +62,8 @@ public class AutoBLUE extends LinearOpMode {
             new Wait(0.8),
             bot.intake.setPower(0),
 
-            bot.moveRelativeAction(0, -1.0, 0.5, 1.0),
-            new Wait(0.3),
+            bot.moveRelativeAction(0, -1.0, 0.8, 1.0),
+            new Wait(0.5),
 
             //SHOOT SECOND 3 BALLS
             /*bot.intake.setPower(1),
@@ -123,7 +122,7 @@ public class AutoBLUE extends LinearOpMode {
                 new SequentialAction(
                     new EndAfterFirstParallel(
                         new Wait(1.3),
-                        new KeepRunning(bot.moveToLaunchArc())
+                        new KeepRunning(bot.moveToLaunchSubArc())
                     ),
                     bot.stopAction()
                 )
@@ -197,7 +196,7 @@ public class AutoBLUE extends LinearOpMode {
             //SHOOT FIRST 3 BALLS
             new EndAfterEitherParallel(
                 new Wait(3.0),
-                bot.moveToLaunchArc()
+                bot.moveToLaunchSubArc()
             ),
             new Wait(0.5),
             bot.shootClose(Op.AUTO),
@@ -216,7 +215,7 @@ public class AutoBLUE extends LinearOpMode {
             //SHOOT SECOND 3 BALLS
             new EndAfterEitherParallel(
                 new Wait(4.5),
-                bot.moveToLaunchArc()
+                bot.moveToLaunchSubArc()
             ),
             new Wait(0.5),
             bot.shootClose(Op.AUTO),
@@ -235,7 +234,7 @@ public class AutoBLUE extends LinearOpMode {
             //SHOOT THIRD 3 BALLS
             new EndAfterEitherParallel(
                 new Wait(5),
-                bot.moveToLaunchArc()
+                bot.moveToLaunchSubArc()
             ),
             new Wait(0.5),
             bot.shootClose(Op.AUTO),

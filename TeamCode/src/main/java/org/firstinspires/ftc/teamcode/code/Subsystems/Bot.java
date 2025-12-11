@@ -369,6 +369,11 @@ public class Bot {
         double ky = (1.0 / 60);
         double kr = (1.0 / 450);
         double kr2 = (1.0 / 80);
+        boolean subArc;
+
+        public MoveToLaunchArc(boolean subArc) {
+            this.subArc = subArc;
+        }
 
         public boolean run(TelemetryPacket telemetryPacket) {
             double x = 0;
@@ -438,11 +443,7 @@ public class Bot {
             if (side == Side.RED)
                 x *= -1;
 
-            if (found || Math.abs(Math.toDegrees(angleDiff)) < 45) {
-                moveRelative(x, y, r, 1.0);
-            } else {
-                moveRelative(0, 0, r, 1.0);
-            }
+
             telemetry.addData("distanceDiff: ", distanceDiff);
             telemetry.addData("offset: ", offset);
             telemetry.addData("angle2: ", angle2);
@@ -452,16 +453,40 @@ public class Bot {
             telemetry.addData("r: ", r);
             telemetry.update();
 
-            if (!found || Math.abs(distanceDiff) > 6 || Math.abs(offset) > 20 || angle2 < Math.toDegrees(40) || angle2 > Math.toDegrees(60)) {
-                return true;
+            if (subArc) {
+                if (found || Math.abs(Math.toDegrees(angleDiff)) < 45) {
+                    moveRelative(x, y, r, 1.0);
+                } else {
+                    moveRelative(0, 0, r, 1.0);
+                }
+
+                if (!found || Math.abs(distanceDiff) > 6 || Math.abs(offset) > 20 || angle2 < Math.toDegrees(40) || angle2 > Math.toDegrees(60)) {
+                    return true;
+                } else {
+                    stop();
+                    return false;
+                }
             } else {
-                stop();
-                return false;
+                if (found || Math.abs(Math.toDegrees(angleDiff)) < 45) {
+                    moveRelative(0, y, r, 1.0);
+                } else {
+                    moveRelative(0, 0, r, 1.0);
+                }
+
+                if (!found || Math.abs(distanceDiff) > 6 || Math.abs(offset) > 20) {
+                    return true;
+                } else {
+                    stop();
+                    return false;
+                }
             }
         }
     }
+    public Action moveToLaunchSubArc() {
+        return new MoveToLaunchArc(true);
+    }
     public Action moveToLaunchArc() {
-        return new MoveToLaunchArc();
+        return new MoveToLaunchArc(false);
     }
 
     public void stop() {
@@ -490,6 +515,7 @@ public class Bot {
                 localizer.setPose(aprilPose);
             }
         }
+        localizer.update();
         drive.updatePoseEstimate();
     }
 
