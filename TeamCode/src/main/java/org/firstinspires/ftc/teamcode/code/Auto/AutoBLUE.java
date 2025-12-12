@@ -59,11 +59,11 @@ public class AutoBLUE extends LinearOpMode {
                 new Wait(2.3),
                 bot.moveToImprecise(new Pose2d(-14.5, -55, toRadians(-90)), 1.0)
             ),
-            new Wait(0.8),
+            new Wait(0.6),
             bot.intake.setPower(0),
 
-            bot.moveRelativeAction(0, -1.0, 0.8, 1.0),
-            new Wait(0.5),
+            bot.moveRelativeAction(0, -1.0, 0.6, 1.0),
+            new Wait(0.4),
 
             //SHOOT SECOND 3 BALLS
             /*bot.intake.setPower(1),
@@ -80,10 +80,10 @@ public class AutoBLUE extends LinearOpMode {
                 new Wait(2.3),
                 bot.moveToImprecise(new Pose2d(8.5, -56.5, toRadians(-85)), 1.0)
             ),
-            new Wait(0.3),
+            new Wait(0.6),
             bot.intake.setPower(0),
 
-            bot.moveRelativeAction(-0.2, -1.0, 0.5, 1.0),
+            bot.moveRelativeAction(-0.2, -1.0, 0.6, 1.0),
             new Wait(0.6),
 
             //SHOOT THIRD 3 BALLS
@@ -105,7 +105,10 @@ public class AutoBLUE extends LinearOpMode {
                         new Wait(29.4)
                     ),
                     bot.intake.setPower(0),
-                    bot.moveRelativeAction(-1.0, 0, 0, 1.0)
+
+                    bot.moveRelativeAction(-1.0, 0, 0, 1.0),
+                    new Wait(0.6),
+                    bot.stopAction()
                 ),
 
                 bot.updatePoseUsingAprilTagAction()

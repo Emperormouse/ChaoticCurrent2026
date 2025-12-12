@@ -101,7 +101,7 @@ public class Bot {
     }
 
     public Action shootClose(Op opmode) {
-        double time = (opmode == Op.AUTO) ? 4.2 : 10;
+        double time = (opmode == Op.AUTO) ? 4.5 : 10;
         return new EndAfterFirstParallel(
             new SequentialAction(
                 gate.open(),
@@ -319,9 +319,9 @@ public class Bot {
     }
 
     public class MoveToVeryImprecise implements Action {
-        private final double pRotational = 1.0;
-        private final double pX = 0.08;
-        private final double pY = 0.08;
+        private final double pRotational = 0.9;
+        private final double pX = 0.06;
+        private final double pY = 0.06;
         private Pose2d targetPose;
         private double speed;
 
@@ -543,6 +543,23 @@ public class Bot {
             }
         }
         return null;
+    }
+
+    public class WaitUntilSeeTag implements Action {
+        public boolean run(TelemetryPacket t) {
+            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+            for (AprilTagDetection detection : currentDetections) {
+                if (detection.metadata != null) {
+                    if (detection.id == 20 || detection.id == 24) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+    }
+    public Action waitUntilSeeTag() {
+        return new WaitUntilSeeTag();
     }
 
     public void aprilTagTelementary() {

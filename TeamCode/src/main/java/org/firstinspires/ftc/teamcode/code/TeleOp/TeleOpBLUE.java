@@ -153,7 +153,7 @@ public class TeleOpBLUE extends LinearOpMode {
             drive.updatePoseEstimate();
             currentPose = drive.localizer.getPose();
 
-            /*if (gamepad1.xWasPressed()) {
+            if (gamepad1.xWasPressed()) {
                 currentAction = new SequentialAction(
                     bot.moveToVeryImprecise(launchPose),
                     new EndAfterFirstParallel(
@@ -168,7 +168,7 @@ public class TeleOpBLUE extends LinearOpMode {
                     ),
                     bot.gate.close()
                 );
-            }*/
+            }
 
             if (gamepad1.yWasPressed()) {
                 currentAction = new SequentialAction(
@@ -177,12 +177,12 @@ public class TeleOpBLUE extends LinearOpMode {
                 );
             }
 
-            if (gamepad1.xWasPressed()) {
+            /*if (gamepad1.xWasPressed()) {
                 currentAction = new ParallelAction(
                     bot.canon.setVelAction(bot.canon.CLOSE_SPEED_FIRST),
                     bot.moveToLaunchSubArc()
                 );
-            }
+            }*/
 
             if (gamepad1.aWasPressed()) {
                 currentAction = new ParallelAction(

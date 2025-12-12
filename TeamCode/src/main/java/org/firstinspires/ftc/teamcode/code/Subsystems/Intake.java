@@ -95,7 +95,7 @@ public class Intake {
 
             if (allTrueInFirstHalf) {
                 intake();
-            } else if (numFalse >= 3) {
+            } else if (numFalse >= 2) {
                 stop();
             } else {
                 intake();

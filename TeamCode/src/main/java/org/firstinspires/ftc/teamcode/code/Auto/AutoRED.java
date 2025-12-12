@@ -48,6 +48,8 @@ public class AutoRED extends LinearOpMode {
 
         Action path = new SequentialAction(
             //SHOOT FIRST 3 BALLS
+            /*bot.moveRelativeAction(0, 0.7, 0, 1.0),
+            bot.waitUntilSeeTag(),*/
 
             shootSequence(),
             bot.canon.setPowerAction(0),
@@ -60,7 +62,7 @@ public class AutoRED extends LinearOpMode {
                 new Wait(2.3),
                 bot.moveToImprecise(new Pose2d(-12, 55, toRadians(90)), 1.0)
             ),
-            new Wait(0.8),
+            new Wait(0.6),
             bot.intake.setPower(0),
 
             bot.moveRelativeAction(0, -1.0, -0.5, 1.0),
@@ -76,16 +78,16 @@ public class AutoRED extends LinearOpMode {
             bot.gate.close(),
 
             //GRAB THIRD 3 BALLS
-            bot.moveToImprecise(new Pose2d(12, 6, toRadians(85))),
+            bot.moveToImprecise(new Pose2d(11.8, 6, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(2.3),
-                bot.moveToImprecise(new Pose2d(12, 56.5, toRadians(85)), 1.0)
+                bot.moveToImprecise(new Pose2d(11.8, 56.5, toRadians(85)), 1.0)
             ),
-            new Wait(0.3),
+            new Wait(0.6),
             bot.intake.setPower(0),
 
-            bot.moveRelativeAction(0.2, -1.0, -0.5, 1.0),
+            bot.moveRelativeAction(0.2, -1.0, -0.6, 1.0),
             new Wait(0.6),
 
             //SHOOT THIRD 3 BALLS
@@ -108,8 +110,10 @@ public class AutoRED extends LinearOpMode {
                         new Wait(29.4)
                     ),
                     bot.intake.setPower(0),
-                    bot.stopAction(),
-                    bot.moveRelativeAction(1.0, 0, 0, 1.0)
+
+                    bot.moveRelativeAction(1.0, 0, 0, 1.0),
+                    new Wait(0.6),
+                    bot.stopAction()
                 ),
 
                 bot.updatePoseUsingAprilTagAction()
