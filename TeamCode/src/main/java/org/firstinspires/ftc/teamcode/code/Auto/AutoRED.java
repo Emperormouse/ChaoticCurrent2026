@@ -116,7 +116,8 @@ public class AutoRED extends LinearOpMode {
                     bot.stopAction()
                 ),
 
-                bot.updatePoseUsingAprilTagAction()
+                bot.updatePoseUsingAprilTagAction(),
+                new KeepRunning(bot.canon.cloneMotorPower())
             )
         );
     }

@@ -41,7 +41,6 @@ public class Bot {
     public Canon canon;
     public Gate gate;
     public Intake intake;
-    public DistanceSensor distanceSensor;
     MecanumDrive drive;
     public Localizer localizer;
 
@@ -77,10 +76,10 @@ public class Bot {
         else
             launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-42.3));
 
-        frontLeft = (DcMotor) hardwareMap.get(DcMotor.class, "front_left");
-        backLeft = (DcMotor)hardwareMap.get(DcMotor.class, "back_left");
-        frontRight = (DcMotor)hardwareMap.get(DcMotor.class, "front_right");
-        backRight = (DcMotor)hardwareMap.get(DcMotor.class, "back_right");
+        frontLeft = hardwareMap.get(DcMotor.class, "front_left");
+        backLeft = hardwareMap.get(DcMotor.class, "back_left");
+        frontRight = hardwareMap.get(DcMotor.class, "front_right");
+        backRight = hardwareMap.get(DcMotor.class, "back_right");
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         //distanceSensor = hardwareMap.get(DistanceSensor.class, "distance_sensor");
@@ -88,16 +87,6 @@ public class Bot {
 
     public void initialize() {
         initAprilTag();
-
-        /*Actions.runBlocking(new SequentialAction(
-            canon.spinUp(canon.CLOSE_SPEED),
-            new EndAfterFirstParallel(
-                new Wait(7.0),
-                canon.maintainSpeed(canon.CLOSE_SPEED)
-            )
-        ));
-        canon.closePower = canon.motor.getPower();
-        canon.setPower(0);*/
     }
 
     public Action shootClose(Op opmode) {
@@ -363,7 +352,7 @@ public class Bot {
         );
     }
 
-    public double targetDistance = 52.0;
+    public double targetDistance = 55.0;
 
     public class MoveToLaunchArc implements Action {
         double ky = (1.0 / 60);

@@ -21,9 +21,9 @@ public class MotorTest extends LinearOpMode {
 
         double timeToSpeed = (double)(System.currentTimeMillis() - start) / 1000;
 
-        Action a = canon.maintainSpeed(1800);
+        //Action a = canon.maintainSpeed(1800);
         while(!isStopRequested()) {
-            a.run(null);
+            //a.run(null);
 
             telemetry.addData("Speed: ", motor.getVelocity());
             telemetry.addData("Time To Spin Up: ", timeToSpeed);

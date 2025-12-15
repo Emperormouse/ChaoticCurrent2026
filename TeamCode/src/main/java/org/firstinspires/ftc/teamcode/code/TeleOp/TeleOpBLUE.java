@@ -10,6 +10,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -201,6 +202,8 @@ public class TeleOpBLUE extends LinearOpMode {
             if (!currentAction.run(t)) {
                 currentAction = defaultAction;
             }
+            Actions.runBlocking(bot.canon.cloneMotorPower());
+
 
             telemetry.addData("Canon power: ", bot.canon.motor.getPower());
             telemetry.addData("Canon speed: ", bot.canon.motor.getVelocity());

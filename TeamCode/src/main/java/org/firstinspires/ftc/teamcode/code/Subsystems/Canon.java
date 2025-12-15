@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Canon {
     public DcMotorEx motor;
+    public DcMotor motor2;
 
     public int CLOSE_SPEED_FIRST = -2080;
     public int CLOSE_SPEED = -2060;
@@ -16,12 +17,17 @@ public class Canon {
 
     public Canon(HardwareMap hardwareMap) {
         motor = hardwareMap.get(DcMotorEx.class, "left_launcher");
+        motor2 = (DcMotor)hardwareMap.get(DcMotorEx.class, "par");
+
         motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     public void setPower(double p) {
         motor.setPower(p);
+        motor2.setPower(p);
     }
 
     private class SpinUp implements Action {
@@ -41,13 +47,10 @@ public class Canon {
         }
     }
 
-    private class MaintainSpeed extends SpinUp {
-        public MaintainSpeed(double target) {
-            super(target);
-        }
+    private class CloneMotorPower implements Action {
         public boolean run(TelemetryPacket t) {
-            super.run(t);
-            return true;
+            motor2.setPower(motor.getPower());
+            return false;
         }
     }
 
@@ -57,7 +60,7 @@ public class Canon {
             power = pow;
         }
         public boolean run(TelemetryPacket t) {
-            motor.setPower(power);
+            setPower(power);
             return false;
         }
     }
@@ -95,8 +98,8 @@ public class Canon {
     public Action spinUp(double target) {
         return new SpinUp(target);
     }
-    public Action maintainSpeed(double target) {
-        return new MaintainSpeed(target);
+    public Action cloneMotorPower() {
+        return new CloneMotorPower();
     }
     public Action setPowerAction(double pow) {
         return new SetPowerAction(pow);
