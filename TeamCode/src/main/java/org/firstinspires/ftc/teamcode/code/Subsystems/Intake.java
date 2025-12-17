@@ -57,7 +57,7 @@ public class Intake {
         private long start;
         private boolean firstTime = true;
         //15 length
-        private int arrLen = 10;
+        private int arrLen = 5;
         private boolean[] arr = new boolean[arrLen];
         private long lastTime = 0;
 
@@ -83,9 +83,9 @@ public class Intake {
                 start = System.currentTimeMillis();
             }
 
-            int numFalse = 0;
+            int numTrue = 0;
             for (boolean b : arr) {
-                if (!b) numFalse++;
+                if (b) numTrue++;
             }
 
             boolean allTrueInFirstHalf = true;
@@ -93,12 +93,12 @@ public class Intake {
                 allTrueInFirstHalf &= arr[i];
             }
 
-            if (allTrueInFirstHalf) {
+            /*if (allTrueInFirstHalf) {
                 intake();
-            } else if (numFalse >= 2) {
-                stop();
+            } else*/ if (numTrue >= 2) {
+                intake();
             } else {
-                intake();
+                stop();
             }
             return true;
         }

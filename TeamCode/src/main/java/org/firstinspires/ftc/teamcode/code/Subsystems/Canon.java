@@ -11,8 +11,8 @@ public class Canon {
     public DcMotorEx motor;
     public DcMotor motor2;
 
-    public int CLOSE_SPEED_FIRST = -2080;
-    public int CLOSE_SPEED = -2060;
+    public int CLOSE_SPEED_FIRST = -1980;
+    public int CLOSE_SPEED = -1900;
     public int targetVel = CLOSE_SPEED;
 
     public Canon(HardwareMap hardwareMap) {
