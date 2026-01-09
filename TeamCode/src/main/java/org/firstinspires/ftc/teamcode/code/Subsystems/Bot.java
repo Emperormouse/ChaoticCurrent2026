@@ -98,7 +98,7 @@ public class Bot {
                 new Wait(time2),
                 new EndAfterFirstParallel(
                     new Wait(time),
-                    intake.setPower(-1.0)
+                    intake.setPower(-0.9)
                 ),
                 //canon.setPowerInstant(0),
                 gate.close()
@@ -176,6 +176,23 @@ public class Bot {
         backLeft.setPower(blPower / denominator);
         backRight.setPower(brPower / denominator);
     }
+    public class MoveFieldCentricAction implements Action {
+        double x, y, r, speed;
+        public MoveFieldCentricAction(double x, double y, double r, double speed) {
+            this.x = x;
+            this.y = y;
+            this.r = r;
+            this.speed = speed;
+        }
+
+        public boolean run(TelemetryPacket t) {
+            moveFieldCentric(x, y, r, speed, Op.AUTO);
+            return true;
+        }
+    }
+    public Action moveFieldCentricAction(double x,double y, double r, double speed) {
+        return new MoveFieldCentricAction(x, y, r, speed);
+    }
 
     public void moveRelative(double x, double y, double r, double speed) {
         double frPower = 0;
@@ -247,7 +264,11 @@ public class Bot {
             double diffY = targetPose.position.y - currentPose.position.y;
             double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
 
-            moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, speed, Op.AUTO);
+            double powX = diffX*pX;
+            double powY = -diffY*pY;
+            double powR = diffR*pRotational;
+
+            moveFieldCentric(powX, powY, powR, speed, Op.AUTO);
 
             if (Math.abs(diffX) > 3.0 || Math.abs(diffY) > 3.0 || Math.abs(diffR) > Math.toRadians(2.8)) {
                 lastTimeMoved = System.currentTimeMillis();
@@ -289,7 +310,11 @@ public class Bot {
             double diffY = targetPose.position.y - currentPose.position.y;
             double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
 
-            moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, speed, Op.AUTO);
+            double powX = diffX*pX;
+            double powY = -diffY*pY;
+            double powR = diffR*pRotational;
+
+            moveFieldCentric(powX, powY, powR, speed, Op.AUTO);
 
             if (Math.abs(diffX)>2.0 || Math.abs(diffY)>2.0 || Math.abs(diffR)>Math.toRadians(2.5)) {
                 return true;
@@ -304,6 +329,61 @@ public class Bot {
     }
     public Action moveToImprecise(Pose2d targetPose, double speed) {
         return new MoveToImprecise(targetPose, speed);
+    }
+    
+
+    public class MoveToContinuous implements Action {
+        private final double pRotational = 1.0;
+        private final double pX = 0.08;
+        private final double pY = 0.08;
+        private Pose2d targetPose;
+        private double speed;
+
+        public MoveToContinuous(Pose2d targetPose, double speed) {
+            this.targetPose = targetPose;
+            this.speed = speed;
+        }
+
+        public boolean run(TelemetryPacket t) {
+            localizer.update();
+            Pose2d currentPose = localizer.getPose();
+            double diffX = targetPose.position.x - currentPose.position.x;
+            double diffY = targetPose.position.y - currentPose.position.y;
+            double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
+
+            double powX = diffX*pX;
+            double powY = -diffY*pY;
+            double powR = diffR*pRotational;
+
+            double minSpeed = 0.25;
+            if (Math.abs(powX) < minSpeed && Math.abs(powY) < minSpeed && Math.abs(powR) < minSpeed) {
+                double max;
+                if (Math.abs(powX) > Math.abs(powY)) {
+                    max = Math.abs(powX);
+                }
+                else {
+                    max = Math.abs(powY);
+                }
+                double mod = minSpeed/max;
+                powX *= mod;
+                powY *= mod;
+            }
+
+            moveFieldCentric(powX, powY, powR, speed, Op.AUTO);
+
+            if (Math.abs(diffX)>3.5 || Math.abs(diffY)>3.5 || Math.abs(diffR)>Math.toRadians(4)) {
+                return true;
+            } else {
+                stop();
+                return false;
+            }
+        }
+    }
+    public Action moveToContinuous(Pose2d targetPose) {
+        return new MoveToContinuous(targetPose, 1.0);
+    }
+    public Action moveToContinuous(Pose2d targetPose, double speed) {
+        return new MoveToContinuous(targetPose, speed);
     }
 
     public class MoveToVeryImprecise implements Action {
@@ -551,6 +631,10 @@ public class Bot {
     }
 
     public void aprilTagTelementary() {
+        telemetry.addData("LocalizerX: ", drive.localizer.getPose().position.x);
+        telemetry.addData("LocalizerY: ", drive.localizer.getPose().position.y);
+        telemetry.addData("LocalizerR: ", Math.toDegrees(drive.localizer.getPose().heading.toDouble()));
+
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         telemetry.addData("# AprilTags Detected", currentDetections.size());
         for (AprilTagDetection detection : currentDetections) {
@@ -567,6 +651,17 @@ public class Bot {
                     detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)-90));
             }
         }
+    }
+    public class TelementaryAction implements Action {
+        public boolean run(TelemetryPacket t) {
+            aprilTagTelementary();
+            telemetry.update();
+
+            return true;
+        }
+    }
+    public Action telementaryAction() {
+        return new TelementaryAction();
     }
 
     public static AprilTagLibrary getDecodeTagLibrary(){
