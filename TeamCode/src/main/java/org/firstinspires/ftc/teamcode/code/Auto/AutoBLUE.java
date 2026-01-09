@@ -120,7 +120,7 @@ public class AutoBLUE extends LinearOpMode {
             bot.moveToContinuous(new Pose2d(29.5, -10, toRadians(-87))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
-                new Wait(1.5)
+                new Wait(1.5),
                 bot.moveToImprecise(new Pose2d(29.5, -58.5, toRadians(-87)), 1.0)
             ),
             new Wait(0.5),
