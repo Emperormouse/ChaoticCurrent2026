@@ -39,7 +39,7 @@ public class TeleOpRED extends LinearOpMode {
     private Pose2d currentPose;
     private boolean isOuttaking = false;
     private boolean useAprilTag = true;
-    Pose2d launchPose = new Pose2d(-22, 17, Math.toRadians(-50));
+    Pose2d launchPose = new Pose2d(-22.4, 16.6, Math.toRadians(-46));
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
@@ -154,7 +154,7 @@ public class TeleOpRED extends LinearOpMode {
             drive.updatePoseEstimate();
             currentPose = drive.localizer.getPose();
 
-            if (gamepad1.xWasPressed()) {
+            /*if (gamepad1.xWasPressed()) {
                 currentAction = new SequentialAction(
                     bot.moveToVeryImprecise(launchPose),
                     new EndAfterFirstParallel(
@@ -169,7 +169,7 @@ public class TeleOpRED extends LinearOpMode {
                     ),
                     bot.gate.close()
                 );
-            }
+            }*/
 
             if (gamepad1.yWasPressed()) {
                 currentAction = new SequentialAction(
@@ -178,12 +178,25 @@ public class TeleOpRED extends LinearOpMode {
                 );
             }
 
-            /*if (gamepad1.xWasPressed()) {
-                currentAction = new ParallelAction(
-                    bot.canon.setVelAction(bot.canon.CLOSE_SPEED_FIRST),
-                    bot.moveToLaunchSubArc()
+            if (gamepad1.xWasPressed()) {
+                currentAction = new SequentialAction(
+                    bot.canon.setVelAction(bot.canon.CLOSE_SPEED),
+                    bot.moveToVeryImprecise(launchPose),
+
+                    new EndAfterFirstParallel(
+                        bot.shootClose(Op.AUTO),
+                        new SequentialAction(
+                            new EndAfterFirstParallel(
+                                new Wait(0.7),
+                                new KeepRunning(bot.moveToLaunchSubArc())
+                            ),
+                            bot.stopAction()
+                        )
+                    ),
+                    bot.gate.close(),
+                    bot.intake.setPower(1.0)
                 );
-            }*/
+            }
 
             if (gamepad1.aWasPressed()) {
                 currentAction = new ParallelAction(

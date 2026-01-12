@@ -431,7 +431,7 @@ public class Bot {
         );
     }
 
-    public double targetDistance = 55.0;
+    public double targetDistance;
 
     public class MoveToLaunchArc implements Action {
         double ky = (1.0 / 60);
@@ -441,6 +441,11 @@ public class Bot {
 
         public MoveToLaunchArc(boolean subArc) {
             this.subArc = subArc;
+            if (side == Side.BLUE) {
+                targetDistance = 55.0;
+            } else {
+                targetDistance = 52.0;
+            }
         }
 
         public boolean run(TelemetryPacket telemetryPacket) {

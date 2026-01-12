@@ -68,7 +68,7 @@ public class AutoBLUE extends LinearOpMode {
             new Wait(0.55),
 
             bot.stopAction(),
-            new Wait(0.1),
+            new Wait(0.3),
 
             /*new EndAfterEitherParallel(
                 new EndAfterEitherParallel(
@@ -142,7 +142,7 @@ public class AutoBLUE extends LinearOpMode {
                 new SequentialAction(
                     new EndAfterEitherParallel(
                         path,
-                        new Wait(129.4)
+                        new Wait(29.4)
                     ),
                     bot.intake.setPower(0),
 
@@ -166,7 +166,7 @@ public class AutoBLUE extends LinearOpMode {
                 bot.shootClose(Op.AUTO),
                 new SequentialAction(
                     new EndAfterFirstParallel(
-                        new Wait(0.8),
+                        new Wait(0.7),
                         new KeepRunning(bot.moveToLaunchSubArc())
                     ),
                     bot.stopAction()
