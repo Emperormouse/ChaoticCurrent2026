@@ -90,14 +90,19 @@ public class Bot {
     }
 
     public Action shootClose(Op opmode) {
-        double time = (opmode == Op.AUTO) ? 2.0 : 10;
-        double time2 = (opmode == Op.AUTO) ? 0.4 : 0.8;
+        if (opmode == Op.AUTO)
+            return shootClose(opmode, 2.0, 0.4);
+        else
+            return shootClose(opmode, 10.0, 0.6);
+    }
+
+    public Action shootClose(Op opmode, double time1, double time2) {
         return new EndAfterFirstParallel(
             new SequentialAction(
                 gate.open(),
                 new Wait(time2),
                 new EndAfterFirstParallel(
-                    new Wait(time),
+                    new Wait(time1),
                     intake.setPower(-0.9)
                 ),
                 //canon.setPowerInstant(0),
