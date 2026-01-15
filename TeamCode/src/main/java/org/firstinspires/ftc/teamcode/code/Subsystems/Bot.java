@@ -93,7 +93,7 @@ public class Bot {
         if (opmode == Op.AUTO)
             return shootClose(opmode, 2.0, 0.4);
         else
-            return shootClose(opmode, 10.0, 0.6);
+            return shootClose(opmode, 10.0, 0.8);
     }
 
     public Action shootClose(Op opmode, double time1, double time2) {
@@ -483,6 +483,9 @@ public class Bot {
                     if (aprilTag.id == targetId) {
                         found = true;
                         offset = -aprilTag.center.x + 300;
+                        if (side == Side.BLUE)
+                            offset += 25;
+
                         r = offset * kr;
 
                         double distance = aprilTag.ftcPose.y;

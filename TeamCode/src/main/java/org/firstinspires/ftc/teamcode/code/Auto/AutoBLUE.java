@@ -95,11 +95,11 @@ public class AutoBLUE extends LinearOpMode {
 
             //GRAB THIRD 3 BALLS
 
-            bot.moveToContinuous(new Pose2d(8.7, -6, toRadians(-87))),
+            bot.moveToContinuous(new Pose2d(8.55, -4, toRadians(-87))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.6),
-                bot.moveTo(new Pose2d(8.7, -57, toRadians(-87)), 1.0)
+                bot.moveTo(new Pose2d(8.55, -57, toRadians(-87)), 1.0)
             ),
             new Wait(0.5),
             bot.intake.setPower(0),
@@ -167,7 +167,7 @@ public class AutoBLUE extends LinearOpMode {
                 bot.shootClose(Op.AUTO),
                 new SequentialAction(
                     new EndAfterFirstParallel(
-                        new Wait(0.85),
+                        new Wait(0.95),
                         new KeepRunning(bot.moveToLaunchSubArc())
                     ),
                     bot.stopAction()

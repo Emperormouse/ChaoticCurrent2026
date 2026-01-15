@@ -167,7 +167,7 @@ public class AutoRED extends LinearOpMode {
                 bot.shootClose(Op.AUTO),
                 new SequentialAction(
                     new EndAfterFirstParallel(
-                        new Wait(0.85),
+                        new Wait(0.95),
                         new KeepRunning(bot.moveToLaunchSubArc())
                     ),
                     bot.stopAction()
