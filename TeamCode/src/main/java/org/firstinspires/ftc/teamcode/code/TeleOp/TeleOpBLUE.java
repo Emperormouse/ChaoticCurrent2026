@@ -193,7 +193,7 @@ public class TeleOpBLUE extends LinearOpMode {
                         bot.shootClose(Op.AUTO),
                         new SequentialAction(
                             new EndAfterFirstParallel(
-                                new Wait(0.7),
+                                new Wait(0.9),
                                 new KeepRunning(bot.moveToLaunchSubArc())
                             ),
                             bot.stopAction()

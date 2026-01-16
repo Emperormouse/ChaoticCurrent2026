@@ -132,6 +132,7 @@ public class TeleOpRED extends LinearOpMode {
         VoltageSensor voltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
 
         boolean isShooting = false;
+        long lastTimeXorAPressed = 0;
 
         waitForStart();
         while (opModeIsActive()) {
@@ -177,11 +178,12 @@ public class TeleOpRED extends LinearOpMode {
                 isShooting = true;
                 currentAction = new SequentialAction(
                     bot.stopAction(),
-                    bot.shootClose(Op.TELE, 10, 0.4)
+                    bot.shootClose(Op.TELE, 10, 0.6)
                 );
             }
 
             if (gamepad1.xWasPressed()) {
+                lastTimeXorAPressed = System.currentTimeMillis();
                 isShooting = true;
                 currentAction = new SequentialAction(
                     bot.canon.setVelAction(bot.canon.CLOSE_SPEED),
@@ -191,7 +193,7 @@ public class TeleOpRED extends LinearOpMode {
                         bot.shootClose(Op.AUTO),
                         new SequentialAction(
                             new EndAfterFirstParallel(
-                                new Wait(0.7),
+                                new Wait(0.9),
                                 new KeepRunning(bot.moveToLaunchSubArc())
                             ),
                             bot.stopAction()
@@ -203,6 +205,7 @@ public class TeleOpRED extends LinearOpMode {
             }
 
             if (gamepad1.aWasPressed()) {
+                lastTimeXorAPressed = System.currentTimeMillis();
                 currentAction = new ParallelAction(
                     bot.canon.setVelAction(bot.canon.CLOSE_SPEED_FIRST),
                     bot.moveToLaunchArc()
@@ -212,7 +215,7 @@ public class TeleOpRED extends LinearOpMode {
             double y = -gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x * 1.1;
             double rx = -gamepad1.right_stick_x;
-            if (isShooting) {
+            if (isShooting  && lastTimeXorAPressed + 500 < System.currentTimeMillis()) {
                 if (Math.abs(x) > 0.1 || Math.abs(y) > 0.1 || Math.abs(rx) > 0.1) {
                     isShooting = false;
                     currentAction = new FieldCentricMovement();

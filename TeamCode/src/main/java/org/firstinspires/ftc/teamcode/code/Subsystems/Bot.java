@@ -93,7 +93,7 @@ public class Bot {
         if (opmode == Op.AUTO)
             return shootClose(opmode, 2.0, 0.4);
         else
-            return shootClose(opmode, 10.0, 0.8);
+            return shootClose(opmode, 10.0, 1.3);
     }
 
     public Action shootClose(Op opmode, double time1, double time2) {
@@ -447,7 +447,7 @@ public class Bot {
         public MoveToLaunchArc(boolean subArc) {
             this.subArc = subArc;
             if (side == Side.BLUE) {
-                targetDistance = 55.0;
+                targetDistance = 52.0;
             } else {
                 targetDistance = 52.0;
             }
@@ -485,6 +485,8 @@ public class Bot {
                         offset = -aprilTag.center.x + 300;
                         if (side == Side.BLUE)
                             offset += 25;
+                        else
+                            offset -= 25;
 
                         r = offset * kr;
 
@@ -536,9 +538,9 @@ public class Bot {
 
             if (subArc) {
                 if (found || Math.abs(Math.toDegrees(angleDiff)) < 45) {
-                    moveRelative(x, y, r, 1.0);
+                    moveRelative(x, y, r, 0.8);
                 } else {
-                    moveRelative(0, 0, r, 1.0);
+                    moveRelative(0, 0, r, 0.8);
                 }
 
                 if (!found || Math.abs(distanceDiff) > 6 || Math.abs(offset) > 20 || angle2 < Math.toDegrees(40) || angle2 > Math.toDegrees(60)) {
@@ -549,9 +551,9 @@ public class Bot {
                 }
             } else {
                 if (found || Math.abs(Math.toDegrees(angleDiff)) < 45) {
-                    moveRelative(0, y, r, 1.0);
+                    moveRelative(0, y, r, 0.8);
                 } else {
-                    moveRelative(0, 0, r, 1.0);
+                    moveRelative(0, 0, r, 0.8);
                 }
 
                 if (!found || Math.abs(distanceDiff) > 6 || Math.abs(offset) > 20) {

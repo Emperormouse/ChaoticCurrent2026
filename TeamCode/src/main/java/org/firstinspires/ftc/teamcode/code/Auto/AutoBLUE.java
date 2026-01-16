@@ -53,20 +53,19 @@ public class AutoBLUE extends LinearOpMode {
             bot.canon.setPowerAction(0),
 
             //GRAB SECOND 3 BALLS
-            bot.moveToContinuous(new Pose2d(-15.5, -12, toRadians(-90))),
+            bot.moveToContinuous(new Pose2d(-16, -12, toRadians(-90))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.3),
-                bot.moveToImprecise(new Pose2d(-15.5, -55, toRadians(-90)), 1.0)
+                bot.moveToImprecise(new Pose2d(-16, -55, toRadians(-90)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.3),
-            bot.intake.setPower(0),
 
             //HIT LEVER
 
             bot.moveRelativeAction(0.4, 0, -1.0, 1.0),
-            new Wait(0.55),
+            new Wait(0.67),
 
             bot.stopAction(),
             new Wait(0.3),
@@ -86,6 +85,7 @@ public class AutoBLUE extends LinearOpMode {
                 bot.waitUntilSeeTag(),
                 new Wait(0.8)
             ),
+            bot.intake.setPower(0),
             bot.stopAction(),
 
             //SHOOT SECOND 3 BALLS
@@ -95,14 +95,13 @@ public class AutoBLUE extends LinearOpMode {
 
             //GRAB THIRD 3 BALLS
 
-            bot.moveToContinuous(new Pose2d(8.55, -4, toRadians(-87))),
+            bot.moveToContinuous(new Pose2d(8.45, -4, toRadians(-87))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.6),
-                bot.moveTo(new Pose2d(8.55, -57, toRadians(-87)), 1.0)
+                bot.moveTo(new Pose2d(9.1, -57, toRadians(-87)), 1.0)
             ),
             new Wait(0.5),
-            bot.intake.setPower(0),
 
             bot.moveRelativeAction(-0.2, -1.0, 0.6, 1.0),
             new EndAfterEitherParallel(
@@ -113,24 +112,25 @@ public class AutoBLUE extends LinearOpMode {
             bot.stopAction(),
 
             //SHOOT THIRD 3 BALLS
+            bot.intake.setPower(0),
             shootSequence(),
             bot.canon.setPowerAction(0),
 
 
             //GRAB FOURTH 3 BALLS
-            bot.moveToContinuous(new Pose2d(29.5, -10, toRadians(-87))),
+            bot.moveToContinuous(new Pose2d(29, -10, toRadians(-87))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.5),
-                bot.moveToImprecise(new Pose2d(29.5, -58.5, toRadians(-87)), 1.0)
+                bot.moveToImprecise(new Pose2d(29, -58.5, toRadians(-87)), 1.0)
             ),
             new Wait(0.5),
-            bot.intake.setPower(0),
 
             bot.moveRelativeAction(-0.2, -1.0, 0.6, 1.0),
             new Wait(0.5),
 
             //SHOOT FOURTH 3 BALLS
+            bot.intake.setPower(0),
             shootSequence(),
             bot.canon.setPowerAction(0)
         );
@@ -143,12 +143,12 @@ public class AutoBLUE extends LinearOpMode {
                 new SequentialAction(
                     new EndAfterEitherParallel(
                         path,
-                        new Wait(29.4)
+                        new Wait(29.6)
                     ),
                     bot.intake.setPower(0),
 
                     bot.moveRelativeAction(-1.0, 0, 0, 1.0),
-                    new Wait(0.6),
+                    new Wait(0.4),
                     bot.stopAction()
                 ),
                 bot.telementaryAction(),
@@ -167,7 +167,7 @@ public class AutoBLUE extends LinearOpMode {
                 bot.shootClose(Op.AUTO),
                 new SequentialAction(
                     new EndAfterFirstParallel(
-                        new Wait(0.95),
+                        new Wait(0.8),
                         new KeepRunning(bot.moveToLaunchSubArc())
                     ),
                     bot.stopAction()
