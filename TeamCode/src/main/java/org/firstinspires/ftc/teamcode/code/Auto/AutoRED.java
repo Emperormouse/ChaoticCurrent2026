@@ -53,20 +53,19 @@ public class AutoRED extends LinearOpMode {
             bot.canon.setPowerAction(0),
 
             //GRAB SECOND 3 BALLS
-            bot.moveToContinuous(new Pose2d(-12, 12, toRadians(90))),
+            bot.moveToContinuous(new Pose2d(-13.1, 12, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.3),
-                bot.moveToImprecise(new Pose2d(-12, 55, toRadians(90)), 1.0)
+                bot.moveToImprecise(new Pose2d(-13.1, 55, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.3),
-            bot.intake.setPower(0),
 
             //HIT LEVER
 
             bot.moveRelativeAction(-0.4, 0, 1.0, 1.0),
-            new Wait(0.55),
+            new Wait(0.67),
 
             bot.stopAction(),
             new Wait(0.3),
@@ -89,20 +88,20 @@ public class AutoRED extends LinearOpMode {
             bot.stopAction(),
 
             //SHOOT SECOND 3 BALLS
+            bot.intake.setPower(0),
             shootSequence(),
             bot.canon.setPowerAction(0),
 
 
             //GRAB THIRD 3 BALLS
 
-            bot.moveToContinuous(new Pose2d(12, 6, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(11.8, 10, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.6),
-                bot.moveTo(new Pose2d(12, 56.5, toRadians(85)), 1.0)
+                bot.moveTo(new Pose2d(11.8, 58.5, toRadians(85)), 1.0)
             ),
             new Wait(0.5),
-            bot.intake.setPower(0),
 
             bot.moveRelativeAction(0.2, -1.0, -0.6, 1.0),
             new EndAfterEitherParallel(
@@ -113,24 +112,25 @@ public class AutoRED extends LinearOpMode {
             bot.stopAction(),
 
             //SHOOT THIRD 3 BALLS
+            bot.intake.setPower(0),
             shootSequence(),
             bot.canon.setPowerAction(0),
 
 
             //GRAB FOURTH 3 BALLS
-            bot.moveToContinuous(new Pose2d(32.5, 10, toRadians(87))),
+            bot.moveToContinuous(new Pose2d(32.5, 14, toRadians(87))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.5),
-                bot.moveToImprecise(new Pose2d(32.5, 58.5, toRadians(87)), 1.0)
+                bot.moveToImprecise(new Pose2d(32.5, 59.5, toRadians(87)), 1.0)
             ),
             new Wait(0.5),
-            bot.intake.setPower(0),
 
             bot.moveRelativeAction(0.2, -1.0, -0.6, 1.0),
             new Wait(0.5),
 
             //SHOOT FOURTH 3 BALLS
+            bot.intake.setPower(0),
             shootSequence(),
             bot.canon.setPowerAction(0)
         );
@@ -167,7 +167,7 @@ public class AutoRED extends LinearOpMode {
                 bot.shootClose(Op.AUTO),
                 new SequentialAction(
                     new EndAfterFirstParallel(
-                        new Wait(0.95),
+                        new Wait(0.8),
                         new KeepRunning(bot.moveToLaunchSubArc())
                     ),
                     bot.stopAction()
