@@ -2,26 +2,32 @@ package org.firstinspires.ftc.teamcode.code.Subsystems;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.code.utility.Side;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+
 public class Canon {
     public DcMotorEx motor;
     public DcMotor motor2;
 
-
-    public int CLOSE_SPEED = -1980;
+    public int CLOSE_SPEED = -1880;
     public int CLOSE_SPEED_FIRST = CLOSE_SPEED;
     public int targetVel = CLOSE_SPEED;
+    private Bot bot;
 
-    public Canon(HardwareMap hardwareMap) {
+    public Canon(HardwareMap hardwareMap, Bot bot) {
+        this.bot = bot;
         motor = hardwareMap.get(DcMotorEx.class, "left_launcher");
         motor2 = (DcMotor)hardwareMap.get(DcMotorEx.class, "par");
 
-        motor.setDirection(DcMotorSimple.Direction.REVERSE);
-        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
+        //motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        //motor2.setDirection(DcMotorSimple.Direction.REVERSE);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
@@ -29,23 +35,6 @@ public class Canon {
     public void setPower(double p) {
         motor.setPower(p);
         motor2.setPower(p);
-    }
-
-    private class SpinUp implements Action {
-        private double targetSpeed;
-
-        public SpinUp(double target) {
-            targetSpeed = target;
-        }
-
-        public boolean run(TelemetryPacket t) {
-            double speed = motor.getVelocity();
-            double error = targetSpeed - speed;
-            //motor.setPower(motor.getPower() + (error *ki));
-            motor.setVelocity(CLOSE_SPEED);
-
-            return Math.abs(error) > 40;
-        }
     }
 
     private class CloneMotorPower implements Action {
@@ -78,6 +67,41 @@ public class Canon {
         }
     }
 
+    public class SetVelByDistance implements Action {
+        public boolean run(TelemetryPacket t) {
+            AprilTagDetection detection = bot.getLatestAprilTagDetection();
+            double distance;
+
+            if (detection != null) {
+                distance = detection.ftcPose.y;
+            } else {
+                Vector2d goalVec;
+                if (bot.side == Side.RED) {
+                    goalVec = new Vector2d(-58.3727f, 55.6425f);
+                } else {
+                    goalVec = new Vector2d(-58.3727f, -55.6425f);
+                }
+
+                Pose2d botPose = bot.localizer.getPose();
+                double dx = botPose.position.x - goalVec.x;
+                double dy = botPose.position.y - goalVec.y;
+
+                distance = Math.sqrt(dx*dx + dy*dy);
+            }
+
+            double m = -5.276;
+            double c = -.1604;
+            double velocity = (m*distance) + c;
+
+            motor.setVelocity(velocity);
+
+            return true;
+        }
+    }
+    public Action setVelByDistance() {
+        return new SetVelByDistance();
+    }
+
     public class WaitUntilAtSpeed implements  Action {
         public boolean run(TelemetryPacket t) {
             boolean isAtSpeed = Math.abs(motor.getVelocity() - targetVel) <= 40;
@@ -96,19 +120,16 @@ public class Canon {
         }
     }
 
-    public Action spinUp(double target) {
-        return new SpinUp(target);
-    }
     public Action cloneMotorPower() {
         return new CloneMotorPower();
     }
     public Action setPowerAction(double pow) {
         return new SetPowerAction(pow);
     }
-    public Action waitUntilAtSpeed() {
-        return new WaitUntilAtSpeed();
-    }
     public Action setVelAction(double vel) {
         return new SetVelAction(vel);
+    }
+    public Action waitUntilAtSpeed() {
+        return new WaitUntilAtSpeed();
     }
 }

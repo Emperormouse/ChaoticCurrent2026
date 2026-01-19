@@ -10,6 +10,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -20,6 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.TwoDeadWheelLocalizer;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
@@ -27,7 +29,10 @@ import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
 import org.firstinspires.ftc.teamcode.code.utility.Op;
 import org.firstinspires.ftc.teamcode.code.utility.Side;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import java.util.ArrayList;
 
 //This is a teleOp that I'm working on which will be able to run RoadRunner paths in teleOp.
 //The best way that I figured out to do this is to make every part of the teleOp an Action, which
@@ -40,6 +45,7 @@ public class TeleOpBLUE extends LinearOpMode {
     private boolean isOuttaking = false;
     private boolean useAprilTag = true;
     Pose2d launchPose = new Pose2d(-24.7, -17, Math.toRadians(50));
+    private double distance = 0.0;
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
@@ -51,6 +57,7 @@ public class TeleOpBLUE extends LinearOpMode {
     //This is the roadrunner mecanum drive
     MecanumDrive drive;
 
+    double lastRightTrigger = 0.0;
     //MANUAL CONTROLS BESIDES MOVEMENT IN HERE
     private class ManualControls implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
@@ -63,8 +70,20 @@ public class TeleOpBLUE extends LinearOpMode {
             } else if (gamepad1.right_bumper || gamepad2.right_bumper) {
                 bot.intake.reverse();
             } else {
-                bot.intake.stop();
+                if (gamepad1.right_trigger > 0.1) {
+                    bot.gate.openManual();
+                    if (distance > 70)
+                        bot.intake.setPowerManual(-0.9);
+                    else
+                        bot.intake.setPowerManual(-1.0);
+                } else if (lastRightTrigger > 0.1) {
+                    bot.gate.closeManual();
+                    bot.intake.stop();
+                } else {
+                    bot.intake.stop();
+                }
             }
+            lastRightTrigger = gamepad1.right_trigger;
 
             if (Math.abs(gamepad1.left_trigger) > 0.2) {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
@@ -79,34 +98,23 @@ public class TeleOpBLUE extends LinearOpMode {
             }
 
             if (gamepad2.dpadUpWasPressed()) {
-                /*isOuttaking = true;
-                bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);*/
-                bot.canon.CLOSE_SPEED_FIRST -= 10;
+                bot.canon.CLOSE_SPEED -= 10;
             }
             if (gamepad2.dpadDownWasPressed()) {
-                /*isOuttaking = false;
-                bot.canon.motor.setPower(0);*/
-                bot.canon.CLOSE_SPEED_FIRST += 10;
+                bot.canon.CLOSE_SPEED += 10;
             }
             if (gamepad2.y) {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
             }
 
-            if (gamepad2.right_bumper) {
-                if (gamepad2.dpadRightWasPressed()) {
-                    bot.targetDistance += 1;
-                }
-                if (gamepad2.dpadLeftWasPressed()) {
-                    bot.targetDistance -= 1;
-                }
-            } else {
-                if (gamepad2.dpadRightWasPressed()) {
-                    bot.canon.CLOSE_SPEED -= 10;
-                }
-                if (gamepad2.dpadLeftWasPressed()) {
-                    bot.canon.CLOSE_SPEED += 10;
-                }
+            if (gamepad2.dpadRightWasPressed()) {
+                bot.targetDistance += 1;
             }
+            if (gamepad2.dpadLeftWasPressed()) {
+                bot.targetDistance -= 1;
+            }
+
+
 
             return true;
         }
@@ -131,14 +139,23 @@ public class TeleOpBLUE extends LinearOpMode {
 
         VoltageSensor voltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
 
-        boolean isShooting = false;
-        long lastTimeXorAPressed = 0;
-
         waitForStart();
         while (opModeIsActive()) {
             telemetry.update();
 
             double currentVoltage = voltageSensor.getVoltage();
+
+            AprilTagDetection detection = bot.getLatestAprilTagDetection();
+            if (detection != null) {
+                distance = detection.ftcPose.y;
+            } else {
+                Vector2d goalVec = new Vector2d(-58.3727f, -55.6425f);
+                Pose2d botPose = bot.localizer.getPose();
+                double dx = botPose.position.x - goalVec.x;
+                double dy = botPose.position.y - goalVec.y;
+                distance = Math.sqrt(dx*dx + dy*dy);
+            }
+            telemetry.addData("Distance: ", distance);
 
             telemetry.addData("Target Distance: ", bot.targetDistance);
             telemetry.addData("Target Speed: ", bot.canon.CLOSE_SPEED);
@@ -157,40 +174,21 @@ public class TeleOpBLUE extends LinearOpMode {
             drive.updatePoseEstimate();
             currentPose = drive.localizer.getPose();
 
-            /*if (gamepad1.xWasPressed()) {
-                currentAction = new SequentialAction(
-                    bot.moveToVeryImprecise(launchPose),
-                    new EndAfterFirstParallel(
-                        bot.shootClose(Op.TELE),
-                        new SequentialAction(
-                            new EndAfterFirstParallel(
-                                new Wait(1.5),
-                                new KeepRunning(bot.moveToLaunchSubArc())
-                            ),
-                            bot.stopAction()
-                        )
-                    ),
-                    bot.gate.close()
-                );
-            }*/
-
             if (gamepad1.yWasPressed()) {
-                isShooting = true;
                 currentAction = new SequentialAction(
                     bot.stopAction(),
-                    bot.shootClose(Op.TELE, 10, 0.6)
+                    bot.shootClose(Op.TELE, 10, 0.0)
                 );
             }
 
             if (gamepad1.xWasPressed()) {
-                lastTimeXorAPressed = System.currentTimeMillis();
-                isShooting = true;
+                bot.intake.stop();
                 currentAction = new SequentialAction(
                     bot.canon.setVelAction(bot.canon.CLOSE_SPEED),
                     bot.moveToVeryImprecise(launchPose),
 
                     new EndAfterFirstParallel(
-                        bot.shootClose(Op.AUTO),
+                        bot.shootClose(Op.TELE),
                         new SequentialAction(
                             new EndAfterFirstParallel(
                                 new Wait(0.9),
@@ -205,27 +203,28 @@ public class TeleOpBLUE extends LinearOpMode {
             }
 
             if (gamepad1.aWasPressed()) {
-                lastTimeXorAPressed = System.currentTimeMillis();
+                bot.intake.stop();
+                bot.gate.close();
                 currentAction = new ParallelAction(
-                    bot.canon.setVelAction(bot.canon.CLOSE_SPEED_FIRST),
-                    bot.moveToLaunchArc()
+                    new TrackedMovement(),
+                    new ManualControls(),
+                    bot.canon.setVelByDistance()
                 );
             }
 
-            double y = -gamepad1.left_stick_y;
+            /*double y = -gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x * 1.1;
             double rx = -gamepad1.right_stick_x;
             if (isShooting && lastTimeXorAPressed + 500 < System.currentTimeMillis()) {
                 if (Math.abs(x) > 0.1 || Math.abs(y) > 0.1 || Math.abs(rx) > 0.1) {
-                    isShooting = false;
                     currentAction = new FieldCentricMovement();
+                    isShooting = false;
                     bot.gate.closeManual();
                     bot.intake.stop();
                 }
-            }
+            }*/
 
             if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
-                isShooting = false;
                 bot.canon.setPower(0);
                 bot.gate.closeManual();
                 isOuttaking = false;
@@ -253,12 +252,50 @@ public class TeleOpBLUE extends LinearOpMode {
             double x = -gamepad1.left_stick_x * 1.1;
             double rx = -gamepad1.right_stick_x;
 
-            if (isOuttaking)
-                rx /= 3;
-
-            double speed = (Math.abs(gamepad1.right_trigger) > 0.2) ? 0.33 : 1.0;
+            double speed = (Math.abs(gamepad1.left_trigger) > 0.2) ? 0.33 : 1.0;
 
             bot.moveFieldCentric(x, y, rx, speed, Op.TELE);
+
+            return true;
+        }
+    }
+
+    private class TrackedMovement implements Action {
+        public boolean run(@NonNull TelemetryPacket t) {
+            double kr = (1.0 / 450);
+            double kr2 = (1.0 / 80);
+            int targetId = 20;
+            Vector2d goalVec = new Vector2d(-58.3727f, -55.6425f);
+
+            double y = -gamepad1.left_stick_y;
+            double x = -gamepad1.left_stick_x * 1.1;
+            double r = 0.0;
+
+            AprilTagDetection detection = bot.getLatestAprilTagDetection();
+            boolean found = (detection != null);
+            if (found) {
+                double offset = -detection.center.x + 300;
+                if (side == Side.BLUE)
+                    offset += 25;
+                else
+                    offset -= 25;
+
+                r = offset * kr;
+            } else {
+                Pose2d botPose = bot.localizer.getPose();
+                double dx = botPose.position.x - goalVec.x;
+                double dy = botPose.position.y - goalVec.y;
+
+                double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
+                if (targetAngle < -Math.PI) {
+                    targetAngle += 2*Math.PI;
+                }
+
+                double angleDiff = targetAngle - botPose.heading.toDouble();
+                r = Math.toDegrees(angleDiff) * kr2;
+            }
+
+            bot.moveFieldCentric(x, y, r*1.5, Op.TELE);
 
             return true;
         }

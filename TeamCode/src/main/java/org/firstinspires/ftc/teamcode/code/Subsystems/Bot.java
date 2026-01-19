@@ -35,6 +35,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Bot {
@@ -63,7 +64,7 @@ public class Bot {
     HardwareMap hardwareMap;
 
     public Bot(HardwareMap hardwareMap, MecanumDrive drive, Side side, Telemetry telemetry) {
-        canon = new Canon(hardwareMap);
+        canon = new Canon(hardwareMap, this);
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap, this);
         this.drive = drive;
@@ -93,14 +94,15 @@ public class Bot {
         if (opmode == Op.AUTO)
             return shootClose(opmode, 2.0, 0.4);
         else
-            return shootClose(opmode, 10.0, 1.3);
+            return shootClose(opmode, 100.0, 0.5);
     }
 
     public Action shootClose(Op opmode, double time1, double time2) {
         return new EndAfterFirstParallel(
             new SequentialAction(
                 gate.open(),
-                new Wait(time2),
+                canon.waitUntilAtSpeed(),
+                new Wait(0.3),
                 new EndAfterFirstParallel(
                     new Wait(time1),
                     intake.setPower(-0.9)
@@ -436,7 +438,7 @@ public class Bot {
         );
     }
 
-    public double targetDistance;
+    public double targetDistance = 52;
 
     public class MoveToLaunchArc implements Action {
         double ky = (1.0 / 60);
@@ -446,11 +448,6 @@ public class Bot {
 
         public MoveToLaunchArc(boolean subArc) {
             this.subArc = subArc;
-            if (side == Side.BLUE) {
-                targetDistance = 52.0;
-            } else {
-                targetDistance = 52.0;
-            }
         }
 
         public boolean run(TelemetryPacket telemetryPacket) {
@@ -462,14 +459,10 @@ public class Bot {
             double offset = 0;
             double angleDiff = 0;
 
-            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-            int targetId;
             Vector2d goalVec;
             if (side == Side.RED) {
-                targetId = 24;
                 goalVec = new Vector2d(-58.3727f, 55.6425f);
             } else {
-                targetId = 20;
                 goalVec = new Vector2d(-58.3727f, -55.6425f);
             }
 
@@ -477,29 +470,23 @@ public class Bot {
             double dx = botPose.position.x - goalVec.x;
             double dy = botPose.position.y - goalVec.y;
 
-            boolean found = false;
-            for (AprilTagDetection aprilTag : currentDetections) {
-                if (aprilTag.metadata != null) {
-                    if (aprilTag.id == targetId) {
-                        found = true;
-                        offset = -aprilTag.center.x + 300;
-                        if (side == Side.BLUE)
-                            offset += 25;
-                        else
-                            offset -= 25;
+            AprilTagDetection detection = getLatestAprilTagDetection();
+            boolean found = (detection != null);
+            if (found) {
+                offset = -detection.center.x + 300;
+                if (side == Side.BLUE)
+                    offset += 25;
+                else
+                    offset -= 25;
 
-                        r = offset * kr;
+                r = offset * kr;
 
-                        double distance = aprilTag.ftcPose.y;
-                        distanceDiff = targetDistance - distance;
-                        y = distanceDiff * ky;
+                double distance = detection.ftcPose.y;
+                distanceDiff = targetDistance - distance;
+                y = distanceDiff * ky;
 
-                        telemetry.addData("Distance: ", distance);
-                    }
-                }
-            }
-
-            if (!found) {
+                telemetry.addData("Distance: ", distance);
+            } else {
                 double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
                 if (targetAngle < -Math.PI) {
                     targetAngle += 2*Math.PI;
@@ -643,6 +630,19 @@ public class Bot {
     }
     public Action waitUntilSeeTag() {
         return new WaitUntilSeeTag();
+    }
+
+    public AprilTagDetection getLatestAprilTagDetection() {
+        int targetId = (side == Side.BLUE) ? 20 : 24;
+
+        ArrayList<AprilTagDetection> detections = aprilTag.getDetections();
+        for (AprilTagDetection detection : detections) {
+            if (detection.metadata != null && detection.id == targetId) {
+                return detection;
+            }
+        }
+
+        return null;
     }
 
     public void aprilTagTelementary() {

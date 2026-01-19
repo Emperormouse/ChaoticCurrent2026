@@ -101,6 +101,7 @@ public class AutoRED extends LinearOpMode {
                 new Wait(1.6),
                 bot.moveTo(new Pose2d(11.8, 58.5, toRadians(85)), 1.0)
             ),
+            bot.stopAction(),
             new Wait(0.5),
 
             bot.moveRelativeAction(0.2, -1.0, -0.6, 1.0),
@@ -124,6 +125,7 @@ public class AutoRED extends LinearOpMode {
                 new Wait(1.5),
                 bot.moveToImprecise(new Pose2d(32.5, 59.5, toRadians(87)), 1.0)
             ),
+            bot.stopAction(),
             new Wait(0.5),
 
             bot.moveRelativeAction(0.2, -1.0, -0.6, 1.0),
