@@ -21,7 +21,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.TwoDeadWheelLocalizer;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
@@ -32,8 +31,6 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
-import java.util.ArrayList;
-
 //This is a teleOp that I'm working on which will be able to run RoadRunner paths in teleOp.
 //The best way that I figured out to do this is to make every part of the teleOp an Action, which
 //is what roadrunner paths are, and then switch between those actions.
@@ -42,10 +39,10 @@ import java.util.ArrayList;
 public class TeleOpBLUE extends LinearOpMode {
     private Bot bot;
     private Pose2d currentPose;
-    private boolean isOuttaking = false;
     private boolean useAprilTag = true;
     Pose2d launchPose = new Pose2d(-24.7, -17, Math.toRadians(50));
     private double distance = 0.0;
+    private AprilTagDetection latestAprilTagDetection = null;
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
@@ -73,7 +70,7 @@ public class TeleOpBLUE extends LinearOpMode {
                 if (gamepad1.right_trigger > 0.1) {
                     bot.gate.openManual();
                     if (distance > 70)
-                        bot.intake.setPowerManual(-0.9);
+                        bot.intake.setPowerManual(-0.8);
                     else
                         bot.intake.setPowerManual(-1.0);
                 } else if (lastRightTrigger > 0.1) {
@@ -145,17 +142,21 @@ public class TeleOpBLUE extends LinearOpMode {
 
             double currentVoltage = voltageSensor.getVoltage();
 
-            AprilTagDetection detection = bot.getLatestAprilTagDetection();
-            if (detection != null) {
-                distance = detection.ftcPose.y;
+            Vector2d aprilVec = new Vector2d(-58.3727f, -55.6425f);
+
+            Pose2d botPose = bot.localizer.getPose();
+            double dx = botPose.position.x - aprilVec.x;
+            double dy = botPose.position.y - aprilVec.y;
+            latestAprilTagDetection = bot.getLatestAprilTagDetection();
+            if (latestAprilTagDetection != null) {
+                distance = latestAprilTagDetection.ftcPose.y;
             } else {
-                Vector2d goalVec = new Vector2d(-58.3727f, -55.6425f);
-                Pose2d botPose = bot.localizer.getPose();
-                double dx = botPose.position.x - goalVec.x;
-                double dy = botPose.position.y - goalVec.y;
                 distance = Math.sqrt(dx*dx + dy*dy);
             }
+
             telemetry.addData("Distance: ", distance);
+            if (latestAprilTagDetection != null)
+                telemetry.addData("April Center: ", latestAprilTagDetection.center.x);
 
             telemetry.addData("Target Distance: ", bot.targetDistance);
             telemetry.addData("Target Speed: ", bot.canon.CLOSE_SPEED);
@@ -227,7 +228,6 @@ public class TeleOpBLUE extends LinearOpMode {
             if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
                 bot.canon.setPower(0);
                 bot.gate.closeManual();
-                isOuttaking = false;
                 currentAction = defaultAction;
             }
 
@@ -262,40 +262,26 @@ public class TeleOpBLUE extends LinearOpMode {
 
     private class TrackedMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
-            double kr = (1.0 / 450);
-            double kr2 = (1.0 / 80);
-            int targetId = 20;
-            Vector2d goalVec = new Vector2d(-58.3727f, -55.6425f);
+            double kr2 = (1.0 / 70);
+            Vector2d aprilVec = new Vector2d(-58.3727f, -55.6425f);
+            Vector2d goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-7);
 
             double y = -gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x * 1.1;
-            double r = 0.0;
 
-            AprilTagDetection detection = bot.getLatestAprilTagDetection();
-            boolean found = (detection != null);
-            if (found) {
-                double offset = -detection.center.x + 300;
-                if (side == Side.BLUE)
-                    offset += 25;
-                else
-                    offset -= 25;
+            Pose2d botPose = bot.localizer.getPose();
+            double dx = botPose.position.x - goalVec.x;
+            double dy = botPose.position.y - goalVec.y;
 
-                r = offset * kr;
-            } else {
-                Pose2d botPose = bot.localizer.getPose();
-                double dx = botPose.position.x - goalVec.x;
-                double dy = botPose.position.y - goalVec.y;
-
-                double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
-                if (targetAngle < -Math.PI) {
-                    targetAngle += 2*Math.PI;
-                }
-
-                double angleDiff = targetAngle - botPose.heading.toDouble();
-                r = Math.toDegrees(angleDiff) * kr2;
+            double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
+            if (targetAngle < -Math.PI) {
+                targetAngle += 2*Math.PI;
             }
 
-            bot.moveFieldCentric(x, y, r*1.5, Op.TELE);
+            double angleDiff = targetAngle - botPose.heading.toDouble();
+            double r = Math.toDegrees(angleDiff) * kr2;
+
+            bot.moveFieldCentric(x, y, r, Op.TELE);
 
             return true;
         }

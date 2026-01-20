@@ -105,7 +105,7 @@ public class Bot {
                 new Wait(0.3),
                 new EndAfterFirstParallel(
                     new Wait(time1),
-                    intake.setPower(-0.9)
+                    intake.setPower(-1.0)
                 ),
                 //canon.setPowerInstant(0),
                 gate.close()
@@ -414,7 +414,7 @@ public class Bot {
 
             moveFieldCentric(diffX*pX, -diffY*pY, diffR*pRotational, speed, Op.AUTO);
 
-            if (Math.abs(diffX)>3.0 || Math.abs(diffY)>3.0 || Math.abs(diffR)>Math.toRadians(5)) {
+            if (Math.abs(diffX)>4.0 || Math.abs(diffY)>4.0 || Math.abs(diffR)>Math.toRadians(10)) {
                 return true;
             } else {
                 stop();
@@ -443,7 +443,7 @@ public class Bot {
     public class MoveToLaunchArc implements Action {
         double ky = (1.0 / 60);
         double kr = (1.0 / 450);
-        double kr2 = (1.0 / 80);
+        double kr2 = (1.0 / 70);
         boolean subArc;
 
         public MoveToLaunchArc(boolean subArc) {
@@ -459,51 +459,42 @@ public class Bot {
             double offset = 0;
             double angleDiff = 0;
 
+            Vector2d aprilVec;
             Vector2d goalVec;
             if (side == Side.RED) {
-                goalVec = new Vector2d(-58.3727f, 55.6425f);
+                aprilVec = new Vector2d(-58.3727f, 55.6425f);
+                goalVec = new Vector2d(aprilVec.x-7, aprilVec.y+7);
             } else {
-                goalVec = new Vector2d(-58.3727f, -55.6425f);
+                aprilVec = new Vector2d(-58.3727f, -55.6425f);
+                goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-7);
             }
 
             Pose2d botPose = localizer.getPose();
-            double dx = botPose.position.x - goalVec.x;
-            double dy = botPose.position.y - goalVec.y;
+            double dx = botPose.position.x - aprilVec.x;
+            double dy = botPose.position.y - aprilVec.y;
+            double dxGoal = botPose.position.x - goalVec.x;
+            double dyGoal = botPose.position.y - goalVec.y;
 
             AprilTagDetection detection = getLatestAprilTagDetection();
             boolean found = (detection != null);
-            if (found) {
-                offset = -detection.center.x + 300;
-                if (side == Side.BLUE)
-                    offset += 25;
-                else
-                    offset -= 25;
 
-                r = offset * kr;
-
-                double distance = detection.ftcPose.y;
-                distanceDiff = targetDistance - distance;
-                y = distanceDiff * ky;
-
-                telemetry.addData("Distance: ", distance);
-            } else {
-                double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
-                if (targetAngle < -Math.PI) {
-                    targetAngle += 2*Math.PI;
-                }
-                angleDiff = targetAngle - botPose.heading.toDouble();
-                r = Math.toDegrees(angleDiff) * kr2;
-
-                double distance = Math.sqrt(dx*dx + dy*dy);
-                distanceDiff = targetDistance - distance;
-                y = distanceDiff * ky;
-
-                telemetry.addData("targetAngle: ", Math.toDegrees(targetAngle));
-                telemetry.addData("actAngle: ", Math.toDegrees(botPose.heading.toDouble()));
-
-                telemetry.addData("dx: ", dx);
-                telemetry.addData("dy: ", dy);
+            double targetAngle = Math.atan2(dxGoal, -dyGoal) - Math.PI/2;
+            if (targetAngle < -Math.PI) {
+                targetAngle += 2*Math.PI;
             }
+            angleDiff = targetAngle - botPose.heading.toDouble();
+            r = Math.toDegrees(angleDiff) * kr2;
+
+            double distance = Math.sqrt(dx*dx + dy*dy);
+            distanceDiff = targetDistance - distance;
+            y = distanceDiff * ky;
+
+            telemetry.addData("targetAngle: ", Math.toDegrees(targetAngle));
+            telemetry.addData("actAngle: ", Math.toDegrees(botPose.heading.toDouble()));
+
+            telemetry.addData("dx: ", dx);
+            telemetry.addData("dy: ", dy);
+
 
             double angle2 = Math.toDegrees(Math.atan2(Math.abs(dy), Math.abs(dx)));
             double targetAngle2 = 50;

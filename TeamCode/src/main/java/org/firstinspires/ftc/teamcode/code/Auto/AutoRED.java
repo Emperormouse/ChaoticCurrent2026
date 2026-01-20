@@ -53,11 +53,11 @@ public class AutoRED extends LinearOpMode {
             bot.canon.setPowerAction(0),
 
             //GRAB SECOND 3 BALLS
-            bot.moveToContinuous(new Pose2d(-13.1, 12, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(-12.8, 12, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.3),
-                bot.moveToImprecise(new Pose2d(-13.1, 55, toRadians(85)), 1.0)
+                bot.moveToImprecise(new Pose2d(-12.8, 55, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.3),

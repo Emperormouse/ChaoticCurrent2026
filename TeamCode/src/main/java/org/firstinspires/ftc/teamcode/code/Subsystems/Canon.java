@@ -90,7 +90,7 @@ public class Canon {
             }
 
             double m = -5.276;
-            double c = -.1604;
+            double c = -1604;
             double velocity = (m*distance) + c;
 
             motor.setVelocity(velocity);
