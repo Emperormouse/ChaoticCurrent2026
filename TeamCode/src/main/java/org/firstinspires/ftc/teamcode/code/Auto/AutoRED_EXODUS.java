@@ -52,19 +52,43 @@ public class AutoRED_EXODUS extends LinearOpMode {
             shootSequence(),
             bot.canon.setPowerAction(0),
 
+            //GRAB THIRD 3 BALLS
+
+            bot.moveToContinuous(new Pose2d(11.0, 12, toRadians(85))),
+            bot.intake.setPower(-1.0),
+            new EndAfterEitherParallel(
+                new Wait(1.6),
+                bot.moveTo(new Pose2d(11.3, 58.5, toRadians(85)), 1.0)
+            ),
+            bot.stopAction(),
+            new Wait(0.5),
+
+            bot.moveRelativeAction(0.4, 0, -1.0, 1.0),
+            new Wait(0.6),
+            bot.stopAction(),
+            new Wait(0.5),
+
+            bot.intake.setPower(0),
+            bot.moveToVeryImprecise(new Pose2d(11.5, 32, 0)),
+
+            //SHOOT THIRD 3 BALLS
+            shootSequence(),
+            bot.canon.setPowerAction(0),
+
+
             //GRAB SECOND 3 BALLS
-            bot.moveToContinuous(new Pose2d(-12.8, 12, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(-11.9, 12, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.3),
-                bot.moveToImprecise(new Pose2d(-12.8, 55, toRadians(85)), 1.0)
+                bot.moveToImprecise(new Pose2d(-11.9, 56, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.3),
 
             //HIT LEVER 1
 
-            bot.moveRelativeAction(-0.4, 0, 1.0, 1.0),
+            bot.moveRelativeAction(-0.5, 0, 1.0, 1.0),
             new Wait(0.67),
 
             bot.stopAction(),
@@ -85,32 +109,13 @@ public class AutoRED_EXODUS extends LinearOpMode {
             bot.canon.setPowerAction(0),
 
 
-            //GRAB THIRD 3 BALLS
 
-            bot.moveToContinuous(new Pose2d(11.4, 10, toRadians(85))),
-            bot.intake.setPower(-1.0),
-            new EndAfterEitherParallel(
-                new Wait(1.6),
-                bot.moveTo(new Pose2d(11.8, 58.5, toRadians(85)), 1.0)
-            ),
-            bot.stopAction(),
-            new Wait(0.5),
-
-            bot.moveRelativeAction(0.4, 0, -1.0, 1.0),
-            new Wait(0.6),
-            bot.stopAction(),
-            new Wait(0.5),
-
-            //SHOOT THIRD 3 BALLS
-            bot.intake.setPower(0),
-            shootSequence(),
-            bot.canon.setPowerAction(0),
-
-            bot.moveToImprecise(new Pose2d(-8.0, 54.5, 0)),
+            //HIT LEVER AGAIN
+            bot.moveToImprecise(new Pose2d(-8.0, 51.0, 0)),
             bot.moveRelativeAction(0.5, 0, 0, 1.0),
-            new Wait(0.3),
+            new Wait(0.5),
             bot.moveRelativeAction(-0.5, 0, 0, 1.0),
-            new Wait(0.3),
+            new Wait(0.5),
             bot.intake.setPower(0),
             bot.stopAction()
         );

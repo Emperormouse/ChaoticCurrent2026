@@ -227,7 +227,7 @@ public class TeleOpRED extends LinearOpMode {
     private class TrackedMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
             double kr = (1.0 / 450);
-            double kr2 = (1.0 / 80);
+            double kr2 = (1.0 / 60);
             int targetId = 20;
             Vector2d goalVec = new Vector2d(-58.3727f, -55.6425f);
 

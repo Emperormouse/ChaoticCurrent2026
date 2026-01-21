@@ -203,6 +203,10 @@ public class TeleOpBLUE extends LinearOpMode {
                 );
             }
 
+            if (gamepad1.dpadUpWasPressed()) {
+                currentAction = bot.moveTo(new Pose2d(25.1,29.4,0));
+            }
+
             if (gamepad1.aWasPressed()) {
                 bot.intake.stop();
                 bot.gate.close();
@@ -212,6 +216,8 @@ public class TeleOpBLUE extends LinearOpMode {
                     bot.canon.setVelByDistance()
                 );
             }
+
+
 
             /*double y = -gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x * 1.1;
@@ -262,7 +268,7 @@ public class TeleOpBLUE extends LinearOpMode {
 
     private class TrackedMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
-            double kr2 = (1.0 / 70);
+            double kr2 = (1.0 / 60);
             Vector2d aprilVec = new Vector2d(-58.3727f, -55.6425f);
             Vector2d goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-7);
 

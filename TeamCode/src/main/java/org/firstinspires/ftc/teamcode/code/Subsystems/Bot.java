@@ -443,7 +443,7 @@ public class Bot {
     public class MoveToLaunchArc implements Action {
         double ky = (1.0 / 60);
         double kr = (1.0 / 450);
-        double kr2 = (1.0 / 70);
+        double kr2 = (1.0 / 50);
         boolean subArc;
 
         public MoveToLaunchArc(boolean subArc) {
