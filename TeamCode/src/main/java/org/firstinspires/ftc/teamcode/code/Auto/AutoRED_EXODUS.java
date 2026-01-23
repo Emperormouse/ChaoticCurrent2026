@@ -6,6 +6,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -24,6 +25,7 @@ public class AutoRED_EXODUS extends LinearOpMode {
     MecanumDrive drive;
     Bot bot;
     Pose2d launchPose = new Pose2d(-22.4, 16.6, Math.toRadians(-46));
+    Vector2d launchVec = new Vector2d(-29, 25);
 
     public void waitSeconds(double time) {
         long startTime = System.currentTimeMillis();
@@ -49,72 +51,70 @@ public class AutoRED_EXODUS extends LinearOpMode {
         Action path = new SequentialAction(
             //SHOOT FIRST 3 BALLS
 
-            shootSequence(),
-            bot.canon.setPowerAction(0),
-
-            //GRAB THIRD 3 BALLS
-
-            bot.moveToContinuous(new Pose2d(11.0, 12, toRadians(85))),
-            bot.intake.setPower(-1.0),
-            new EndAfterEitherParallel(
-                new Wait(1.6),
-                bot.moveTo(new Pose2d(11.3, 58.5, toRadians(85)), 1.0)
-            ),
-            bot.stopAction(),
-            new Wait(0.5),
-
-            bot.moveRelativeAction(0.4, 0, -1.0, 1.0),
-            new Wait(0.6),
-            bot.stopAction(),
-            new Wait(0.5),
-
-            bot.intake.setPower(0),
-            bot.moveToVeryImprecise(new Pose2d(11.5, 32, 0)),
-
-            //SHOOT THIRD 3 BALLS
-            shootSequence(),
+            shootSequence(launchVec),
             bot.canon.setPowerAction(0),
 
 
             //GRAB SECOND 3 BALLS
-            bot.moveToContinuous(new Pose2d(-11.9, 12, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(-13.9, 20, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.3),
-                bot.moveToImprecise(new Pose2d(-11.9, 56, toRadians(85)), 1.0)
+                bot.moveToImprecise(new Pose2d(-13.9, 55, toRadians(85)), 0.9)
             ),
             bot.stopAction(),
             new Wait(0.3),
 
-            //HIT LEVER 1
-
-            bot.moveRelativeAction(-0.5, 0, 1.0, 1.0),
-            new Wait(0.67),
-
-            bot.stopAction(),
-            new Wait(0.3),
-
-            bot.moveRelativeAction(1.0, 0.8, 0, 1.0),
-            new Wait(0.3),
-            bot.moveRelativeAction(0, 0.8, 1.0, 1.0),
+            //Lever version 1
+            /*new EndAfterEitherParallel(
+                new Wait(1.0),
+                bot.moveToImprecise(new Pose2d(-6.7, 52, Math.toRadians(0)))
+            ),
             new EndAfterEitherParallel(
-                bot.waitUntilSeeTag(),
-                new Wait(0.8)
+                new Wait(1.0),
+                bot.moveTo(new Pose2d(-6.7, 56, Math.toRadians(0)))
+            ),*/
+
+            //Lever version 2
+            new EndAfterFirstParallel(
+                new Wait(1.5),
+                new KeepRunning(bot.moveTo(new Pose2d(-6.7, 56, Math.toRadians(190)), -1))
             ),
-            bot.intake.setPower(0),
-            bot.stopAction(),
 
             //SHOOT SECOND 3 BALLS
-            shootSequence(),
+            shootSequence(launchVec),
             bot.canon.setPowerAction(0),
 
+            //GRAB THIRD 3 BALLS
+            bot.moveToContinuous(new Pose2d(10.2, 16, toRadians(85))),
+            bot.intake.setPower(-1.0),
+            new EndAfterEitherParallel(
+                new Wait(1.6),
+                bot.moveTo(new Pose2d(10.2, 58.5, toRadians(85)), 1.0)
+            ),
+            bot.stopAction(),
+            new Wait(0.5),
 
+            /*bot.moveRelativeAction(0.4, 0, -1.0, 1.0),
+            new Wait(0.6),
+            bot.stopAction(),
+            new Wait(0.5),*/
+
+            new EndAfterFirstParallel(
+                new Wait(1.5),
+                new KeepRunning(bot.moveTo(new Pose2d(-1.7, 55, 0)))
+            ),
+
+            //SHOOT THIRD 3 BALLS
+            shootSequence(launchVec),
+            bot.canon.setPowerAction(0),
 
             //HIT LEVER AGAIN
             bot.moveToImprecise(new Pose2d(-8.0, 51.0, 0)),
             bot.moveRelativeAction(0.5, 0, 0, 1.0),
             new Wait(0.5),
             bot.moveRelativeAction(-0.5, 0, 0, 1.0),
+
             new Wait(0.5),
             bot.intake.setPower(0),
             bot.stopAction()
@@ -133,24 +133,26 @@ public class AutoRED_EXODUS extends LinearOpMode {
         );
     }
 
-    public Action shootSequence() {
-        return new SequentialAction(
-            bot.canon.setVelAction(bot.canon.CLOSE_SPEED),
-            bot.moveToVeryImprecise(launchPose),
-
-            new EndAfterFirstParallel(
-                bot.shootClose(Op.AUTO),
-                new SequentialAction(
-                    new EndAfterFirstParallel(
-                        new Wait(0.8),
-                        new KeepRunning(bot.moveToLaunchSubArc())
-                    ),
-                    bot.stopAction()
-                )
+    public Action shootSequence(Vector2d targetVec) {
+        return new EndAfterFirstParallel(
+            new SequentialAction(
+                bot.moveToTracked(targetVec),
+                bot.stopAction(),
+                bot.gate.open(),
+                new EndAfterFirstParallel(
+                    new Wait(2.6),
+                    new ParallelAction(
+                        new KeepRunning(bot.aimAtGoal()),
+                        new SequentialAction(
+                            new Wait(0.6),
+                            bot.intake.setPower(-1.0)
+                        )
+                    )
+                ),
+                bot.intake.setPower(0),
+                bot.gate.close()
             ),
-            bot.gate.close(),
-            bot.intake.setPower(1.0)
+            bot.canon.setVelByDistance()
         );
-
     }
 }

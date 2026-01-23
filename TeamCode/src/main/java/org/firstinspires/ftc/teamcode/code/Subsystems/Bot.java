@@ -12,7 +12,6 @@ import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -59,6 +58,8 @@ public class Bot {
     public Side side;
 
     public Pose2d launchPose;
+    public Vector2d aprilVec;
+    public Vector2d goalVec;
 
     Telemetry telemetry;
     HardwareMap hardwareMap;
@@ -72,10 +73,15 @@ public class Bot {
         this.telemetry = telemetry;
         this.hardwareMap = hardwareMap;
         this.side = side;
-        if (side == Side.BLUE)
+        if (side == Side.BLUE) {
             launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(51.5));
-        else
+            aprilVec = new Vector2d(-58.3727f, -55.6425f);
+            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-7);
+        } else {
             launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-42.3));
+            aprilVec = new Vector2d(-58.3727f, 55.6425f);
+            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y+7);
+        }
 
         frontLeft = hardwareMap.get(DcMotor.class, "front_left");
         backLeft = hardwareMap.get(DcMotor.class, "back_left");
@@ -255,13 +261,15 @@ public class Bot {
         private final double pRotational = 1.0;
         private final double pX = 0.065;
         private final double pY = 0.065;
+        private final int turnMod;
         private Pose2d targetPose;
         private long lastTimeMoved = 0;
         private double speed;
 
-        public MoveTo(Pose2d targetPose, double speed) {
+        public MoveTo(Pose2d targetPose, double speed, int turnMod) {
             this.targetPose = targetPose;
             this.speed = speed;
+            this.turnMod = turnMod;
         }
 
         public boolean run(TelemetryPacket t) {
@@ -269,7 +277,16 @@ public class Bot {
             Pose2d currentPose = localizer.getPose();
             double diffX = targetPose.position.x - currentPose.position.x;
             double diffY = targetPose.position.y - currentPose.position.y;
-            double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
+
+            double targetR = targetPose.heading.toDouble();
+            double currentR = currentPose.heading.toDouble();
+            if (turnMod == -1) {
+                if (targetR < 0)
+                    targetR += Math.toRadians(360);
+                if (currentR < 0)
+                    currentR += Math.toRadians(360);
+            }
+            double diffR = targetR - currentR;
 
             double powX = diffX*pX;
             double powY = -diffY*pY;
@@ -277,7 +294,7 @@ public class Bot {
 
             moveFieldCentric(powX, powY, powR, speed, Op.AUTO);
 
-            if (Math.abs(diffX) > 3.0 || Math.abs(diffY) > 3.0 || Math.abs(diffR) > Math.toRadians(2.8)) {
+            if (Math.abs(diffX) > 3.0 || Math.abs(diffY) > 3.0 || Math.abs(diffR) > Math.toRadians(3)) {
                 lastTimeMoved = System.currentTimeMillis();
             }
 
@@ -292,10 +309,13 @@ public class Bot {
         }
     }
     public Action moveTo(Pose2d targetPose) {
-        return new MoveTo(targetPose, 1.0);
+        return new MoveTo(targetPose, 1.0, 1);
     }
     public Action moveTo(Pose2d targetPose, double speed) {
-        return new MoveTo(targetPose, speed);
+        return new MoveTo(targetPose, speed, 1);
+    }
+    public Action moveTo(Pose2d targetPose, double speed, int turnMod) {
+        return new MoveTo(targetPose, speed, turnMod);
     }
 
     public class MoveToImprecise implements Action {
@@ -340,9 +360,9 @@ public class Bot {
     
 
     public class MoveToContinuous implements Action {
-        private final double pRotational = 1.0;
-        private final double pX = 0.08;
-        private final double pY = 0.08;
+        private final double pRotational = 0.8;
+        private final double pX = 0.05;
+        private final double pY = 0.05;
         private Pose2d targetPose;
         private double speed;
 
@@ -362,7 +382,7 @@ public class Bot {
             double powY = -diffY*pY;
             double powR = diffR*pRotational;
 
-            double minSpeed = 0.25;
+            double minSpeed = 0.15;
             if (Math.abs(powX) < minSpeed && Math.abs(powY) < minSpeed && Math.abs(powR) < minSpeed) {
                 double max;
                 if (Math.abs(powX) > Math.abs(powY)) {
@@ -378,7 +398,7 @@ public class Bot {
 
             moveFieldCentric(powX, powY, powR, speed, Op.AUTO);
 
-            if (Math.abs(diffX)>3.5 || Math.abs(diffY)>3.5 || Math.abs(diffR)>Math.toRadians(4)) {
+            if (Math.abs(diffX)>4 || Math.abs(diffY)>4 || Math.abs(diffR)>Math.toRadians(5)) {
                 return true;
             } else {
                 stop();
@@ -428,7 +448,7 @@ public class Bot {
 
     //infinitely settles
     public Action settle(Pose2d targetPose) {
-        return new KeepRunning(new MoveTo(targetPose, 1.0));
+        return new KeepRunning(new MoveTo(targetPose, 1.0, 1));
     }
     //settles for amount of time in seconds
     public Action settle(Pose2d targetPose, double time) {
@@ -438,12 +458,118 @@ public class Bot {
         );
     }
 
+    //drives to location while tracking april tag
+    public class MoveToTracked implements Action {
+        private double pRotational = (1.0 / 60);
+        private double pX = 0.065;
+        private double pY = 0.065;
+        private boolean reachedTargetVec = false;
+        private Vector2d targetVec;
+        private double speed;
+
+        public MoveToTracked(Vector2d targetVec) {
+            this(targetVec, 1.0);
+        }
+        public MoveToTracked(Vector2d targetVec, double speed) {
+            this.targetVec = targetVec;
+            this.speed = speed;
+        }
+
+        public boolean run(TelemetryPacket t) {
+            localizer.update();
+            Pose2d currentPose = localizer.getPose();
+
+            //Tracking
+            double dx = currentPose.position.x - goalVec.x;
+            double dy = currentPose.position.y - goalVec.y;
+
+            double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
+            if (targetAngle < -Math.PI) {
+                targetAngle += 2*Math.PI;
+            }
+
+            double diffX = targetVec.x - currentPose.position.x;
+            double diffY = targetVec.y - currentPose.position.y;
+            double angleDiff = Math.toDegrees(targetAngle - currentPose.heading.toDouble());
+
+            if (Math.abs(diffX) < 5.0 && Math.abs(diffY) < 5.0)
+                reachedTargetVec = true;
+
+            double powX = diffX*pX;
+            double powY = -diffY*pY;
+            double powR = angleDiff*pRotational;
+
+            if (reachedTargetVec)
+                moveFieldCentric(0, 0, powR, speed, Op.AUTO);
+            else
+                moveFieldCentric(powX, powY, powR, speed, Op.AUTO);
+
+            if (!reachedTargetVec || Math.abs(angleDiff)>5.0) {
+                return true;
+            } else {
+                stop();
+                return false;
+            }
+        }
+    }
+    public Action moveToTracked(Vector2d targetVec) {
+        return new MoveToTracked(targetVec);
+    }
+    public Action moveToTracked(Vector2d targetVec, double speed) {
+        return new MoveToTracked(targetVec, speed);
+    }
+
+    //drives to location while tracking april tag
+    public class AimAtGoal implements Action {
+        private double pRotational = (1.0 / 60);
+        private double speed;
+
+        public AimAtGoal() {
+            this(1.0);
+        }
+        public AimAtGoal(double speed) {
+            this.speed = speed;
+        }
+
+        public boolean run(TelemetryPacket t) {
+            localizer.update();
+            Pose2d currentPose = localizer.getPose();
+
+            //Tracking
+            double dx = currentPose.position.x - goalVec.x;
+            double dy = currentPose.position.y - goalVec.y;
+
+            double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
+            if (targetAngle < -Math.PI) {
+                targetAngle += 2*Math.PI;
+            }
+
+            double angleDiff = Math.toDegrees(targetAngle - currentPose.heading.toDouble());
+            double powR = angleDiff*pRotational;
+
+            moveRelative(0, 0, powR, speed);
+
+            if (Math.abs(angleDiff)>5.0) {
+                return true;
+            } else {
+                stop();
+                return false;
+            }
+        }
+    }
+    public Action aimAtGoal() {
+        return new AimAtGoal();
+    }
+    public Action aimAtGoal(double speed) {
+        return new AimAtGoal(speed);
+    }
+
     public double targetDistance = 52;
 
     public class MoveToLaunchArc implements Action {
         double ky = (1.0 / 60);
         double kr = (1.0 / 450);
-        double kr2 = (1.0 / 50);
+        double kr2 = (1.0 / 60);
         boolean subArc;
 
         public MoveToLaunchArc(boolean subArc) {
