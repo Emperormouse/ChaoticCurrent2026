@@ -487,6 +487,7 @@ public class Bot {
             if (targetAngle < -Math.PI) {
                 targetAngle += 2*Math.PI;
             }
+            targetAngle += Math.toRadians(-20);
 
             double diffX = targetVec.x - currentPose.position.x;
             double diffY = targetVec.y - currentPose.position.y;
@@ -543,6 +544,7 @@ public class Bot {
             if (targetAngle < -Math.PI) {
                 targetAngle += 2*Math.PI;
             }
+            targetAngle += Math.toRadians(-20);
 
             double angleDiff = Math.toDegrees(targetAngle - currentPose.heading.toDouble());
             double powR = angleDiff*pRotational;
