@@ -24,8 +24,8 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 public class AutoRED_EXODUS extends LinearOpMode {
     MecanumDrive drive;
     Bot bot;
-    Pose2d launchPose = new Pose2d(-22.4, 16.6, Math.toRadians(-46));
-    Vector2d launchVec = new Vector2d(-29, 25);
+    Pose2d launchPose = new Pose2d(-21.4, 15.6, Math.toRadians(-46));
+    Vector2d launchVec = new Vector2d(-24.7, 23.4);
 
     public void waitSeconds(double time) {
         long startTime = System.currentTimeMillis();
@@ -56,11 +56,11 @@ public class AutoRED_EXODUS extends LinearOpMode {
 
 
             //GRAB SECOND 3 BALLS
-            bot.moveToContinuous(new Pose2d(-13.9, 20, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(-14.8, 14, toRadians(90))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.3),
-                bot.moveToImprecise(new Pose2d(-13.9, 55, toRadians(85)), 0.9)
+                bot.moveToImprecise(new Pose2d(-14.8, 53, toRadians(90)), 0.9)
             ),
             bot.stopAction(),
             new Wait(0.3),
@@ -76,21 +76,26 @@ public class AutoRED_EXODUS extends LinearOpMode {
             ),*/
 
             //Lever version 2
-            new EndAfterFirstParallel(
-                new Wait(1.5),
-                new KeepRunning(bot.moveTo(new Pose2d(-6.7, 56, Math.toRadians(190)), -1))
+            new EndAfterEitherParallel(
+                new Wait(1.1),
+                bot.moveTo(new Pose2d(-9.8, 50, Math.toRadians(0)), 0.9)
+                //new KeepRunning(bot.moveTo(new Pose2d(-7.8, 56.5, Math.toRadians(160)), 0.9))
             ),
+            bot.moveRelativeAction(1.0, 0, 0, 1.0),
+            new Wait(0.3),
+            bot.stopAction(),
+            new Wait(0.2),
 
             //SHOOT SECOND 3 BALLS
             shootSequence(launchVec),
             bot.canon.setPowerAction(0),
 
             //GRAB THIRD 3 BALLS
-            bot.moveToContinuous(new Pose2d(10.2, 16, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(10.0, 13, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.6),
-                bot.moveTo(new Pose2d(10.2, 58.5, toRadians(85)), 1.0)
+                bot.moveTo(new Pose2d(10.0, 58.5, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.5),
@@ -100,18 +105,22 @@ public class AutoRED_EXODUS extends LinearOpMode {
             bot.stopAction(),
             new Wait(0.5),*/
 
-            new EndAfterFirstParallel(
+            new EndAfterEitherParallel(
                 new Wait(1.5),
                 new KeepRunning(bot.moveTo(new Pose2d(-1.7, 55, 0)))
             ),
+            bot.moveRelativeAction(-1.0, 0, 0, 1.0),
+            new Wait(0.15),
+            bot.stopAction(),
+
 
             //SHOOT THIRD 3 BALLS
             shootSequence(launchVec),
             bot.canon.setPowerAction(0),
 
             //HIT LEVER AGAIN
-            bot.moveToImprecise(new Pose2d(-8.0, 51.0, 0)),
-            bot.moveRelativeAction(0.5, 0, 0, 1.0),
+            bot.moveToImprecise(new Pose2d(-7.0, 50.0, 0)),
+            bot.moveRelativeAction(1.0, 0, 0, 1.0),
             new Wait(0.5),
             bot.moveRelativeAction(-0.5, 0, 0, 1.0),
 

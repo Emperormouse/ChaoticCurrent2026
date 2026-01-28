@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.code.Subsystems;
 
+import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.max;
@@ -280,13 +281,14 @@ public class Bot {
 
             double targetR = targetPose.heading.toDouble();
             double currentR = currentPose.heading.toDouble();
-            if (turnMod == -1) {
-                if (targetR < 0)
-                    targetR += Math.toRadians(360);
-                if (currentR < 0)
-                    currentR += Math.toRadians(360);
-            }
             double diffR = targetR - currentR;
+            /*if (turnMod == -1) {
+                if (Math.abs(targetR+(2*PI) - currentR) < Math.abs(diffR)) {
+                    diffR = targetR+(2*PI) - currentR;
+                } else if (Math.abs(targetR-(2*PI) - currentR) < Math.abs(diffR)) {
+                    diffR = targetR-(2*PI) - currentR;
+                }
+            }*/
 
             double powX = diffX*pX;
             double powY = -diffY*pY;
@@ -483,11 +485,14 @@ public class Bot {
             double dx = currentPose.position.x - goalVec.x;
             double dy = currentPose.position.y - goalVec.y;
 
-            double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
-            if (targetAngle < -Math.PI) {
-                targetAngle += 2*Math.PI;
+            double targetAngle = Math.atan2(dx, -dy) - PI/2;
+            if (targetAngle < -PI) {
+                targetAngle += 2* PI;
             }
-            targetAngle += Math.toRadians(-20);
+            if (side == Side.BLUE)
+                targetAngle += Math.toRadians(4);
+            else
+                targetAngle += Math.toRadians(-4);
 
             double diffX = targetVec.x - currentPose.position.x;
             double diffY = targetVec.y - currentPose.position.y;
@@ -540,11 +545,14 @@ public class Bot {
             double dx = currentPose.position.x - goalVec.x;
             double dy = currentPose.position.y - goalVec.y;
 
-            double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
-            if (targetAngle < -Math.PI) {
-                targetAngle += 2*Math.PI;
+            double targetAngle = Math.atan2(dx, -dy) - PI/2;
+            if (targetAngle < -PI) {
+                targetAngle += 2* PI;
             }
-            targetAngle += Math.toRadians(-20);
+            if (side == Side.BLUE)
+                targetAngle += Math.toRadians(4);
+            else
+                targetAngle += Math.toRadians(-4);
 
             double angleDiff = Math.toDegrees(targetAngle - currentPose.heading.toDouble());
             double powR = angleDiff*pRotational;
@@ -606,9 +614,9 @@ public class Bot {
             AprilTagDetection detection = getLatestAprilTagDetection();
             boolean found = (detection != null);
 
-            double targetAngle = Math.atan2(dxGoal, -dyGoal) - Math.PI/2;
-            if (targetAngle < -Math.PI) {
-                targetAngle += 2*Math.PI;
+            double targetAngle = Math.atan2(dxGoal, -dyGoal) - PI/2;
+            if (targetAngle < -PI) {
+                targetAngle += 2* PI;
             }
             angleDiff = targetAngle - botPose.heading.toDouble();
             r = Math.toDegrees(angleDiff) * kr2;
