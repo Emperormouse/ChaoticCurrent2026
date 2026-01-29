@@ -6,6 +6,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -24,6 +25,7 @@ public class AutoRED extends LinearOpMode {
     MecanumDrive drive;
     Bot bot;
     Pose2d launchPose = new Pose2d(-22.4, 16.6, Math.toRadians(-46));
+    Vector2d launchVec = new Vector2d(-24.7, 23.4);
 
     public void waitSeconds(double time) {
         long startTime = System.currentTimeMillis();
@@ -48,93 +50,78 @@ public class AutoRED extends LinearOpMode {
 
         Action path = new SequentialAction(
             //SHOOT FIRST 3 BALLS
+            //bot.moveTo(new Pose2d(-9.8, 50, Math.toRadians(190)), 0.9, -1),
 
-            shootSequence(),
+            shootSequence(launchVec),
             bot.canon.setPowerAction(0),
+            bot.intake.setPower(1.0),
 
             //GRAB SECOND 3 BALLS
-            bot.moveToContinuous(new Pose2d(-12.8, 12, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(-14.8, 14, toRadians(90))),
             bot.intake.setPower(-1.0),
+            new EndAfterEitherParallel(
+                new Wait(1.0),
+                bot.moveToImprecise(new Pose2d(-14.8, 53, toRadians(90)), 0.9)
+            ),
+            bot.stopAction(),
+            new Wait(0.3),
+            bot.intake.setPower(0),
+
+            //Lever version 2
             new EndAfterEitherParallel(
                 new Wait(1.3),
-                bot.moveToImprecise(new Pose2d(-12.8, 55, toRadians(85)), 1.0)
+                //bot.moveTo(new Pose2d(-9.8, 50, Math.toRadians(0)), 0.9)
+                new KeepRunning(bot.moveTo(new Pose2d(-7.9, 57, Math.toRadians(181)), 0.7, -1))
             ),
-            bot.stopAction(),
-            new Wait(0.3),
-
-            //HIT LEVER
-
-            bot.moveRelativeAction(-0.4, 0, 1.0, 1.0),
-            new Wait(0.67),
-
-            bot.stopAction(),
-            new Wait(0.3),
-
-            /*new EndAfterEitherParallel(
-                new EndAfterEitherParallel(
-                    bot.waitUntilSeeTag(),
-                    new Wait(1.0)
-                ),
-                bot.moveFieldCentricAction(-1.0, 1.0, -1.0, 1.0)
-            ),*/
-
-            bot.moveRelativeAction(1.0, 0.8, 0, 1.0),
-            new Wait(0.3),
-            bot.moveRelativeAction(0, 0.8, 1.0, 1.0),
-            new EndAfterEitherParallel(
-                bot.waitUntilSeeTag(),
-                new Wait(0.8)
-            ),
-            bot.stopAction(),
 
             //SHOOT SECOND 3 BALLS
-            bot.intake.setPower(0),
-            shootSequence(),
+            shootSequence(launchVec),
             bot.canon.setPowerAction(0),
-
+            bot.intake.setPower(1.0),
 
             //GRAB THIRD 3 BALLS
-
-            bot.moveToContinuous(new Pose2d(11.8, 10, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(9.95, 13, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
-                new Wait(1.6),
-                bot.moveTo(new Pose2d(11.8, 58.5, toRadians(85)), 1.0)
+                new Wait(1.4),
+                bot.moveTo(new Pose2d(9.9, 58, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
-            new Wait(0.5),
+            new Wait(0.3),
+            bot.intake.setPower(0),
 
-            bot.moveRelativeAction(0.2, -1.0, -0.6, 1.0),
+            bot.moveRelativeAction(0, -1.0, -0.6, 1.0),
             new EndAfterEitherParallel(
-                new Wait(0.8),
+                new Wait(0.6),
                 bot.waitUntilSeeTag()
             ),
 
-            bot.stopAction(),
-
             //SHOOT THIRD 3 BALLS
-            bot.intake.setPower(0),
-            shootSequence(),
+            shootSequence(launchVec),
             bot.canon.setPowerAction(0),
+            bot.intake.setPower(1.0),
 
 
             //GRAB FOURTH 3 BALLS
-            bot.moveToContinuous(new Pose2d(32.5, 14, toRadians(87))),
             bot.intake.setPower(-1.0),
+            bot.moveToContinuous(new Pose2d(32.5, 10, toRadians(85))),
             new EndAfterEitherParallel(
-                new Wait(1.5),
-                bot.moveToImprecise(new Pose2d(32.5, 59.5, toRadians(87)), 1.0)
+                new Wait(1.3),
+                bot.moveToImprecise(new Pose2d(32.5, 58, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
-            new Wait(0.5),
+            new Wait(0.3),
+            bot.intake.setPower(0),
 
-            bot.moveRelativeAction(0.2, -1.0, -0.6, 1.0),
+            bot.moveRelativeAction(0, -1.0, -0.6, 1.0),
             new Wait(0.5),
 
             //SHOOT FOURTH 3 BALLS
+            shootSequence(launchVec),
+            bot.canon.setPowerAction(0),
+
             bot.intake.setPower(0),
-            shootSequence(),
-            bot.canon.setPowerAction(0)
+            bot.stopAction()
         );
 
         waitForStart();
@@ -160,25 +147,27 @@ public class AutoRED extends LinearOpMode {
         );
     }
 
-    public Action shootSequence() {
-        return new SequentialAction(
-            bot.canon.setVelAction(bot.canon.CLOSE_SPEED),
-            bot.moveToVeryImprecise(launchPose),
-
-            new EndAfterFirstParallel(
-                bot.shootClose(Op.AUTO),
-                new SequentialAction(
-                    new EndAfterFirstParallel(
-                        new Wait(0.8),
-                        new KeepRunning(bot.moveToLaunchSubArc())
-                    ),
-                    bot.stopAction()
-                )
+    public Action shootSequence(Vector2d targetVec) {
+        return new EndAfterFirstParallel(
+            new SequentialAction(
+                bot.moveToTracked(targetVec),
+                bot.stopAction(),
+                bot.gate.open(),
+                new EndAfterFirstParallel(
+                    new Wait(2.5),
+                    new ParallelAction(
+                        new KeepRunning(bot.aimAtGoal()),
+                        new SequentialAction(
+                            new Wait(0.5),
+                            bot.intake.setPower(-1.0)
+                        )
+                    )
+                ),
+                bot.intake.setPower(0),
+                bot.gate.close()
             ),
-            bot.gate.close(),
-            bot.intake.setPower(1.0)
+            bot.canon.setVelByDistance()
         );
-
     }
 }
 

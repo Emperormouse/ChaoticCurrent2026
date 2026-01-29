@@ -282,13 +282,17 @@ public class Bot {
             double targetR = targetPose.heading.toDouble();
             double currentR = currentPose.heading.toDouble();
             double diffR = targetR - currentR;
-            /*if (turnMod == -1) {
-                if (Math.abs(targetR+(2*PI) - currentR) < Math.abs(diffR)) {
-                    diffR = targetR+(2*PI) - currentR;
-                } else if (Math.abs(targetR-(2*PI) - currentR) < Math.abs(diffR)) {
-                    diffR = targetR-(2*PI) - currentR;
-                }
-            }*/
+            telemetry.addData("diffR1: ", Math.toDegrees(diffR));
+            if (turnMod == -1) {
+                double diffR2 = targetR+(2*PI) - currentR;
+                double diffR3 = targetR-(2*PI) - currentR;
+                telemetry.addData("diffR2: ", Math.toDegrees(diffR2));
+                telemetry.addData("diffR3: ", Math.toDegrees(diffR3));
+                if (Math.abs(diffR2) < Math.abs(diffR))
+                    diffR = diffR2;
+                if (Math.abs(diffR3) < Math.abs(diffR))
+                    diffR = diffR3;
+            }
 
             double powX = diffX*pX;
             double powY = -diffY*pY;
@@ -321,9 +325,9 @@ public class Bot {
     }
 
     public class MoveToImprecise implements Action {
-        private final double pRotational = 1.0;
-        private final double pX = 0.08;
-        private final double pY = 0.08;
+        private final double pRotational = 0.9;
+        private final double pX = 0.07;
+        private final double pY = 0.07;
         private Pose2d targetPose;
         private double speed;
 
@@ -491,14 +495,13 @@ public class Bot {
             }
             if (side == Side.BLUE)
                 targetAngle += Math.toRadians(4);
-            else
-                targetAngle += Math.toRadians(-4);
+
 
             double diffX = targetVec.x - currentPose.position.x;
             double diffY = targetVec.y - currentPose.position.y;
             double angleDiff = Math.toDegrees(targetAngle - currentPose.heading.toDouble());
 
-            if (Math.abs(diffX) < 5.0 && Math.abs(diffY) < 5.0)
+            if (Math.abs(diffX) < 4.0 && Math.abs(diffY) < 4.0)
                 reachedTargetVec = true;
 
             double powX = diffX*pX;
@@ -551,8 +554,6 @@ public class Bot {
             }
             if (side == Side.BLUE)
                 targetAngle += Math.toRadians(4);
-            else
-                targetAngle += Math.toRadians(-4);
 
             double angleDiff = Math.toDegrees(targetAngle - currentPose.heading.toDouble());
             double powR = angleDiff*pRotational;

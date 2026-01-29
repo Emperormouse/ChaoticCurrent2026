@@ -39,9 +39,10 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 public class TeleOpRED extends LinearOpMode {
     private Bot bot;
     private Pose2d currentPose;
-    private boolean isOuttaking = false;
     private boolean useAprilTag = true;
     Pose2d launchPose = new Pose2d(-22.4, 16.6, Math.toRadians(-46));
+    private double distance = 0.0;
+    private AprilTagDetection latestAprilTagDetection = null;
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
@@ -53,8 +54,8 @@ public class TeleOpRED extends LinearOpMode {
     //This is the roadrunner mecanum drive
     MecanumDrive drive;
 
-    //MANUAL CONTROLS BESIDES MOVEMENT IN HERE
     double lastRightTrigger = 0.0;
+    //MANUAL CONTROLS BESIDES MOVEMENT IN HERE
     private class ManualControls implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
             if (gamepad1.a) {
@@ -67,15 +68,19 @@ public class TeleOpRED extends LinearOpMode {
                 bot.intake.reverse();
             } else {
                 if (gamepad1.right_trigger > 0.1) {
-                    bot.gate.open();
-                    bot.intake.setPower(-0.9);
+                    bot.gate.openManual();
+                    if (distance > 70)
+                        bot.intake.setPowerManual(-0.8);
+                    else
+                        bot.intake.setPowerManual(-1.0);
                 } else if (lastRightTrigger > 0.1) {
-                    bot.gate.close();
+                    bot.gate.closeManual();
                     bot.intake.stop();
                 } else {
                     bot.intake.stop();
                 }
             }
+            lastRightTrigger = gamepad1.right_trigger;
 
             if (Math.abs(gamepad1.left_trigger) > 0.2) {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
@@ -107,7 +112,6 @@ public class TeleOpRED extends LinearOpMode {
             }
 
 
-            lastRightTrigger = gamepad1.right_trigger;
 
             return true;
         }
@@ -137,6 +141,22 @@ public class TeleOpRED extends LinearOpMode {
             telemetry.update();
 
             double currentVoltage = voltageSensor.getVoltage();
+
+            Vector2d aprilVec = new Vector2d(-58.3727f, 55.6425f);
+
+            Pose2d botPose = bot.localizer.getPose();
+            double dx = botPose.position.x - aprilVec.x;
+            double dy = botPose.position.y - aprilVec.y;
+            latestAprilTagDetection = bot.getLatestAprilTagDetection();
+            if (latestAprilTagDetection != null) {
+                distance = latestAprilTagDetection.ftcPose.y;
+            } else {
+                distance = Math.sqrt(dx*dx + dy*dy);
+            }
+
+            telemetry.addData("Distance: ", distance);
+            if (latestAprilTagDetection != null)
+                telemetry.addData("April Center: ", latestAprilTagDetection.center.x);
 
             telemetry.addData("Target Distance: ", bot.targetDistance);
             telemetry.addData("Target Speed: ", bot.canon.CLOSE_SPEED);
@@ -183,14 +203,21 @@ public class TeleOpRED extends LinearOpMode {
                 );
             }
 
+            if (gamepad1.dpadUpWasPressed()) {
+                currentAction = bot.moveTo(new Pose2d(25.1,29.4,0));
+            }
+
             if (gamepad1.aWasPressed()) {
                 bot.intake.stop();
                 bot.gate.close();
                 currentAction = new ParallelAction(
-                    bot.canon.setVelByDistance(),
-                    new TrackedMovement()
+                    new TrackedMovement(),
+                    new ManualControls(),
+                    bot.canon.setVelByDistance()
                 );
             }
+
+
 
             /*double y = -gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x * 1.1;
@@ -198,18 +225,15 @@ public class TeleOpRED extends LinearOpMode {
             if (isShooting && lastTimeXorAPressed + 500 < System.currentTimeMillis()) {
                 if (Math.abs(x) > 0.1 || Math.abs(y) > 0.1 || Math.abs(rx) > 0.1) {
                     currentAction = new FieldCentricMovement();
-                    if (gamepad1.right_trigger < 0.1) {
-                        isShooting = false;
-                        bot.gate.closeManual();
-                        bot.intake.stop();
-                    }
+                    isShooting = false;
+                    bot.gate.closeManual();
+                    bot.intake.stop();
                 }
             }*/
 
             if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
                 bot.canon.setPower(0);
                 bot.gate.closeManual();
-                isOuttaking = false;
                 currentAction = defaultAction;
             }
 
@@ -218,51 +242,10 @@ public class TeleOpRED extends LinearOpMode {
             }
             Actions.runBlocking(bot.canon.cloneMotorPower());
 
+
             telemetry.addData("Canon power: ", bot.canon.motor.getPower());
             telemetry.addData("Canon speed: ", bot.canon.motor.getVelocity());
             telemetry.addData("Pos: ", currentPose);
-        }
-    }
-
-    private class TrackedMovement implements Action {
-        public boolean run(@NonNull TelemetryPacket t) {
-            double kr = (1.0 / 450);
-            double kr2 = (1.0 / 60);
-            int targetId = 20;
-            Vector2d goalVec = new Vector2d(-58.3727f, -55.6425f);
-
-            double y = -gamepad1.left_stick_y;
-            double x = -gamepad1.left_stick_x * 1.1;
-            double r = 0.0;
-
-            AprilTagDetection detection = bot.getLatestAprilTagDetection();
-            boolean found = (detection != null);
-            if (found) {
-                double offset = -detection.center.x + 300;
-                if (side == Side.BLUE)
-                    offset += 25;
-                else
-                    offset -= 25;
-
-                r = offset * kr;
-            } else {
-                Pose2d botPose = bot.localizer.getPose();
-                double dx = botPose.position.x - goalVec.x;
-                double dy = botPose.position.y - goalVec.y;
-
-                double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
-                if (targetAngle < -Math.PI) {
-                    targetAngle += 2*Math.PI;
-                }
-
-                double angleDiff = targetAngle - botPose.heading.toDouble();
-                r = Math.toDegrees(angleDiff) * kr2;
-            }
-
-            double speed = (Math.abs(gamepad1.left_trigger) > 0.2) ? 0.33 : 1.0;
-            bot.moveFieldCentric(x*speed, y*speed, r, Op.TELE);
-
-            return true;
         }
     }
 
@@ -275,12 +258,36 @@ public class TeleOpRED extends LinearOpMode {
             double x = -gamepad1.left_stick_x * 1.1;
             double rx = -gamepad1.right_stick_x;
 
-            if (isOuttaking)
-                rx /= 3;
-
             double speed = (Math.abs(gamepad1.left_trigger) > 0.2) ? 0.33 : 1.0;
 
             bot.moveFieldCentric(x, y, rx, speed, Op.TELE);
+
+            return true;
+        }
+    }
+
+    private class TrackedMovement implements Action {
+        public boolean run(@NonNull TelemetryPacket t) {
+            double kr2 = (1.0 / 60);
+            Vector2d aprilVec = new Vector2d(-58.3727f, 55.6425f);
+            Vector2d goalVec = new Vector2d(aprilVec.x-7, aprilVec.y+7);
+
+            double y = -gamepad1.left_stick_y;
+            double x = -gamepad1.left_stick_x * 1.1;
+
+            Pose2d botPose = bot.localizer.getPose();
+            double dx = botPose.position.x - goalVec.x;
+            double dy = botPose.position.y - goalVec.y;
+
+            double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
+            if (targetAngle < -Math.PI) {
+                targetAngle += 2*Math.PI;
+            }
+
+            double angleDiff = targetAngle - botPose.heading.toDouble();
+            double r = Math.toDegrees(angleDiff) * kr2;
+
+            bot.moveFieldCentric(x, y, r, Op.TELE);
 
             return true;
         }
