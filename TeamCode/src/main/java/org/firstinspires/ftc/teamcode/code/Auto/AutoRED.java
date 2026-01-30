@@ -50,7 +50,6 @@ public class AutoRED extends LinearOpMode {
 
         Action path = new SequentialAction(
             //SHOOT FIRST 3 BALLS
-            //bot.moveTo(new Pose2d(-9.8, 50, Math.toRadians(190)), 0.9, -1),
 
             shootSequence(launchVec),
             bot.canon.setPowerAction(0),
