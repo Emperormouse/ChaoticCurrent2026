@@ -7,12 +7,14 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 //This is a more complex example which shows some more of the roadrunner methods for making paths.
 //Strafing is the only method that you really need, but example 3 will show splines, which are a lot
 //more complicated but are faster in many situations.
+@Disabled
 @Autonomous
 public class ExampleAuto2 extends LinearOpMode {
     public void runOpMode() {

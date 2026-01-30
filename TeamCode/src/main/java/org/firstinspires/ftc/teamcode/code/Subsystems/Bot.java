@@ -47,8 +47,6 @@ public class Bot {
 
     public AprilTagProcessor aprilTag;
     public VisionPortal visionPortal;
-    public Position cameraPosition = new Position(DistanceUnit.INCH, 0, 0, 0, 0);
-    public YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 0, -90, 0, 0);
 
     private DcMotor frontLeft;
     private DcMotor backLeft;
@@ -404,7 +402,7 @@ public class Bot {
 
             moveFieldCentric(powX, powY, powR, speed, Op.AUTO);
 
-            if (Math.abs(diffX)>4 || Math.abs(diffY)>4 || Math.abs(diffR)>Math.toRadians(5)) {
+            if (Math.abs(diffX)>2.5 || Math.abs(diffY)>3 || Math.abs(diffR)>Math.toRadians(3.5)) {
                 return true;
             } else {
                 stop();
@@ -824,6 +822,8 @@ public class Bot {
             .build();
     }
 
+    public Position cameraPosition = new Position(DistanceUnit.INCH, 0, 3.5, 13.75, 0);
+    public YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 0, -90, 0, 0);
     public void initAprilTag() {
 
         // Create the AprilTag processor.

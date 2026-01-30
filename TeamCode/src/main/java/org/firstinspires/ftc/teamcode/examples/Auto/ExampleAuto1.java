@@ -5,12 +5,14 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 //This example is mostly meant to show the structure of an auto opMode using roadrunner
 //There is no loop, just a path which is created from multiple steps and then run.
+@Disabled
 @Autonomous
 public class ExampleAuto1 extends LinearOpMode {
     public void runOpMode() {

@@ -70,7 +70,7 @@ public class AutoRED_EXODUS extends LinearOpMode {
             new EndAfterEitherParallel(
                 new Wait(1.5),
                 //bot.moveTo(new Pose2d(-9.8, 50, Math.toRadians(0)), 0.9)
-                new KeepRunning(bot.moveTo(new Pose2d(-7.7, 57, Math.toRadians(181)), 0.8, -1))
+                new KeepRunning(bot.moveTo(new Pose2d(-4.85, 57, Math.toRadians(181)), 0.8, -1))
             ),
 
             //SHOOT SECOND 3 BALLS
@@ -79,11 +79,11 @@ public class AutoRED_EXODUS extends LinearOpMode {
             bot.intake.setPower(1.0),
 
             //GRAB THIRD 3 BALLS
-            bot.moveToContinuous(new Pose2d(9.9, 13, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(9.9, 12, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.4),
-                bot.moveTo(new Pose2d(9.9, 58, toRadians(85)), 1.0)
+                bot.moveTo(new Pose2d(9.85, 58, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.3),
@@ -104,10 +104,10 @@ public class AutoRED_EXODUS extends LinearOpMode {
             bot.canon.setPowerAction(0),
 
             //HIT LEVER AGAIN
-            bot.moveToImprecise(new Pose2d(-7.0, 50.0, 0)),
+            bot.moveToImprecise(new Pose2d(-3, 55.0, 0)),
             bot.moveRelativeAction(1.0, 0, 0, 1.0),
             new Wait(0.5),
-            bot.moveRelativeAction(-0.5, 0, 0, 1.0),
+            bot.stopAction(),
 
             new Wait(0.5),
             bot.intake.setPower(0),
