@@ -56,11 +56,15 @@ public class AutoRED_EXODUS extends LinearOpMode {
             bot.intake.setPower(1.0),
 
             //GRAB SECOND 3 BALLS
-            bot.moveToContinuous(new Pose2d(-14.8, 14, toRadians(90))),
+            new EndAfterFirstParallel(
+                new Wait(1.1),
+                new KeepRunning(bot.moveToContinuous(new Pose2d(-14.5, 14, toRadians(90))))
+            ),
+
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
-                new Wait(1.1),
-                bot.moveToImprecise(new Pose2d(-14.8, 53, toRadians(90)), 1.0)
+                new Wait(1.2),
+                bot.moveToImprecise(new Pose2d(-14.5, 53.5, toRadians(90)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.3),
@@ -68,9 +72,9 @@ public class AutoRED_EXODUS extends LinearOpMode {
 
             //Lever version 2
             new EndAfterEitherParallel(
-                new Wait(1.5),
+                new Wait(1.7),
                 //bot.moveTo(new Pose2d(-9.8, 50, Math.toRadians(0)), 0.9)
-                new KeepRunning(bot.moveTo(new Pose2d(-4.85, 57, Math.toRadians(181)), 0.8, -1))
+                new KeepRunning(bot.moveTo(new Pose2d(-6.2, 60, Math.toRadians(181)), 0.75, -1))
             ),
 
             //SHOOT SECOND 3 BALLS
@@ -79,11 +83,11 @@ public class AutoRED_EXODUS extends LinearOpMode {
             bot.intake.setPower(1.0),
 
             //GRAB THIRD 3 BALLS
-            bot.moveToContinuous(new Pose2d(9.9, 12, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(10.0, 12, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.4),
-                bot.moveTo(new Pose2d(9.85, 58, toRadians(85)), 1.0)
+                bot.moveTo(new Pose2d(10.0, 58, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.3),
@@ -94,22 +98,22 @@ public class AutoRED_EXODUS extends LinearOpMode {
             new Wait(0.5),*/
 
             new EndAfterEitherParallel(
-                new Wait(1.3),
-                new KeepRunning(bot.moveTo(new Pose2d(-1.7, 56, 0)))
+                new Wait(100.3),
+                new KeepRunning(bot.moveTo(new Pose2d(-1.7, 56.5, 0)))
             ),
-            bot.intake.setPower(0),
 
             //SHOOT THIRD 3 BALLS
             shootSequence(launchVec),
             bot.canon.setPowerAction(0),
 
             //HIT LEVER AGAIN
-            bot.moveToImprecise(new Pose2d(-3, 55.0, 0)),
-            bot.moveRelativeAction(1.0, 0, 0, 1.0),
+            new EndAfterEitherParallel(
+                new Wait(2.5),
+                bot.moveToImprecise(new Pose2d(-3, 56.0, 0))
+            ),
             new Wait(0.5),
-            bot.stopAction(),
+            bot.moveToImprecise(new Pose2d(-3, 46.0, 0)),
 
-            new Wait(0.5),
             bot.intake.setPower(0),
             bot.stopAction()
         );
@@ -119,7 +123,22 @@ public class AutoRED_EXODUS extends LinearOpMode {
         //END OF INIT
 
         Actions.runBlocking(new ParallelAction(
-                path,
+                new SequentialAction(
+                    new EndAfterFirstParallel(
+                        new Wait(25.5),
+                        path
+                    ),
+                    bot.intake.setPower(0),
+                    new EndAfterEitherParallel(
+                        new Wait(3.9),
+                        shootSequence(launchVec, 3.9, 0.5)
+                    ),
+                    bot.moveRelativeAction(1.0, 0, 0, 1.0),
+                    new Wait(0.6),
+                    bot.stopAction(),
+                    bot.canon.setPowerAction(0)
+                ),
+
                 bot.telementaryAction(),
                 bot.updatePoseUsingAprilTagAction(),
                 new KeepRunning(bot.canon.cloneMotorPower())
@@ -128,17 +147,20 @@ public class AutoRED_EXODUS extends LinearOpMode {
     }
 
     public Action shootSequence(Vector2d targetVec) {
+        return shootSequence(targetVec, 2.5, 0.5);
+    }
+    public Action shootSequence(Vector2d targetVec, double time1, double time2) {
         return new EndAfterFirstParallel(
             new SequentialAction(
                 bot.moveToTracked(targetVec),
                 bot.stopAction(),
                 bot.gate.open(),
                 new EndAfterFirstParallel(
-                    new Wait(2.5),
+                    new Wait(time1),
                     new ParallelAction(
                         new KeepRunning(bot.aimAtGoal()),
                         new SequentialAction(
-                            new Wait(0.5),
+                            new Wait(time2),
                             bot.intake.setPower(-1.0)
                         )
                     )

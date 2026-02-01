@@ -182,7 +182,7 @@ public class TeleOpRED extends LinearOpMode {
                 );
             }
 
-            if (gamepad1.xWasPressed()) {
+            /*if (gamepad1.xWasPressed()) {
                 bot.intake.stop();
                 currentAction = new SequentialAction(
                     bot.canon.setVelAction(bot.canon.CLOSE_SPEED),
@@ -201,6 +201,9 @@ public class TeleOpRED extends LinearOpMode {
                     bot.gate.close(),
                     bot.intake.setPower(1.0)
                 );
+            }*/
+            if (gamepad1.xWasPressed()) {
+                currentAction = bot.moveToImprecise(new Pose2d(-3, 56.0, 0));
             }
 
             if (gamepad1.dpadUpWasPressed()) {

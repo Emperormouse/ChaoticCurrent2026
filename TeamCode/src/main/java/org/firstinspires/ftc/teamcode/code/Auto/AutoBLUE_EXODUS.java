@@ -53,18 +53,18 @@ public class AutoBLUE_EXODUS extends LinearOpMode {
             bot.canon.setPowerAction(0),
 
             //GRAB SECOND 3 BALLS
-            bot.moveToContinuous(new Pose2d(-16, -12, toRadians(-90))),
+            bot.moveToContinuous(new Pose2d(-15.9, -12, toRadians(-90))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.3),
-                bot.moveToImprecise(new Pose2d(-16, -53.5, toRadians(-90)), 1.0)
+                bot.moveToImprecise(new Pose2d(-15.9, -53.5, toRadians(-90)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.3),
 
             //HIT LEVER 1
 
-            bot.moveRelativeAction(0.4, 0, -1.0, 1.0),
+            bot.moveRelativeAction(0.4, 0, -0.8, 1.0),
             new Wait(0.67),
 
             bot.stopAction(),
@@ -106,9 +106,11 @@ public class AutoBLUE_EXODUS extends LinearOpMode {
             shootSequence(),
             bot.canon.setPowerAction(0),
 
-            bot.moveToImprecise(new Pose2d(-8.5, -52.3, 0)),
+            bot.moveToImprecise(new Pose2d(-2.5, -53.3, 0)),
             bot.moveRelativeAction(-0.5, 0, 0, 1.0),
             new Wait(0.3),
+            bot.stopAction(),
+            new Wait(0.5),
             bot.moveRelativeAction(0.5, 0, 0, 1.0),
             new Wait(0.3),
             bot.intake.setPower(0),

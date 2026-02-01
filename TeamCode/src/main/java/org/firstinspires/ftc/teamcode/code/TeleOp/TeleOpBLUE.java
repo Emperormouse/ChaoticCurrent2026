@@ -182,7 +182,7 @@ public class TeleOpBLUE extends LinearOpMode {
                 );
             }
 
-            if (gamepad1.xWasPressed()) {
+            /*if (gamepad1.xWasPressed()) {
                 bot.intake.stop();
                 currentAction = new SequentialAction(
                     bot.canon.setVelAction(bot.canon.CLOSE_SPEED),
@@ -200,6 +200,12 @@ public class TeleOpBLUE extends LinearOpMode {
                     ),
                     bot.gate.close(),
                     bot.intake.setPower(1.0)
+                );
+            }*/
+            if (gamepad1.xWasPressed() || gamepad2.xWasPressed()) {
+                currentAction = new SequentialAction(
+                    bot.moveToContinuous(new Pose2d(-0.5, -50, 0)),
+                    bot.moveTo(new Pose2d(-0.5, -53, 0))
                 );
             }
 
