@@ -47,6 +47,7 @@ public class AutoRED_EXODUS extends LinearOpMode {
         Pose2d startPos = drive.localizer.getPose();
         telemetry.addData("Start Position: ", startPos);
         telemetry.update();
+        bot.isOpModeRunning = true;
 
         Action path = new SequentialAction(
             //SHOOT FIRST 3 BALLS
@@ -72,10 +73,14 @@ public class AutoRED_EXODUS extends LinearOpMode {
 
             //Lever version 2
             new EndAfterEitherParallel(
-                new Wait(1.7),
-                //bot.moveTo(new Pose2d(-9.8, 50, Math.toRadians(0)), 0.9)
-                new KeepRunning(bot.moveTo(new Pose2d(-6.2, 60, Math.toRadians(181)), 0.75, -1))
+                new Wait(0.9),
+                new KeepRunning(bot.moveTo(new Pose2d(-7.8, 52, Math.toRadians(0)), 0.7))
+                //new KeepRunning(bot.moveTo(new Pose2d(-6.2, 60, Math.toRadians(181)), 0.75, -1))
             ),
+            bot.moveRelativeAction(1.0, 0, 0, 1.0),
+            new Wait(0.3),
+            bot.stopAction(),
+            new Wait(0.5),
 
             //SHOOT SECOND 3 BALLS
             shootSequence(launchVec),
@@ -83,11 +88,11 @@ public class AutoRED_EXODUS extends LinearOpMode {
             bot.intake.setPower(1.0),
 
             //GRAB THIRD 3 BALLS
-            bot.moveToContinuous(new Pose2d(10.0, 12, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(10.1, 12, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.4),
-                bot.moveTo(new Pose2d(10.0, 58, toRadians(85)), 1.0)
+                bot.moveTo(new Pose2d(10.1, 58, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.3),
@@ -166,7 +171,11 @@ public class AutoRED_EXODUS extends LinearOpMode {
                     )
                 ),
                 bot.intake.setPower(0),
-                bot.gate.close()
+                bot.gate.close(),
+                new EndAfterEitherParallel(
+                    new Wait(1.5),
+                    bot.waitUntilSeeTag(1.0)
+                )
             ),
             bot.canon.setVelByDistance()
         );

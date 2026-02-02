@@ -59,6 +59,7 @@ public class Bot {
     public Pose2d launchPose;
     public Vector2d aprilVec;
     public Vector2d goalVec;
+    public boolean isOpModeRunning = false;
 
     Telemetry telemetry;
     HardwareMap hardwareMap;
@@ -708,6 +709,7 @@ public class Bot {
         if (useAprilTag) {
             Pose2d aprilPose = getPoseFromAprilTag();
             if (aprilPose != null) {
+                lastTimeTagSeen = System.currentTimeMillis();
                 localizer.setPose(aprilPose);
             }
         }
@@ -741,21 +743,36 @@ public class Bot {
         return null;
     }
 
+    private long lastTimeTagSeen = 0;
     public class WaitUntilSeeTag implements Action {
+        double time;
+        public WaitUntilSeeTag(double time) {
+            this.time = time;
+        }
+        public WaitUntilSeeTag() {
+            this.time = 0;
+        }
         public boolean run(TelemetryPacket t) {
             List<AprilTagDetection> currentDetections = aprilTag.getDetections();
             for (AprilTagDetection detection : currentDetections) {
                 if (detection.metadata != null) {
                     if (detection.id == 20 || detection.id == 24) {
+                        lastTimeTagSeen = System.currentTimeMillis();
                         return false;
                     }
                 }
+            }
+            if (lastTimeTagSeen + time*1000 > System.currentTimeMillis()) {
+                return false;
             }
             return true;
         }
     }
     public Action waitUntilSeeTag() {
         return new WaitUntilSeeTag();
+    }
+    public Action waitUntilSeeTag(double time) {
+        return new WaitUntilSeeTag(time);
     }
 
     public AprilTagDetection getLatestAprilTagDetection() {
