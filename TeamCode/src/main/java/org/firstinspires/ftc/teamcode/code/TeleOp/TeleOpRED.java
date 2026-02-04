@@ -130,7 +130,8 @@ public class TeleOpRED extends LinearOpMode {
 
         Action defaultAction = new ParallelAction(
             new FieldCentricMovement(),
-            new ManualControls()
+            new ManualControls(),
+            bot.canon.setVelAction(-1800)
         );
         Action currentAction = defaultAction;
 

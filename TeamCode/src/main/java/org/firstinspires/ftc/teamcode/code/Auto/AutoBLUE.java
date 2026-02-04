@@ -100,7 +100,7 @@ public class AutoBLUE extends LinearOpMode {
             bot.moveToContinuous(new Pose2d(8.45, -4, toRadians(-87))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
-                new Wait(1.6),
+                new Wait(1.3),
                 bot.moveTo(new Pose2d(9.1, -57, toRadians(-87)), 1.0)
             ),
             bot.stopAction(),
@@ -124,11 +124,11 @@ public class AutoBLUE extends LinearOpMode {
             bot.moveToContinuous(new Pose2d(29, -10, toRadians(-87))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
-                new Wait(1.5),
+                new Wait(1.3),
                 bot.moveToImprecise(new Pose2d(29, -59.5, toRadians(-87)), 1.0)
             ),
             bot.stopAction(),
-            new Wait(0.5),
+            new Wait(0.4),
 
             bot.moveRelativeAction(-0.2, -1.0, 0.6, 1.0),
             new Wait(0.5),
@@ -169,7 +169,7 @@ public class AutoBLUE extends LinearOpMode {
                 bot.stopAction(),
                 bot.gate.open(),
                 new EndAfterFirstParallel(
-                    new Wait(2.6),
+                    new Wait(2.4),
                     new ParallelAction(
                         new KeepRunning(bot.aimAtGoal()),
                         new SequentialAction(

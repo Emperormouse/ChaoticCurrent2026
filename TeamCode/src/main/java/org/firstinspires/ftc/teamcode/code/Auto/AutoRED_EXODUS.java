@@ -25,7 +25,7 @@ public class AutoRED_EXODUS extends LinearOpMode {
     MecanumDrive drive;
     Bot bot;
     Pose2d launchPose = new Pose2d(-21.4, 15.6, Math.toRadians(-46));
-    Vector2d launchVec = new Vector2d(-24.7, 23.4);
+    Vector2d launchVec = new Vector2d(-25.7, 25);
 
     public void waitSeconds(double time) {
         long startTime = System.currentTimeMillis();
@@ -56,46 +56,54 @@ public class AutoRED_EXODUS extends LinearOpMode {
             bot.canon.setPowerAction(0),
             bot.intake.setPower(1.0),
 
+            bot.disableAprilTag(),
+
             //GRAB SECOND 3 BALLS
             new EndAfterFirstParallel(
                 new Wait(1.1),
-                new KeepRunning(bot.moveToContinuous(new Pose2d(-14.5, 14, toRadians(90))))
+                new KeepRunning(bot.moveToContinuous(new Pose2d(-14.2, 14, toRadians(85))))
             ),
 
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.2),
-                bot.moveToImprecise(new Pose2d(-14.5, 53.5, toRadians(90)), 1.0)
+                bot.moveToImprecise(new Pose2d(-14.2, 56, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
-            new Wait(0.3),
+            new Wait(0.4),
             bot.intake.setPower(0),
 
             //Lever version 2
             new EndAfterEitherParallel(
                 new Wait(0.9),
-                new KeepRunning(bot.moveTo(new Pose2d(-7.8, 52, Math.toRadians(0)), 0.7))
+                new KeepRunning(bot.moveTo(new Pose2d(-7.75, 48, Math.toRadians(0)), 0.7))
                 //new KeepRunning(bot.moveTo(new Pose2d(-6.2, 60, Math.toRadians(181)), 0.75, -1))
             ),
+            bot.enableAprilTag(),
             bot.moveRelativeAction(1.0, 0, 0, 1.0),
             new Wait(0.3),
             bot.stopAction(),
-            new Wait(0.5),
+            new Wait(0.2),
 
             //SHOOT SECOND 3 BALLS
             shootSequence(launchVec),
             bot.canon.setPowerAction(0),
             bot.intake.setPower(1.0),
 
+            bot.disableAprilTag(),
+
             //GRAB THIRD 3 BALLS
-            bot.moveToContinuous(new Pose2d(10.1, 12, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(10.55, 12, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.4),
-                bot.moveTo(new Pose2d(10.1, 58, toRadians(85)), 1.0)
+                bot.moveTo(new Pose2d(10.55, 58.5, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
-            new Wait(0.3),
+            new Wait(0.4),
+            bot.intake.setPower(0),
+
+            bot.enableAprilTag(),
 
             /*bot.moveRelativeAction(0.4, 0, -1.0, 1.0),
             new Wait(0.6),
@@ -105,22 +113,7 @@ public class AutoRED_EXODUS extends LinearOpMode {
             new EndAfterEitherParallel(
                 new Wait(100.3),
                 new KeepRunning(bot.moveTo(new Pose2d(-1.7, 56.5, 0)))
-            ),
-
-            //SHOOT THIRD 3 BALLS
-            shootSequence(launchVec),
-            bot.canon.setPowerAction(0),
-
-            //HIT LEVER AGAIN
-            new EndAfterEitherParallel(
-                new Wait(2.5),
-                bot.moveToImprecise(new Pose2d(-3, 56.0, 0))
-            ),
-            new Wait(0.5),
-            bot.moveToImprecise(new Pose2d(-3, 46.0, 0)),
-
-            bot.intake.setPower(0),
-            bot.stopAction()
+            )
         );
 
         waitForStart();
@@ -171,11 +164,7 @@ public class AutoRED_EXODUS extends LinearOpMode {
                     )
                 ),
                 bot.intake.setPower(0),
-                bot.gate.close(),
-                new EndAfterEitherParallel(
-                    new Wait(1.5),
-                    bot.waitUntilSeeTag(1.0)
-                )
+                bot.gate.close()
             ),
             bot.canon.setVelByDistance()
         );

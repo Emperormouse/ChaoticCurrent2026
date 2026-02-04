@@ -130,7 +130,8 @@ public class TeleOpBLUE extends LinearOpMode {
 
         Action defaultAction = new ParallelAction(
             new FieldCentricMovement(),
-            new ManualControls()
+            new ManualControls(),
+            bot.canon.setVelAction(-1800)
         );
         Action currentAction = defaultAction;
 
@@ -222,7 +223,6 @@ public class TeleOpBLUE extends LinearOpMode {
                     bot.canon.setVelByDistance()
                 );
             }
-
 
 
             /*double y = -gamepad1.left_stick_y;

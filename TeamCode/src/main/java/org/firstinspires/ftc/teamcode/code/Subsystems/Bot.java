@@ -76,11 +76,11 @@ public class Bot {
         if (side == Side.BLUE) {
             launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(51.5));
             aprilVec = new Vector2d(-58.3727f, -55.6425f);
-            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-7);
+            goalVec = new Vector2d(aprilVec.x-5, aprilVec.y-7);
         } else {
             launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-42.3));
             aprilVec = new Vector2d(-58.3727f, 55.6425f);
-            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y+7);
+            goalVec = new Vector2d(aprilVec.x-5, aprilVec.y+7);
         }
 
         frontLeft = hardwareMap.get(DcMotor.class, "front_left");
@@ -258,9 +258,9 @@ public class Bot {
 
     //drives to location
     public class MoveTo implements Action {
-        private final double pRotational = 1.0;
-        private final double pX = 0.065;
-        private final double pY = 0.065;
+        private final double pRotational = 0.7;
+        private final double pX = 0.05;
+        private final double pY = 0.05;
         private final int turnMod;
         private Pose2d targetPose;
         private long lastTimeMoved = 0;
@@ -324,9 +324,9 @@ public class Bot {
     }
 
     public class MoveToImprecise implements Action {
-        private final double pRotational = 0.9;
-        private final double pX = 0.07;
-        private final double pY = 0.07;
+        private final double pRotational = 0.7;
+        private final double pX = 0.05;
+        private final double pY = 0.05;
         private Pose2d targetPose;
         private double speed;
 
@@ -365,9 +365,9 @@ public class Bot {
     
 
     public class MoveToContinuous implements Action {
-        private final double pRotational = 0.8;
-        private final double pX = 0.05;
-        private final double pY = 0.05;
+        private final double pRotational = 0.7;
+        private final double pX = 0.04;
+        private final double pY = 0.04;
         private Pose2d targetPose;
         private double speed;
 
@@ -419,9 +419,9 @@ public class Bot {
     }
 
     public class MoveToVeryImprecise implements Action {
-        private final double pRotational = 0.9;
-        private final double pX = 0.06;
-        private final double pY = 0.06;
+        private final double pRotational = 0.8;
+        private final double pX = 0.05;
+        private final double pY = 0.05;
         private Pose2d targetPose;
         private double speed;
 
@@ -465,15 +465,16 @@ public class Bot {
 
     //drives to location while tracking april tag
     public class MoveToTracked implements Action {
-        private double pRotational = (1.0 / 60);
-        private double pX = 0.065;
-        private double pY = 0.065;
+        private double pRotational = (1.0 / 70);
+        private double pX = 0.04;
+        private double pY = 0.04;
         private boolean reachedTargetVec = false;
         private Vector2d targetVec;
         private double speed;
 
         public MoveToTracked(Vector2d targetVec) {
             this(targetVec, 1.0);
+
         }
         public MoveToTracked(Vector2d targetVec, double speed) {
             this.targetVec = targetVec;
@@ -705,13 +706,28 @@ public class Bot {
 
     // ===== APRIL TAG =====
 
+    private class SetUseAprilTag implements Action {
+        boolean isEnabled;
+        public SetUseAprilTag(boolean b) {
+            isEnabled = b;
+        }
+        public boolean run(TelemetryPacket t) {
+            useAprilTag = isEnabled;
+            return false;
+        }
+    }
+    public Action enableAprilTag() {
+        return new SetUseAprilTag(true);
+    }
+    public Action disableAprilTag() {
+        return new SetUseAprilTag(false);
+    }
+
     public void updatePoseUsingAprilTag() {
-        if (useAprilTag) {
-            Pose2d aprilPose = getPoseFromAprilTag();
-            if (aprilPose != null) {
-                lastTimeTagSeen = System.currentTimeMillis();
-                localizer.setPose(aprilPose);
-            }
+        Pose2d aprilPose = getPoseFromAprilTag();
+        if (aprilPose != null) {
+            lastTimeTagSeen = System.currentTimeMillis();
+            localizer.setPose(aprilPose);
         }
         localizer.update();
         drive.updatePoseEstimate();
@@ -728,7 +744,11 @@ public class Bot {
     }
 
     public Pose2d getPoseFromAprilTag() {
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        List<AprilTagDetection> currentDetections = aprilTag.getFreshDetections();
+        if (!useAprilTag)
+            return null;
+        if (currentDetections == null)
+            return null;
         for (AprilTagDetection detection : currentDetections) {
             if (detection.metadata != null) {
                 if (detection.id == 20 || detection.id == 24) {
