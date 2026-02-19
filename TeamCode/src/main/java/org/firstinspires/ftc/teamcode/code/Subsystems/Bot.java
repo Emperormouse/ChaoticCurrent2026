@@ -42,7 +42,7 @@ public class Bot {
     public Canon canon;
     public Gate gate;
     public Intake intake;
-    MecanumDrive drive;
+    public MecanumDrive drive;
     public Localizer localizer;
 
     public AprilTagProcessor aprilTag;
@@ -76,7 +76,7 @@ public class Bot {
         if (side == Side.BLUE) {
             launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(51.5));
             aprilVec = new Vector2d(-58.3727f, -55.6425f);
-            goalVec = new Vector2d(aprilVec.x-5, aprilVec.y-7);
+            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-7);
         } else {
             launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-42.3));
             aprilVec = new Vector2d(-58.3727f, 55.6425f);
@@ -93,7 +93,7 @@ public class Bot {
     }
 
     public void initialize() {
-        initAprilTag();
+        //initAprilTag();
     }
 
     public Action shootClose(Op opmode) {
@@ -744,7 +744,7 @@ public class Bot {
     }
 
     public Pose2d getPoseFromAprilTag() {
-        List<AprilTagDetection> currentDetections = aprilTag.getFreshDetections();
+        /*List<AprilTagDetection> currentDetections = aprilTag.getFreshDetections();
         if (!useAprilTag)
             return null;
         if (currentDetections == null)
@@ -759,7 +759,7 @@ public class Bot {
                     );
                 }
             }
-        }
+        }*/
         return null;
     }
 

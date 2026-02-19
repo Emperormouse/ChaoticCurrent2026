@@ -21,13 +21,16 @@ public class Canon {
     public int targetVel = CLOSE_SPEED;
     private Bot bot;
 
+    public double m = -5.276;
+    public double b = -1584;
+
     public Canon(HardwareMap hardwareMap, Bot bot) {
         this.bot = bot;
         motor = hardwareMap.get(DcMotorEx.class, "left_launcher");
         motor2 = (DcMotor)hardwareMap.get(DcMotorEx.class, "par");
 
-        //motor.setDirection(DcMotorSimple.Direction.REVERSE);
-        //motor2.setDirection(DcMotorSimple.Direction.REVERSE);
+        motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
@@ -68,6 +71,10 @@ public class Canon {
     }
 
     public class SetVelByDistance implements Action {
+        private double maxSpeed = 10_000;
+        public SetVelByDistance(double maxSpeed) {
+            this.maxSpeed = maxSpeed;
+        }
         public boolean run(TelemetryPacket t) {
             AprilTagDetection detection = bot.getLatestAprilTagDetection();
             double distance;
@@ -89,17 +96,20 @@ public class Canon {
                 distance = Math.sqrt(dx*dx + dy*dy);
             }
 
-            double m = -5.276;
-            double c = -1604;
-            double velocity = (m*distance) + c;
+            double velocity = (m*distance) + b;
+            if (Math.abs(velocity) > Math.abs(maxSpeed))
+                velocity = -1 * Math.abs(maxSpeed);
 
             motor.setVelocity(velocity);
 
             return true;
         }
     }
+    public Action setVelByDistance(double maxSpeed) {
+        return new SetVelByDistance(maxSpeed);
+    }
     public Action setVelByDistance() {
-        return new SetVelByDistance();
+        return new SetVelByDistance(10_000);
     }
 
     public class WaitUntilAtSpeed implements  Action {

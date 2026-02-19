@@ -36,7 +36,7 @@ import java.util.Arrays;
 @Config
 public final class TwoDeadWheelLocalizer implements Localizer {
     public static class Params {
-        public double parYTicks = 2956.270137235431; // y position of the parallel encoder (in tick units)
+        public double parYTicks = 3092.981641532379; // y position of the parallel encoder (in tick units)
         public double perpXTicks = 374.37309353827504; // x position of the perpendicular encoder (in tick units)
     }
 

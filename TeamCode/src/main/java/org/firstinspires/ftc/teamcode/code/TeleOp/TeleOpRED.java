@@ -31,10 +31,6 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
-//This is a teleOp that I'm working on which will be able to run RoadRunner paths in teleOp.
-//The best way that I figured out to do this is to make every part of the teleOp an Action, which
-//is what roadrunner paths are, and then switch between those actions.
-//This will most likely be used if we want to make a TeleOp which is mostly automated
 @TeleOp
 public class TeleOpRED extends LinearOpMode {
     private Bot bot;
@@ -43,11 +39,6 @@ public class TeleOpRED extends LinearOpMode {
     Pose2d launchPose = new Pose2d(-22.4, 16.6, Math.toRadians(-46));
     private double distance = 0.0;
     private AprilTagDetection latestAprilTagDetection = null;
-
-    private AprilTagProcessor aprilTag;
-    private VisionPortal visionPortal;
-    private Position cameraPosition = new Position(DistanceUnit.INCH, 0, 0, 0, 0);
-    private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 0, -90, 0, 0);
 
     Side side = Side.RED;
 
@@ -82,10 +73,6 @@ public class TeleOpRED extends LinearOpMode {
             }
             lastRightTrigger = gamepad1.right_trigger;
 
-            if (Math.abs(gamepad1.left_trigger) > 0.2) {
-                bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
-            }
-
             if (gamepad2.a) {
                 bot.gate.openManual();
             } else if (gamepad2.b) {
@@ -95,10 +82,10 @@ public class TeleOpRED extends LinearOpMode {
             }
 
             if (gamepad2.dpadUpWasPressed()) {
-                bot.canon.CLOSE_SPEED -= 10;
+                bot.canon.b -= 10;
             }
             if (gamepad2.dpadDownWasPressed()) {
-                bot.canon.CLOSE_SPEED += 10;
+                bot.canon.b += 10;
             }
             if (gamepad2.y) {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
@@ -111,6 +98,9 @@ public class TeleOpRED extends LinearOpMode {
                 bot.targetDistance -= 1;
             }
 
+            if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {
+                bot.canon.motor.setVelocity(-1850);
+            }
 
 
             return true;
@@ -134,13 +124,9 @@ public class TeleOpRED extends LinearOpMode {
         );
         Action currentAction = defaultAction;
 
-        VoltageSensor voltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
-
         waitForStart();
         while (opModeIsActive()) {
             telemetry.update();
-
-            double currentVoltage = voltageSensor.getVoltage();
 
             Vector2d aprilVec = new Vector2d(-58.3727f, 55.6425f);
 
@@ -175,33 +161,6 @@ public class TeleOpRED extends LinearOpMode {
             drive.updatePoseEstimate();
             currentPose = drive.localizer.getPose();
 
-            if (gamepad1.yWasPressed()) {
-                currentAction = new SequentialAction(
-                    bot.stopAction(),
-                    bot.shootClose(Op.TELE, 10, 0.0)
-                );
-            }
-
-            /*if (gamepad1.xWasPressed()) {
-                bot.intake.stop();
-                currentAction = new SequentialAction(
-                    bot.canon.setVelAction(bot.canon.CLOSE_SPEED),
-                    bot.moveToVeryImprecise(launchPose),
-
-                    new EndAfterFirstParallel(
-                        bot.shootClose(Op.TELE),
-                        new SequentialAction(
-                            new EndAfterFirstParallel(
-                                new Wait(0.9),
-                                new KeepRunning(bot.moveToLaunchSubArc())
-                            ),
-                            bot.stopAction()
-                        )
-                    ),
-                    bot.gate.close(),
-                    bot.intake.setPower(1.0)
-                );
-            }*/
             if (gamepad1.xWasPressed()) {
                 currentAction = bot.moveToImprecise(new Pose2d(-3, 56.0, 0));
             }
@@ -219,20 +178,6 @@ public class TeleOpRED extends LinearOpMode {
                     bot.canon.setVelByDistance()
                 );
             }
-
-
-
-            /*double y = -gamepad1.left_stick_y;
-            double x = -gamepad1.left_stick_x * 1.1;
-            double rx = -gamepad1.right_stick_x;
-            if (isShooting && lastTimeXorAPressed + 500 < System.currentTimeMillis()) {
-                if (Math.abs(x) > 0.1 || Math.abs(y) > 0.1 || Math.abs(rx) > 0.1) {
-                    currentAction = new FieldCentricMovement();
-                    isShooting = false;
-                    bot.gate.closeManual();
-                    bot.intake.stop();
-                }
-            }*/
 
             if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
                 bot.canon.setPower(0);
@@ -294,12 +239,6 @@ public class TeleOpRED extends LinearOpMode {
 
             return true;
         }
-    }
-
-    public Action pathToPos(Pose2d startPose, Pose2d target) {
-        return drive.actionBuilder(startPose)
-            .strafeToSplineHeading(target.position, target.heading.toDouble())
-            .build();
     }
 }
 

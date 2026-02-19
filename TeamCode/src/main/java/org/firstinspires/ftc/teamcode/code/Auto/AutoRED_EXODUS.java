@@ -25,7 +25,7 @@ public class AutoRED_EXODUS extends LinearOpMode {
     MecanumDrive drive;
     Bot bot;
     Pose2d launchPose = new Pose2d(-21.4, 15.6, Math.toRadians(-46));
-    Vector2d launchVec = new Vector2d(-25.7, 25);
+    Vector2d launchVec = new Vector2d(-23.5, 22.5);
 
     public void waitSeconds(double time) {
         long startTime = System.currentTimeMillis();
@@ -61,13 +61,13 @@ public class AutoRED_EXODUS extends LinearOpMode {
             //GRAB SECOND 3 BALLS
             new EndAfterFirstParallel(
                 new Wait(1.1),
-                new KeepRunning(bot.moveToContinuous(new Pose2d(-14.2, 14, toRadians(85))))
+                new KeepRunning(bot.moveToContinuous(new Pose2d(-14.0, 14, toRadians(85))))
             ),
 
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.2),
-                bot.moveToImprecise(new Pose2d(-14.2, 56, toRadians(85)), 1.0)
+                bot.moveToImprecise(new Pose2d(-14.0, 56, toRadians(85)), 1.0)
             ),
             bot.stopAction(),
             new Wait(0.4),
@@ -76,12 +76,12 @@ public class AutoRED_EXODUS extends LinearOpMode {
             //Lever version 2
             new EndAfterEitherParallel(
                 new Wait(0.9),
-                new KeepRunning(bot.moveTo(new Pose2d(-7.75, 48, Math.toRadians(0)), 0.7))
+                new KeepRunning(bot.moveTo(new Pose2d(-7.4, 48, Math.toRadians(5)), 0.7))
                 //new KeepRunning(bot.moveTo(new Pose2d(-6.2, 60, Math.toRadians(181)), 0.75, -1))
             ),
             bot.enableAprilTag(),
             bot.moveRelativeAction(1.0, 0, 0, 1.0),
-            new Wait(0.3),
+            new Wait(0.4),
             bot.stopAction(),
             new Wait(0.2),
 
@@ -93,25 +93,20 @@ public class AutoRED_EXODUS extends LinearOpMode {
             bot.disableAprilTag(),
 
             //GRAB THIRD 3 BALLS
-            bot.moveToContinuous(new Pose2d(10.55, 12, toRadians(85))),
+            bot.moveToContinuous(new Pose2d(11.5, 12, toRadians(85))),
             bot.intake.setPower(-1.0),
             new EndAfterEitherParallel(
                 new Wait(1.4),
-                bot.moveTo(new Pose2d(10.55, 58.5, toRadians(85)), 1.0)
+                bot.moveTo(new Pose2d(11.5, 58.5, toRadians(85)), 1.0)
             ),
-            bot.stopAction(),
-            new Wait(0.4),
-            bot.intake.setPower(0),
 
             bot.enableAprilTag(),
 
-            /*bot.moveRelativeAction(0.4, 0, -1.0, 1.0),
-            new Wait(0.6),
-            bot.stopAction(),
-            new Wait(0.5),*/
-
-            new EndAfterEitherParallel(
-                new Wait(100.3),
+            new ParallelAction(
+                new SequentialAction(
+                    new Wait(4.0),
+                    bot.intake.setPower(0)
+                ),
                 new KeepRunning(bot.moveTo(new Pose2d(-1.7, 56.5, 0)))
             )
         );
@@ -123,16 +118,16 @@ public class AutoRED_EXODUS extends LinearOpMode {
         Actions.runBlocking(new ParallelAction(
                 new SequentialAction(
                     new EndAfterFirstParallel(
-                        new Wait(25.5),
+                        new Wait(25),
                         path
                     ),
                     bot.intake.setPower(0),
                     new EndAfterEitherParallel(
-                        new Wait(3.9),
-                        shootSequence(launchVec, 3.9, 0.5)
+                        new Wait(4.5),
+                        shootSequence(launchVec, 4.5, 0.5)
                     ),
                     bot.moveRelativeAction(1.0, 0, 0, 1.0),
-                    new Wait(0.6),
+                    new Wait(0.5),
                     bot.stopAction(),
                     bot.canon.setPowerAction(0)
                 ),
@@ -145,7 +140,7 @@ public class AutoRED_EXODUS extends LinearOpMode {
     }
 
     public Action shootSequence(Vector2d targetVec) {
-        return shootSequence(targetVec, 2.5, 0.5);
+        return shootSequence(targetVec, 2.4, 0.4);
     }
     public Action shootSequence(Vector2d targetVec, double time1, double time2) {
         return new EndAfterFirstParallel(
