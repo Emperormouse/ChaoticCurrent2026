@@ -86,6 +86,12 @@ public class TeleOpBLUE extends LinearOpMode {
                 bot.canon.motor2.setPower(1.0);
             }
 
+            if (gamepad2.dpadRightWasPressed()) {
+                bot.gate.openManual();
+            } else if (gamepad2.dpadLeftWasPressed()) {
+                bot.gate.closeManual();
+            }
+
             if (gamepad2.dpadUpWasPressed()) {
                 bot.canon.b -= 10;
             }
@@ -94,13 +100,6 @@ public class TeleOpBLUE extends LinearOpMode {
             }
             if (gamepad2.y) {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
-            }
-
-            if (gamepad2.dpadRightWasPressed()) {
-                bot.targetDistance += 1;
-            }
-            if (gamepad2.dpadLeftWasPressed()) {
-                bot.targetDistance -= 1;
             }
 
             /*if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {
