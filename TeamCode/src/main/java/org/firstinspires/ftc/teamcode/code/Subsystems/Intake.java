@@ -4,29 +4,38 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Intake {
     private DcMotorEx motor;
+    private DcMotorEx motor2;
     private Bot bot;
 
     public Intake(HardwareMap hardwareMap, Bot bot) {
         motor = hardwareMap.get(DcMotorEx.class, "intake");
+        motor2 = hardwareMap.get(DcMotorEx.class, "perp");
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
         this.bot = bot;
     }
 
     public void intake() {
         motor.setPower(-1.0);
+        motor2.setPower(-1.0);
     }
     public void reverse() {
         motor.setPower(1.0);
+        motor2.setPower(1.0);
     }
     public void stop() {
         motor.setPower(0.0);
+        motor2.setPower(0.0);
     }
     public void setPowerManual(double pow) {
         motor.setPower(pow);
+        motor2.setPower(pow);
     }
 
     public class SpinForDuration implements Action {
