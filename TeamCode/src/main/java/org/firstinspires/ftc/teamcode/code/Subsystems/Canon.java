@@ -21,6 +21,7 @@ public class Canon {
     public int CLOSE_SPEED_FIRST = CLOSE_SPEED;
     public int targetVel = CLOSE_SPEED;
     private Bot bot;
+    public double CANON_OFFSET = 7.5;
 
     private double canonAngle = 55 * (Math.PI/180);
 
@@ -83,9 +84,9 @@ public class Canon {
             this.maxSpeed = maxSpeed;
         }
         public boolean run(TelemetryPacket packet) {
-            double x = bot.goalVec.x - bot.canonPose.getPosition().x;
-            double y = bot.goalVec.y - bot.canonPose.getPosition().y;
-            double z = 40 - 12; //goal height - canon height (constant)
+            double x = bot.goalVec.x - bot.canonPose.position.x;
+            double y = bot.goalVec.y - bot.canonPose.position.y;
+            double z = 45 - 12; //goal height - canon height (constant)
 
             double d = Math.sqrt(x*x + y*y); //distance
             if (d < 42.0) //domain
@@ -96,7 +97,7 @@ public class Canon {
             double t = Math.sqrt((2*(d*Math.tan(canonAngle)-z))/g);
             double translationalVelocity = (1/t)*Math.sqrt(d*d + Math.pow((z + 0.5*g*t*t), 2));
 
-            double ticksPerSec = velocityToTicksPerSec(translationalVelocity);
+            double ticksPerSec = velocityToTicksPerSec2(translationalVelocity);
 
             motor.setVelocity(ticksPerSec);
 

@@ -60,10 +60,7 @@ public class TeleOpBLUE extends LinearOpMode {
             } else {
                 if (gamepad1.right_trigger > 0.1) {
                     bot.gate.openManual();
-                    if (distance > 70)
-                        bot.intake.setPowerManual(-0.8);
-                    else
-                        bot.intake.setPowerManual(-1.0);
+                    bot.intake.setPowerManual(-1.0);
                 } else if (lastRightTrigger > 0.1) {
                     bot.gate.closeManual();
                     bot.intake.stop();
@@ -134,8 +131,11 @@ public class TeleOpBLUE extends LinearOpMode {
             telemetry.addData("X: ", bot.botPose.position.x);
             telemetry.addData("Y: ", bot.botPose.position.y);
             telemetry.addData("R: ", bot.botPose.heading.toDouble());
-            telemetry.addData("Speed: ", bot.canon.CLOSE_SPEED);
-            telemetry.addData("tgtSpeed: ", bot.canon.motor.getVelocity());
+            telemetry.addData("Speed: ", bot.canon.motor.getVelocity());
+
+            telemetry.addData("Canon_X: ", bot.canonPose.position.x);
+            telemetry.addData("Canon_Y: ", bot.canonPose.position.y);
+            telemetry.addData("CanonR: ", bot.canonPose.heading.toDouble());
 
             if (gamepad1.xWasPressed()) {
                 currentAction = new SequentialAction(
@@ -153,6 +153,7 @@ public class TeleOpBLUE extends LinearOpMode {
                 bot.gate.close();
                 currentAction = new ParallelAction(
                     new TrackedMovement(),
+                    //new FieldCentricMovement(),
                     new ManualControls(),
                     bot.canon.setVelByDistance()
                 );
@@ -195,7 +196,7 @@ public class TeleOpBLUE extends LinearOpMode {
 
     private class TrackedMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
-            double kr2 = (1.0 / 60);
+            double kr2 = (1.0 / 50);
 
             double y = -gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x * 1.1;

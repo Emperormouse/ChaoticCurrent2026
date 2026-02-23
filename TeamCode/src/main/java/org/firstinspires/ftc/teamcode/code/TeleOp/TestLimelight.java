@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp
@@ -35,14 +36,13 @@ public class TestLimelight extends LinearOpMode {
         while (opModeIsActive()) {
             telemetry.update();
 
-            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-            limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
             LLResult result = limelight.getLatestResult();
 
-            telemetry.addData("imuRoation: ", orientation.getYaw(AngleUnit.DEGREES));
             if (result != null) {
                 if (result.isValid()) {
-                    Pose3D botpose = result.getBotpose_MT2();
+                    Pose3D botpose = result.getBotpose();
+                    Position pos = botpose.getPosition().toUnit(DistanceUnit.INCH);
+
                     telemetry.addData("tx", result.getTx());
                     telemetry.addData("ty", result.getTy());
                     telemetry.addData("Botpose", botpose.getPosition().toUnit(DistanceUnit.INCH).toString());
