@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.code.utility.Side;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -16,13 +17,12 @@ public class Canon {
     public DcMotorEx motor;
     public DcMotor motor2;
 
-    public int CLOSE_SPEED = -1880;
+    public int CLOSE_SPEED = 1200;
     public int CLOSE_SPEED_FIRST = CLOSE_SPEED;
     public int targetVel = CLOSE_SPEED;
     private Bot bot;
 
-    public double m = -5.276;
-    public double b = -1584;
+    private double canonAngle = 55 * (Math.PI/180);
 
     public Canon(HardwareMap hardwareMap, Bot bot) {
         this.bot = bot;
@@ -33,6 +33,9 @@ public class Canon {
         motor2.setDirection(DcMotorSimple.Direction.REVERSE);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        PIDFCoefficients pid = new PIDFCoefficients(500.0, 0, 0 , 22.5);
+        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pid);
     }
 
     public void setPower(double p) {
@@ -58,6 +61,10 @@ public class Canon {
         }
     }
 
+    public void setVelocityToCloseSpeed() {
+        motor.setVelocity(CLOSE_SPEED);
+    }
+
     public class SetVelAction implements Action {
         private double vel;
         public SetVelAction(double vel) {
@@ -75,32 +82,23 @@ public class Canon {
         public SetVelByDistance(double maxSpeed) {
             this.maxSpeed = maxSpeed;
         }
-        public boolean run(TelemetryPacket t) {
-            AprilTagDetection detection = bot.getLatestAprilTagDetection();
-            double distance;
+        public boolean run(TelemetryPacket packet) {
+            double x = bot.goalVec.x - bot.canonPose.getPosition().x;
+            double y = bot.goalVec.y - bot.canonPose.getPosition().y;
+            double z = 40 - 12; //goal height - canon height (constant)
 
-            if (detection != null) {
-                distance = detection.ftcPose.y;
-            } else {
-                Vector2d goalVec;
-                if (bot.side == Side.RED) {
-                    goalVec = new Vector2d(-58.3727f, 55.6425f);
-                } else {
-                    goalVec = new Vector2d(-58.3727f, -55.6425f);
-                }
+            double d = Math.sqrt(x*x + y*y); //distance
+            if (d < 42.0) //domain
+                d = 42.0;
 
-                Pose2d botPose = bot.localizer.getPose();
-                double dx = botPose.position.x - goalVec.x;
-                double dy = botPose.position.y - goalVec.y;
+            double g = 386.2205; //g in inches/sec^2
 
-                distance = Math.sqrt(dx*dx + dy*dy);
-            }
+            double t = Math.sqrt((2*(d*Math.tan(canonAngle)-z))/g);
+            double translationalVelocity = (1/t)*Math.sqrt(d*d + Math.pow((z + 0.5*g*t*t), 2));
 
-            double velocity = (m*distance) + b;
-            if (Math.abs(velocity) > Math.abs(maxSpeed))
-                velocity = -1 * Math.abs(maxSpeed);
+            double ticksPerSec = velocityToTicksPerSec(translationalVelocity);
 
-            motor.setVelocity(velocity);
+            motor.setVelocity(ticksPerSec);
 
             return true;
         }
@@ -110,6 +108,18 @@ public class Canon {
     }
     public Action setVelByDistance() {
         return new SetVelByDistance(10_000);
+    }
+
+    private double velocityToTicksPerSec(double v) {
+        double a = 0.000276155;
+        double b = -0.553527;
+        double c = 429.32088;
+
+        return (Math.sqrt(4*a*(v-c)+b*b) - b) / (2*a);
+    }
+
+    private double velocityToTicksPerSec2(double v) {
+        return 6.98312*v + 17.21118;
     }
 
     public class WaitUntilAtSpeed implements  Action {

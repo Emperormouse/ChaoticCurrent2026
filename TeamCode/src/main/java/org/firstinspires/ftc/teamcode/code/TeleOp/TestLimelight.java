@@ -38,12 +38,15 @@ public class TestLimelight extends LinearOpMode {
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
             limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
             LLResult result = limelight.getLatestResult();
+
+            telemetry.addData("imuRoation: ", orientation.getYaw(AngleUnit.DEGREES));
             if (result != null) {
                 if (result.isValid()) {
                     Pose3D botpose = result.getBotpose_MT2();
                     telemetry.addData("tx", result.getTx());
                     telemetry.addData("ty", result.getTy());
                     telemetry.addData("Botpose", botpose.getPosition().toUnit(DistanceUnit.INCH).toString());
+                    telemetry.addData("Angle: ", botpose.getOrientation().getYaw());
                     // Use botpose data
                 }
             }

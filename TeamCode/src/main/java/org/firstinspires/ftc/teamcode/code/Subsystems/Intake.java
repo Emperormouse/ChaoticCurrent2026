@@ -17,7 +17,7 @@ public class Intake {
         motor2 = hardwareMap.get(DcMotorEx.class, "perp");
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
+        //motor2.setDirection(DcMotorSimple.Direction.REVERSE);
         this.bot = bot;
     }
 

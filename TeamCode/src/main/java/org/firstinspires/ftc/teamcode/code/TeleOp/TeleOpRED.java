@@ -81,12 +81,6 @@ public class TeleOpRED extends LinearOpMode {
                 bot.gate.holdManual();
             }
 
-            if (gamepad2.dpadUpWasPressed()) {
-                bot.canon.b -= 10;
-            }
-            if (gamepad2.dpadDownWasPressed()) {
-                bot.canon.b += 10;
-            }
             if (gamepad2.y) {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
             }
@@ -119,14 +113,14 @@ public class TeleOpRED extends LinearOpMode {
         TelemetryPacket t = new TelemetryPacket();
 
         Action defaultAction = new ParallelAction(
-            new FieldCentricMovement(),
+            //new FieldCentricMovement(),
             new ManualControls()
         );
         Action currentAction = defaultAction;
 
         waitForStart();
         while (opModeIsActive()) {
-            telemetry.update();
+            /*telemetry.update();
 
             Vector2d aprilVec = new Vector2d(-58.3727f, 55.6425f);
 
@@ -237,7 +231,7 @@ public class TeleOpRED extends LinearOpMode {
 
             bot.moveFieldCentric(x, y, r, Op.TELE);
 
-            return true;
+            return true;*/
         }
     }
 }
