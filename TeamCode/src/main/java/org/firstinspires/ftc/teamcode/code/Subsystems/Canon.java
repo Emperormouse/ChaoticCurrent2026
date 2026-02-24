@@ -86,7 +86,7 @@ public class Canon {
         public boolean run(TelemetryPacket packet) {
             double x = bot.goalVec.x - bot.canonPose.position.x;
             double y = bot.goalVec.y - bot.canonPose.position.y;
-            double z = 45 - 12; //goal height - canon height (constant)
+            double z = 40 - 12; //goal height - canon height (constant)
 
             double d = Math.sqrt(x*x + y*y); //distance
             if (d < 42.0) //domain
