@@ -724,7 +724,7 @@ public class Bot {
 
         botPose = new Pose2d(p.position.x, p.position.y, p.heading.toDouble());
         double x = botPose.position.x;
-        double y = botPose.position.x;
+        double y = botPose.position.y;
         double r = botPose.heading.toDouble();
         canonPose = new Pose2d(x+cos(r)*canon.CANON_OFFSET, y+sin(r)*canon.CANON_OFFSET, r);
     }
@@ -767,7 +767,7 @@ public class Bot {
     }
 
     public Pose2d getPoseFromAprilTag() {
-        /*List<AprilTagDetection> currentDetections = aprilTag.getFreshDetections();
+        List<AprilTagDetection> currentDetections = aprilTag.getFreshDetections();
         if (!useAprilTag)
             return null;
         if (currentDetections == null)
@@ -782,7 +782,7 @@ public class Bot {
                     );
                 }
             }
-        }*/
+        }
         return null;
     }
 

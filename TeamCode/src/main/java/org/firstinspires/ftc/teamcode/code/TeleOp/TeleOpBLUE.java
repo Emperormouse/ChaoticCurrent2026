@@ -107,8 +107,7 @@ public class TeleOpBLUE extends LinearOpMode {
     @Override
     public void runOpMode() {
         //Pose2d startPose = new Pose2d(60.1, -12.7, 0);
-        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0)); //The start position,
-        // which is on the left tile of the far launch zone, with the intake up against the wall.
+        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
         bot = new Bot(hardwareMap, drive, side, telemetry);
         bot.initialize();
@@ -130,12 +129,12 @@ public class TeleOpBLUE extends LinearOpMode {
 
             telemetry.addData("X: ", bot.botPose.position.x);
             telemetry.addData("Y: ", bot.botPose.position.y);
-            telemetry.addData("R: ", bot.botPose.heading.toDouble());
+            telemetry.addData("R: ", bot.botPose.heading.toDouble() * (180/Math.PI));
             telemetry.addData("Speed: ", bot.canon.motor.getVelocity());
 
             telemetry.addData("Canon_X: ", bot.canonPose.position.x);
             telemetry.addData("Canon_Y: ", bot.canonPose.position.y);
-            telemetry.addData("CanonR: ", bot.canonPose.heading.toDouble());
+            telemetry.addData("Canon_R: ", bot.canonPose.heading.toDouble() * (180/Math.PI));
 
             if (gamepad1.xWasPressed()) {
                 currentAction = new SequentialAction(
