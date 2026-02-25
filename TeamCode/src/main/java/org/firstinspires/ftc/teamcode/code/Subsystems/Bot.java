@@ -12,6 +12,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -66,6 +67,12 @@ public class Bot {
 
     public Pose2d botPose = new Pose2d(0, 0, 0);
     public Pose2d canonPose = new Pose2d(0, 0, 0);
+    public double distanceToGoal = 0.0;
+    public double velX = 0.0;
+    public double velY = 0.0;
+
+    private DcMotorEx par;
+    private DcMotorEx perp;
 
     Telemetry telemetry;
     HardwareMap hardwareMap;
@@ -82,11 +89,11 @@ public class Bot {
         if (side == Side.BLUE) {
             launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(51.5));
             aprilVec = new Vector2d(-58.3727f, -55.6425f);
-            goalVec = new Vector2d(aprilVec.x-5, aprilVec.y-7);
+            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-9);
         } else {
             launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-42.3));
             aprilVec = new Vector2d(-58.3727f, 55.6425f);
-            goalVec = new Vector2d(aprilVec.x-5, aprilVec.y+7);
+            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y+9);
         }
 
         frontLeft = hardwareMap.get(DcMotor.class, "front_left");
@@ -96,6 +103,9 @@ public class Bot {
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         //distanceSensor = hardwareMap.get(DistanceSensor.class, "distance_sensor");
+
+        par = hardwareMap.get(DcMotorEx.class, "par");
+        perp = hardwareMap.get(DcMotorEx.class, "perp");
     }
 
     public void initialize() {
@@ -157,7 +167,7 @@ public class Bot {
 
         double botRot = localizer.getPose().heading.toDouble();
         if (side == Side.BLUE && opmode == Op.TELE) {
-            botRot += Math.toRadians(180);
+            botRot += Math.toRadians(90);
         }
 
         frPower += r;
@@ -727,6 +737,15 @@ public class Bot {
         double y = botPose.position.y;
         double r = botPose.heading.toDouble();
         canonPose = new Pose2d(x+cos(r)*canon.CANON_OFFSET, y+sin(r)*canon.CANON_OFFSET, r);
+
+        double dx = (goalVec.x - botPose.position.x);
+        double dy = (goalVec.y - botPose.position.y);
+        distanceToGoal = Math.sqrt(dx*dx + dy*dy);
+
+        double parV = (par.getVelocity() * MecanumDrive.PARAMS.inPerTick);
+        double perpV = (perp.getVelocity() * MecanumDrive.PARAMS.inPerTick);
+        velX = parV * cos(r) + perpV * sin(r);
+        velY = parV * sin(r) - perpV * cos(r);
     }
 
     private class SetUseAprilTag implements Action {

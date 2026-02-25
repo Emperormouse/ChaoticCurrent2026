@@ -44,6 +44,10 @@ public class TeleOpBLUE extends LinearOpMode {
 
     //This is the roadrunner mecanum drive
     MecanumDrive drive;
+    long lastTimeAtSpeed = 0;
+    boolean isShooting = false;
+    boolean lastIsShooting = false;
+    double intakeSpeed = 0;
 
     double lastRightTrigger = 0.0;
     //MANUAL CONTROLS BESIDES MOVEMENT IN HERE
@@ -53,22 +57,34 @@ public class TeleOpBLUE extends LinearOpMode {
                 telemetry.addLine("A pressed");
             }
 
+            lastIsShooting = isShooting;
+            if (gamepad1.right_trigger > 0.1 && bot.canon.isAtSpeed()) {
+                isShooting = true;
+            }
+            if (gamepad1.right_trigger < 0.1) {
+                isShooting = false;
+            }
+
+            intakeSpeed = -(120/bot.distanceToGoal)*0.7;
+            //intakeSpeed = -1.0;
             if (gamepad1.left_bumper || gamepad2.left_bumper) {
                 bot.intake.intake();
             } else if (gamepad1.right_bumper || gamepad2.right_bumper) {
                 bot.intake.reverse();
             } else {
-                if (gamepad1.right_trigger > 0.1) {
+                if (isShooting) {
                     bot.gate.openManual();
-                    bot.intake.setPowerManual(-1.0);
-                } else if (lastRightTrigger > 0.1) {
+                    if (Math.abs(bot.canon.targetVel - bot.canon.motor.getVelocity()) <= 100)
+                        bot.intake.setPowerManual(-1.0);
+                    else
+                        bot.intake.stop();
+                } else if (lastIsShooting) {
                     bot.gate.closeManual();
                     bot.intake.stop();
                 } else {
                     bot.intake.stop();
                 }
             }
-            lastRightTrigger = gamepad1.right_trigger;
 
             if (gamepad2.aWasPressed()) {
                 bot.canon.setVelocityToCloseSpeed();
@@ -117,12 +133,16 @@ public class TeleOpBLUE extends LinearOpMode {
         Action defaultAction = new ParallelAction(
             new FieldCentricMovement(),
             new ManualControls(),
-            new KeepRunning(bot.canon.cloneMotorPower())
+            new KeepRunning(bot.canon.cloneMotorPower()),
+            new KeepRunning(bot.canon.setVelAction(300))
         );
         Action currentAction = defaultAction;
 
         waitForStart();
         while (opModeIsActive()) {
+            if (bot.canon.isAtSpeed()) {
+                lastTimeAtSpeed = System.currentTimeMillis();
+            }
             telemetry.update();
 
             bot.updatePose();
@@ -130,11 +150,24 @@ public class TeleOpBLUE extends LinearOpMode {
             telemetry.addData("X: ", bot.botPose.position.x);
             telemetry.addData("Y: ", bot.botPose.position.y);
             telemetry.addData("R: ", bot.botPose.heading.toDouble() * (180/Math.PI));
-            telemetry.addData("Speed: ", bot.canon.motor.getVelocity());
-
+            telemetry.addLine("==============================");
+            telemetry.addData("Vel_X: ", bot.velX);
+            telemetry.addData("Vel_Y: ", bot.velY);
+            telemetry.addData("TargetR: ", bot.canon.targetAngle * (180/Math.PI));
+            telemetry.addLine("==============================");
             telemetry.addData("Canon_X: ", bot.canonPose.position.x);
             telemetry.addData("Canon_Y: ", bot.canonPose.position.y);
             telemetry.addData("Canon_R: ", bot.canonPose.heading.toDouble() * (180/Math.PI));
+            telemetry.addLine("==============================");
+            telemetry.addData("Target Speed: ", bot.canon.targetVel);
+            telemetry.addData("Speed: ", bot.canon.motor.getVelocity());
+            telemetry.addData("Canon power: ", bot.canon.motor.getPower());
+            telemetry.addData("isAtSpeed: ", bot.canon.isAtSpeed());
+            telemetry.addLine("==============================");
+            telemetry.addData("Distance: ", bot.distanceToGoal);
+            telemetry.addData("Intake Speed: ", intakeSpeed);
+            telemetry.addLine("==============================");
+
 
             if (gamepad1.xWasPressed()) {
                 currentAction = new SequentialAction(
@@ -169,10 +202,6 @@ public class TeleOpBLUE extends LinearOpMode {
             }
             Actions.runBlocking(bot.canon.cloneMotorPower());
 
-
-            telemetry.addData("Canon power: ", bot.canon.motor.getPower());
-            telemetry.addData("Canon speed: ", bot.canon.motor.getVelocity());
-            telemetry.addData("Pos: ", currentPose);
         }
     }
 
@@ -195,7 +224,7 @@ public class TeleOpBLUE extends LinearOpMode {
 
     private class TrackedMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
-            double kr2 = (1.0 / 50);
+            double kr2 = (1.0 / 70);
 
             double y = -gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x * 1.1;

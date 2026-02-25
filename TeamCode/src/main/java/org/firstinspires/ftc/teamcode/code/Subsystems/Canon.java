@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.teamcode.code.utility.QuarticSolver;
 import org.firstinspires.ftc.teamcode.code.utility.Side;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
@@ -20,6 +21,7 @@ public class Canon {
     public int CLOSE_SPEED = 1200;
     public int CLOSE_SPEED_FIRST = CLOSE_SPEED;
     public int targetVel = CLOSE_SPEED;
+    public double targetAngle = -1.0;
     private Bot bot;
     public double CANON_OFFSET = 7.5;
 
@@ -32,10 +34,10 @@ public class Canon {
 
         motor.setDirection(DcMotorSimple.Direction.REVERSE);
         motor2.setDirection(DcMotorSimple.Direction.REVERSE);
-        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        PIDFCoefficients pid = new PIDFCoefficients(500.0, 0, 0 , 22.5);
+        PIDFCoefficients pid = new PIDFCoefficients(700.0, 0, 0 , 22.5);
         motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pid);
     }
 
@@ -86,7 +88,7 @@ public class Canon {
         public boolean run(TelemetryPacket packet) {
             double x = bot.goalVec.x - bot.canonPose.position.x;
             double y = bot.goalVec.y - bot.canonPose.position.y;
-            double z = 40 - 12; //goal height - canon height (constant)
+            double z = 43 - 12; //goal height - canon height (constant)
 
             double d = Math.sqrt(x*x + y*y); //distance
             if (d < 42.0) //domain
@@ -99,6 +101,7 @@ public class Canon {
 
             double ticksPerSec = velocityToTicksPerSec2(translationalVelocity);
 
+            targetVel = (int)ticksPerSec;
             motor.setVelocity(ticksPerSec);
 
             return true;
@@ -109,6 +112,61 @@ public class Canon {
     }
     public Action setVelByDistance() {
         return new SetVelByDistance(10_000);
+    }
+
+    public class SetVelByDistanceWithRSpeed implements Action {
+        private double maxSpeed = 10_000;
+        public SetVelByDistanceWithRSpeed(double maxSpeed) {
+            this.maxSpeed = maxSpeed;
+        }
+        public boolean run(TelemetryPacket packet) {
+            double x = bot.goalVec.x - bot.canonPose.position.x;
+            double y = bot.goalVec.y - bot.canonPose.position.y;
+            double z = 43 - 12; //goal height - canon height (constant)
+
+            double Rx = bot.velX;
+            double Ry = bot.velY;
+
+            double g = 386.2205; //g in inches/sec^2
+
+            double tanA = Math.tan(canonAngle);
+
+            double a = 0.25 * g * g;
+            double b = g * z - tanA * tanA * (Rx*Rx + Ry*Ry);
+            double c = 2 * tanA * tanA * (x*Rx + y*Ry);
+            double d = z*z - tanA * tanA * (x*x + y*y);
+
+            Double t = QuarticSolver.lowestPositiveRealSolution(a, b, c, d);
+            if (t == null) {
+                targetVel = 10_000;
+                return false;
+            }
+
+            double Vx = (x/t)-Rx;
+            double Vy = (y/t)-Ry;
+            double Vz = (z + 0.5*g*t*t)/t;
+
+            targetAngle = Math.atan2(Vy, Vx);
+
+            double translationalVelocity = Math.sqrt(Vx*Vx + Vy*Vy + Vz*Vz);
+
+            double ticksPerSec = velocityToTicksPerSec2(translationalVelocity);
+
+            targetVel = (int)ticksPerSec;
+            motor.setVelocity(ticksPerSec);
+
+            return true;
+        }
+    }
+    public Action setVelByDistanceWithRSpeed(double maxSpeed) {
+        return new SetVelByDistanceWithRSpeed(maxSpeed);
+    }
+    public Action setVelByDistanceWithRSpeed() {
+        return new SetVelByDistanceWithRSpeed(10_000);
+    }
+
+    public boolean isAtSpeed() {
+        return Math.abs(targetVel - motor.getVelocity()) <= 60;
     }
 
     private double velocityToTicksPerSec(double v) {
