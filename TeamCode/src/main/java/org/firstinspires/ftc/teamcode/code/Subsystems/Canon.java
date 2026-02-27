@@ -101,6 +101,10 @@ public class Canon {
 
             double ticksPerSec = velocityToTicksPerSec2(translationalVelocity);
 
+            //adjustment for far zone
+            if (d > 90.0)
+                ticksPerSec += 40;
+
             targetVel = (int)ticksPerSec;
             motor.setVelocity(ticksPerSec);
 
