@@ -74,10 +74,7 @@ public class TeleOpBLUE extends LinearOpMode {
             } else {
                 if (isShooting) {
                     bot.gate.openManual();
-                    if (Math.abs(bot.canon.targetVel - bot.canon.motor.getVelocity()) <= 100)
-                        bot.intake.setPowerManual(-1.0);
-                    else
-                        bot.intake.stop();
+                    bot.intake.setPowerManual(-1.0);
                 } else if (lastIsShooting) {
                     bot.gate.closeManual();
                     bot.intake.stop();
@@ -133,8 +130,8 @@ public class TeleOpBLUE extends LinearOpMode {
         Action defaultAction = new ParallelAction(
             new FieldCentricMovement(),
             new ManualControls(),
-            new KeepRunning(bot.canon.cloneMotorPower()),
-            new KeepRunning(bot.canon.setVelAction(300))
+            new KeepRunning(bot.canon.cloneMotorPower())
+            //new KeepRunning(bot.canon.setVelAction(300))
         );
         Action currentAction = defaultAction;
 

@@ -89,11 +89,11 @@ public class Bot {
         if (side == Side.BLUE) {
             launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(51.5));
             aprilVec = new Vector2d(-58.3727f, -55.6425f);
-            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-9);
+            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-7);
         } else {
             launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-42.3));
             aprilVec = new Vector2d(-58.3727f, 55.6425f);
-            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y+9);
+            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y+7);
         }
 
         frontLeft = hardwareMap.get(DcMotor.class, "front_left");
@@ -165,9 +165,12 @@ public class Bot {
         double brPower = 0;
         double blPower = 0;
 
-        double botRot = localizer.getPose().heading.toDouble();
+        double botRot = botPose.heading.toDouble();
         if (side == Side.BLUE && opmode == Op.TELE) {
             botRot += Math.toRadians(90);
+        }
+        if (side == Side.BLUE && opmode == Op.AUTO) {
+            botRot -= Math.toRadians(90);
         }
 
         frPower += r;
@@ -353,16 +356,21 @@ public class Bot {
 
         public boolean run(TelemetryPacket t) {
             localizer.update();
-            Pose2d currentPose = localizer.getPose();
+            Pose2d currentPose = botPose;
             double diffX = targetPose.position.x - currentPose.position.x;
             double diffY = targetPose.position.y - currentPose.position.y;
             double diffR = targetPose.heading.toDouble() - currentPose.heading.toDouble();
 
-            double powX = diffX*pX;
-            double powY = -diffY*pY;
+            double powX = -diffX*pX;
+            double powY = diffY*pY;
             double powR = diffR*pRotational;
 
-            moveFieldCentric(powX, powY, powR, speed, Op.AUTO);
+            telemetry.addData("PowX: ", powX);
+            telemetry.addData("PowY: ", powY);
+            telemetry.addData("PowR: ", powR);
+            telemetry.update();
+
+            moveFieldCentric(powX, powY, powR, 1.0, Op.AUTO);
 
             if (Math.abs(diffX)>2.0 || Math.abs(diffY)>2.0 || Math.abs(diffR)>Math.toRadians(2.5)) {
                 return true;
@@ -546,7 +554,7 @@ public class Bot {
 
     //drives to location while tracking april tag
     public class AimAtGoal implements Action {
-        private double pRotational = (1.0 / 60);
+        private double pRotational = (1.0 / 70);
         private double speed;
 
         public AimAtGoal() {
@@ -576,7 +584,7 @@ public class Bot {
 
             moveRelative(0, 0, powR, speed);
 
-            if (Math.abs(angleDiff)>5.0) {
+            if (Math.abs(angleDiff)>3.0) {
                 return true;
             } else {
                 stop();
@@ -611,16 +619,6 @@ public class Bot {
             double distanceDiff = 0;
             double offset = 0;
             double angleDiff = 0;
-
-            Vector2d aprilVec;
-            Vector2d goalVec;
-            if (side == Side.RED) {
-                aprilVec = new Vector2d(-58.3727f, 55.6425f);
-                goalVec = new Vector2d(aprilVec.x-7, aprilVec.y+7);
-            } else {
-                aprilVec = new Vector2d(-58.3727f, -55.6425f);
-                goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-7);
-            }
 
             Pose2d botPose = localizer.getPose();
             double dx = botPose.position.x - aprilVec.x;
@@ -746,6 +744,15 @@ public class Bot {
         double perpV = (perp.getVelocity() * MecanumDrive.PARAMS.inPerTick);
         velX = parV * cos(r) + perpV * sin(r);
         velY = parV * sin(r) - perpV * cos(r);
+    }
+    public class UpdatePose implements Action {
+        public boolean run(TelemetryPacket t) {
+            updatePose();
+            return true;
+        }
+    }
+    public Action updatePoseAction() {
+        return new UpdatePose();
     }
 
     private class SetUseAprilTag implements Action {

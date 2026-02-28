@@ -23,7 +23,7 @@ public class Canon {
     public int targetVel = CLOSE_SPEED;
     public double targetAngle = -1.0;
     private Bot bot;
-    public double CANON_OFFSET = 7.5;
+    public double CANON_OFFSET = -7.5;
 
     private double canonAngle = 55 * (Math.PI/180);
 
