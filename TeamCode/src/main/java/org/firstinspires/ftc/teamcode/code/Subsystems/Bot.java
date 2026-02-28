@@ -343,9 +343,9 @@ public class Bot {
     }
 
     public class MoveToImprecise implements Action {
-        private final double pRotational = 0.7;
-        private final double pX = 0.05;
-        private final double pY = 0.05;
+        private final double pRotational = 1.0;
+        private final double pX = 0.1;
+        private final double pY = 0.1;
         private Pose2d targetPose;
         private double speed;
 
@@ -569,20 +569,23 @@ public class Bot {
             Pose2d currentPose = localizer.getPose();
 
             //Tracking
-            double dx = currentPose.position.x - goalVec.x;
-            double dy = currentPose.position.y - goalVec.y;
+
+            double dx = botPose.position.x - goalVec.x;
+            double dy = botPose.position.y - goalVec.y;
 
             double targetAngle = Math.atan2(dx, -dy) - PI/2;
             if (targetAngle < -PI) {
                 targetAngle += 2* PI;
             }
-            if (side == Side.BLUE)
-                targetAngle += Math.toRadians(2);
 
-            double angleDiff = Math.toDegrees(targetAngle - currentPose.heading.toDouble());
-            double powR = angleDiff*pRotational;
+            if (targetAngle < -Math.PI) {
+                targetAngle += 2*Math.PI;
+            }
 
-            moveRelative(0, 0, powR, speed);
+            double angleDiff = targetAngle - botPose.heading.toDouble();
+            double r = Math.toDegrees(angleDiff) * pRotational;
+
+            moveRelative(0, 0, r, 1.0);
 
             if (Math.abs(angleDiff)>3.0) {
                 return true;
