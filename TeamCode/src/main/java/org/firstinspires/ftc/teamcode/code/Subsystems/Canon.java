@@ -170,7 +170,7 @@ public class Canon {
     }
 
     public boolean isAtSpeed() {
-        return Math.abs(targetVel - motor.getVelocity()) <= 60;
+        return Math.abs(targetVel - motor.getVelocity()) <= 80;
     }
 
     private double velocityToTicksPerSec(double v) {

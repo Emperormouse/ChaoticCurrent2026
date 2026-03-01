@@ -60,8 +60,8 @@ public class TeleOpRED extends LinearOpMode {
             } else {
                 if (gamepad1.right_trigger > 0.1) {
                     bot.gate.openManual();
-                    if (distance > 70)
-                        bot.intake.setPowerManual(-0.8);
+                    if (bot.distanceToGoal > 70)
+                        bot.intake.setPowerManual(-0.7);
                     else
                         bot.intake.setPowerManual(-1.0);
                 } else if (lastRightTrigger > 0.1) {

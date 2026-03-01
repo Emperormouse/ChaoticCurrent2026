@@ -26,16 +26,16 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 @Config
 public class AutoBLUE extends LinearOpMode {
     public static class PARAMS {
-        public double x1 = 8.3;
+        public double x1 = 7.5;
         public double angle = -120;
         public double y1 = -50;
-        public double y2 = -62.8;
+        public double y2 = -63.7;
         public double xMiddle = 10;
-        public double yMiddle1 = -35;
-        public double yMiddle2 = -59;
-        public double closeX = -13.5;
+        public double yMiddle1 = -30;
+        public double yMiddle2 = -60;
+        public double closeX = -14;
         public double closeY1 = -33;
-        public double closeY2 = -53;
+        public double closeY2 = -53.5;
 
     }
     public static PARAMS PARAMS = new PARAMS();
@@ -47,8 +47,8 @@ public class AutoBLUE extends LinearOpMode {
     double launchSpeed = 1420;
 
     public void runOpMode() {
-        drive = new MecanumDrive(hardwareMap, new Pose2d(-69, -44.44, Math.toRadians(41.3)));
-        bot = new Bot(hardwareMap, drive, Side.RED, telemetry);
+        drive = new MecanumDrive(hardwareMap, new Pose2d(-52.87, -36.2, Math.toRadians(-90)));
+        bot = new Bot(hardwareMap, drive, Side.BLUE, telemetry);
 
         bot.initialize();
         long startTime = System.currentTimeMillis();
@@ -94,90 +94,49 @@ public class AutoBLUE extends LinearOpMode {
 
         Action RRPath2 = bot.drive.actionBuilder(startPos)
             .strafeToLinearHeading(launchVec, toRadians(45))
-            .afterTime(0, aimSequence(2.3, 1.2))
-            .waitSeconds(2.2)
-
-            //.setTangent(toRadians(10))
-            /*.splineTo(new Vector2d(13, -40), toRadians(-90))
-            .strafeToConstantHeading(new Vector2d(13, -57.5))
-            .waitSeconds(0.2)
-            .setTangent(toRadians(90))
-            .strafeToLinearHeading(launchVec, toRadians(45))
-
-            .waitSeconds(1.2)*/
+            .afterTime(0, aimSequence(2.4, 1.1))
+            .waitSeconds(2.4)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
             .splineToSplineHeading(new Pose2d(PARAMS.xMiddle, PARAMS.yMiddle1, toRadians(-90)), toRadians(-90))
             .strafeToConstantHeading(new Vector2d(PARAMS.xMiddle, PARAMS.yMiddle2))
+            .afterTime(0.3, bot.intake.setPower(0))
             .setTangent(toRadians(90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.1)
+            .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
             .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
             .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
+            .afterTime(0.3, bot.intake.setPower(0))
             .setTangent(toRadians(90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.1)
+            .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
             .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
             .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
+            .afterTime(0.3, bot.intake.setPower(0))
             .setTangent(toRadians(90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.1)
+            .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
-            //.strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
             .lineToY(PARAMS.closeY2)
+            .afterTime(0.3, bot.intake.setPower(0))
             .strafeToLinearHeading(launchVec, toRadians(45))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.1)
+            .waitSeconds(1.3)
 
-            /*.setTangent(toRadians(0))
-            .splineToLinearHeading(new Pose2d(4.5, -62, toRadians(-125)), toRadians(-120))
-            .waitSeconds(3.0)
-            .strafeToLinearHeading(launchVec, toRadians(45))
-            .afterTime(0, bot.intake.setPower(1.0))
-            .waitSeconds(1.2)*/
-
-            /*.strafeToLinearHeading(new Vector2d(9.7, -54), toRadians(-130))
-            .strafeToLinearHeading(new Vector2d(9.7, -61), toRadians(-130))
-            .waitSeconds(3.5)
-            .setTangent(45)
-            .strafeToLinearHeading(launchVec, toRadians(45))
-            .afterTime(0, bot.intake.setPower(1.0))
-            .waitSeconds(1.2)*/
-
-            /*.setTangent(toRadians(0))
-            .splineToLinearHeading(new Pose2d(4.5, -62, toRadians(-125)), toRadians(-120))
-            .waitSeconds(3.0)
-            .strafeToLinearHeading(launchVec, toRadians(45))
-            .afterTime(0, bot.intake.setPower(1.0))
-            .waitSeconds(1.2)*/
-
-            /*.afterTime(0, bot.intake.setPower(-1.0))
-            .strafeToLinearHeading(new Vector2d(9.7, -54), toRadians(-130))
-            .strafeToLinearHeading(new Vector2d(9.7, -61), toRadians(-130))
-            .waitSeconds(3.5)
-            .strafeToLinearHeading(launchVec, toRadians(45))
-            .afterTime(0, bot.intake.setPower(1.0))
-            .waitSeconds(1.2)*/
-
-            /*.turnTo(toRadians(-90))
-            .strafeToConstantHeading(new Vector2d(-12.3, -53))
-            .waitSeconds(0.2)
-            .strafeToLinearHeading(launchVec, launchPose.heading.toDouble())
-            .waitSeconds(1.2)*/
             .build();
 
         Action RRPath3 = new SequentialAction(
@@ -199,16 +158,30 @@ public class AutoBLUE extends LinearOpMode {
 
 
         bot.intake.setPowerManual(-1.0);
-        Actions.runBlocking(new ParallelAction(
-            RRPath2,
-            new KeepRunning(bot.updatePoseAction()),
-            new KeepRunning(bot.canon.cloneMotorPower()),
-            new KeepRunning(bot.canon.setVelAction(launchSpeed))
-        ));
+        Actions.runBlocking(
+            new SequentialAction(
+                new EndAfterEitherParallel(
+                    new ParallelAction(
+                        RRPath2,
+                        new KeepRunning(bot.updatePoseAction()),
+                        new KeepRunning(bot.canon.cloneMotorPower()),
+                        new KeepRunning(bot.canon.setVelAction(launchSpeed))
+                    ),
+                    new Wait(29.6)
+                ),
+                new EndAfterFirstParallel(
+                    new Wait(0.4),
+                    new KeepRunning(bot.moveRelativeAction(-1.0, 0.0, 0.0, 1.0))
+                ),
+                bot.stopAction(),
+                bot.intake.setPower(0),
+                bot.canon.setPowerAction(0)
+            )
+        );
     }
 
     public Action aimSequence() {
-        return aimSequence(1.1, 0.0);
+        return aimSequence(1.3, 0.0);
     }
     public Action aimSequence(double time1, double time2) {
         return new SequentialAction(

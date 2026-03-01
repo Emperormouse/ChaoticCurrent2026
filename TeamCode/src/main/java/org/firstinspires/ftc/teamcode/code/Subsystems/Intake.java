@@ -63,53 +63,14 @@ public class Intake {
     }
 
     public class IntakeWhenAtSpeed implements  Action {
-        private long start;
-        private boolean firstTime = true;
-        //15 length
-        private int arrLen = 5;
-        private boolean[] arr = new boolean[arrLen];
-        private long lastTime = 0;
-
-        public IntakeWhenAtSpeed() {
-            for (int i=0; i<arr.length; i++) {
-                arr[i] = false;
-            }
-        }
-
         public boolean run(TelemetryPacket t) {
-            boolean isAtSpeed = Math.abs(bot.canon.motor.getVelocity() - bot.canon.targetVel) <= 60;
-            if (System.currentTimeMillis() > lastTime + 10) {
-                lastTime = System.currentTimeMillis();
-                //Shift everything right one place
-                for (int i = arr.length-1; i >= 1; i--) {
-                    arr[i] = arr[i-1];
-                }
-                arr[0] = isAtSpeed;
-            }
-
-            if (firstTime) {
-                firstTime = false;
-                start = System.currentTimeMillis();
-            }
-
-            int numTrue = 0;
-            for (boolean b : arr) {
-                if (b) numTrue++;
-            }
-
-            boolean allTrueInFirstHalf = true;
-            for (int i=0; i<arr.length/2; i++) {
-                allTrueInFirstHalf &= arr[i];
-            }
-
-            /*if (allTrueInFirstHalf) {
+            boolean isAtSpeed = bot.canon.isAtSpeed();
+            if (isAtSpeed)
                 intake();
-            } else*/ if (numTrue >= 2) {
-                intake();
-            } else {
+            else
                 stop();
-            }
-            return true;
+
+            return false;
         }
     }
 

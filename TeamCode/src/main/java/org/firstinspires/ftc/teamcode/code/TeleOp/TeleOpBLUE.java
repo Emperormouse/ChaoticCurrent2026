@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.code.TeleOp;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.toRadians;
 
 import androidx.annotation.NonNull;
 
@@ -65,8 +66,6 @@ public class TeleOpBLUE extends LinearOpMode {
                 isShooting = false;
             }
 
-            intakeSpeed = -(120/bot.distanceToGoal)*0.7;
-            //intakeSpeed = -1.0;
             if (gamepad1.left_bumper || gamepad2.left_bumper) {
                 bot.intake.intake();
             } else if (gamepad1.right_bumper || gamepad2.right_bumper) {
@@ -74,7 +73,10 @@ public class TeleOpBLUE extends LinearOpMode {
             } else {
                 if (isShooting) {
                     bot.gate.openManual();
-                    bot.intake.setPowerManual(-1.0);
+                    if (bot.distanceToGoal > 80)
+                        bot.intake.setPowerManual(-0.8);
+                    else
+                        bot.intake.setPowerManual(-1.0);
                 } else if (lastIsShooting) {
                     bot.gate.closeManual();
                     bot.intake.stop();
@@ -235,6 +237,8 @@ public class TeleOpBLUE extends LinearOpMode {
             }
 
             double angleDiff = targetAngle - bot.botPose.heading.toDouble();
+            if (bot.distanceToGoal < 70)
+                angleDiff += toRadians(-2);
             double r = Math.toDegrees(angleDiff) * kr2;
 
             bot.moveFieldCentric(x, y, r, Op.TELE);

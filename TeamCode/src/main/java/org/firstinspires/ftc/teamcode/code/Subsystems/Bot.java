@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.max;
 import static java.lang.Math.sin;
+import static java.lang.Math.toRadians;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
@@ -89,11 +90,11 @@ public class Bot {
         if (side == Side.BLUE) {
             launchPose = new Pose2d(-14.3, -9.8, Math.toRadians(51.5));
             aprilVec = new Vector2d(-58.3727f, -55.6425f);
-            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y-7);
+            goalVec = new Vector2d(aprilVec.x-5, aprilVec.y-5);
         } else {
             launchPose = new Pose2d(-15.1, 14.8, Math.toRadians(-42.3));
             aprilVec = new Vector2d(-58.3727f, 55.6425f);
-            goalVec = new Vector2d(aprilVec.x-7, aprilVec.y+7);
+            goalVec = new Vector2d(aprilVec.x-5, aprilVec.y+5);
         }
 
         frontLeft = hardwareMap.get(DcMotor.class, "front_left");
@@ -566,7 +567,6 @@ public class Bot {
 
         public boolean run(TelemetryPacket t) {
             localizer.update();
-            Pose2d currentPose = localizer.getPose();
 
             //Tracking
 
@@ -574,23 +574,24 @@ public class Bot {
             double dy = botPose.position.y - goalVec.y;
 
             double targetAngle = Math.atan2(dx, -dy) - PI/2;
-            if (targetAngle < -PI) {
-                targetAngle += 2* PI;
-            }
-
             if (targetAngle < -Math.PI) {
                 targetAngle += 2*Math.PI;
             }
 
-            double angleDiff = targetAngle - botPose.heading.toDouble();
-            double r = Math.toDegrees(angleDiff) * pRotational;
+            double angleDiff = (targetAngle-toRadians(2.5)) - botPose.heading.toDouble();
 
+            double r = Math.toDegrees(angleDiff) * pRotational;
             moveRelative(0, 0, r, 1.0);
 
-            if (Math.abs(angleDiff)>3.0) {
+            telemetry.addData("Target Angle: ", targetAngle * (180/PI));
+            telemetry.addData("Current Angle: ", botPose.heading.toDouble() * (180/PI));
+            telemetry.addData("Angle Diff: ", angleDiff * (180 / PI));
+            telemetry.addData("R: ", r);
+            telemetry.update();
+
+            if (Math.abs(angleDiff)>toRadians(3.0)) {
                 return true;
             } else {
-                stop();
                 return false;
             }
         }
