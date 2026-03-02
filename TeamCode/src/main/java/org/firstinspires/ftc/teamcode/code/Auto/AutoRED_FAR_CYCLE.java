@@ -2,12 +2,14 @@ package org.firstinspires.ftc.teamcode.code.Auto;
 
 import static java.lang.Math.toRadians;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -21,15 +23,27 @@ import org.firstinspires.ftc.teamcode.code.utility.Op;
 import org.firstinspires.ftc.teamcode.code.utility.Side;
 
 @Autonomous
-public class Blue_Gate extends LinearOpMode {
+@Config
+public class AutoRED_FAR_CYCLE extends LinearOpMode {
+    public static class PARAMS {
+        public double launchX = 52;
+        public double launchY = 15;
+        public double launchR = -20;
+        public double cycleX = 63.5;
+        public double cycleY = 64;
+
+    }
+    public static PARAMS PARAMS = new PARAMS();
+
     MecanumDrive drive;
     Bot bot;
-    Pose2d launchPose = new Pose2d(-12.3, -16, Math.toRadians(45));
-    Vector2d launchVec = new Vector2d(launchPose.position.x, launchPose.position.y);
-    double launchSpeed = 1409;
+
+    Pose2d launchPoseFar = new Pose2d(PARAMS.launchX, PARAMS.launchY, Math.toRadians(PARAMS.launchR));
+    Vector2d launchVecFar = new Vector2d(launchPoseFar.position.x, launchPoseFar.position.y);
+    double launchSpeed = 1740;
 
     public void runOpMode() {
-        drive = new MecanumDrive(hardwareMap, new Pose2d(-69, -44.44, Math.toRadians(41.3)));
+        drive = new MecanumDrive(hardwareMap, new Pose2d(-52.87, -36.2, Math.toRadians(-90)));
         bot = new Bot(hardwareMap, drive, Side.RED, telemetry);
 
         bot.initialize();
@@ -45,37 +59,53 @@ public class Blue_Gate extends LinearOpMode {
         telemetry.update();
         bot.isOpModeRunning = true;
 
-        Action RRPath = bot.drive.actionBuilder(startPos)
-            .afterTime(0, bot.canon.setVelAction(launchSpeed))
-            .strafeToLinearHeading(launchVec, toRadians(45))
-            .afterTime(0, aimSequence(2.0, 0.8))
-            .waitSeconds(2.0)
 
-            .setTangent(toRadians(-20))
-            .splineToSplineHeading(new Pose2d(12, -50, toRadians(-125)), toRadians(-90))
-            .strafeToConstantHeading(new Vector2d(12, -60))
-            .waitSeconds(3.5)
-            .setTangent(toRadians(90))
-            .afterTime(0, bot.canon.setVelAction(launchSpeed))
-            .splineToLinearHeading(launchPose, toRadians(180))
+        Action RRPath = bot.drive.actionBuilder(startPos)
+            .strafeToLinearHeading(launchVecFar, toRadians(PARAMS.launchR))
+            .waitSeconds(2.0)
+            .afterTime(0, aimSequence(4.4, 1.0))
+            .waitSeconds(4.5)
+
+            .turnTo(toRadians(90))
+            .afterTime(0, bot.intake.setPower(-1.0))
+            .strafeToConstantHeading(new Vector2d(PARAMS.cycleX, PARAMS.cycleY))
+            .waitSeconds(1.0)
+            .strafeToSplineHeading(launchVecFar, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.6)
+            .waitSeconds(5.0)
+
+            .turnTo(toRadians(90))
+            .afterTime(0, bot.intake.setPower(-1.0))
+            .strafeToConstantHeading(new Vector2d(PARAMS.cycleX, PARAMS.cycleY))
+            .waitSeconds(1.0)
+            .strafeToSplineHeading(launchVecFar, toRadians(PARAMS.launchR))
+            .afterTime(0, aimSequence())
+            .waitSeconds(5.0)
+
+            .strafeToConstantHeading(new Vector2d(PARAMS.cycleX, 45))
+            .waitSeconds(1.0)
+
             .build();
+
 
 
         waitForStart();
 
         //END OF INIT
 
-        Actions.runBlocking(new ParallelAction(
-            RRPath,
-            new KeepRunning(bot.updatePoseUsingAprilTagAction()),
-            new KeepRunning(bot.canon.cloneMotorPower())
-        ));
+
+        Actions.runBlocking(
+            new ParallelAction(
+                RRPath,
+                new KeepRunning(bot.updatePoseAction()),
+                new KeepRunning(bot.canon.cloneMotorPower()),
+                new KeepRunning(bot.canon.setVelAction(launchSpeed))
+            )
+        );
     }
 
     public Action aimSequence() {
-        return aimSequence(1.6, 0.4);
+        return aimSequence(4.9, 1.0);
     }
     public Action aimSequence(double time1, double time2) {
         return new SequentialAction(
@@ -86,10 +116,16 @@ public class Blue_Gate extends LinearOpMode {
             new EndAfterFirstParallel(
                 new Wait(time1),
                 new ParallelAction(
-                    new KeepRunning(bot.aimAtGoal()),
+                    new SequentialAction(
+                        new EndAfterFirstParallel(
+                            new Wait(3.0),
+                            new KeepRunning(bot.aimAtGoal())
+                        ),
+                        bot.stopAction()
+                    ),
                     new SequentialAction(
                         new Wait(time2),
-                        bot.intake.setPower(-1.0)
+                        new KeepRunning(bot.intake.intakeWhenAtSpeed())
                     )
                 )
             ),

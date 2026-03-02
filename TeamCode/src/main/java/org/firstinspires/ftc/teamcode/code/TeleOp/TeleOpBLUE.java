@@ -35,22 +35,14 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @TeleOp
 public class TeleOpBLUE extends LinearOpMode {
     private Bot bot;
-    private Pose2d currentPose;
-    private boolean useAprilTag = false;
-    Pose2d launchPose = new Pose2d(-24.7, -17, Math.toRadians(50));
-    private double distance = 0.0;
-    private AprilTagDetection latestAprilTagDetection = null;
-
     Side side = Side.BLUE;
 
     //This is the roadrunner mecanum drive
     MecanumDrive drive;
-    long lastTimeAtSpeed = 0;
     boolean isShooting = false;
     boolean lastIsShooting = false;
     double intakeSpeed = 0;
 
-    double lastRightTrigger = 0.0;
     //MANUAL CONTROLS BESIDES MOVEMENT IN HERE
     private class ManualControls implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
@@ -139,9 +131,6 @@ public class TeleOpBLUE extends LinearOpMode {
 
         waitForStart();
         while (opModeIsActive()) {
-            if (bot.canon.isAtSpeed()) {
-                lastTimeAtSpeed = System.currentTimeMillis();
-            }
             telemetry.update();
 
             bot.updatePose();
@@ -184,7 +173,6 @@ public class TeleOpBLUE extends LinearOpMode {
                 bot.gate.close();
                 currentAction = new ParallelAction(
                     new TrackedMovement(),
-                    //new FieldCentricMovement(),
                     new ManualControls(),
                     bot.canon.setVelByDistance()
                 );

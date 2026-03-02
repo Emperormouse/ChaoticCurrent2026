@@ -167,11 +167,15 @@ public class Bot {
         double blPower = 0;
 
         double botRot = botPose.heading.toDouble();
-        if (side == Side.BLUE && opmode == Op.TELE) {
-            botRot += Math.toRadians(90);
-        }
-        if (side == Side.BLUE && opmode == Op.AUTO) {
+
+        if (opmode == Op.AUTO) {
             botRot -= Math.toRadians(90);
+        } else {
+            if (side == Side.BLUE) {
+                botRot += Math.toRadians(90);
+            } else {
+                botRot -= toRadians(90);
+            }
         }
 
         frPower += r;
@@ -578,7 +582,10 @@ public class Bot {
                 targetAngle += 2*Math.PI;
             }
 
-            double angleDiff = (targetAngle-toRadians(2.5)) - botPose.heading.toDouble();
+            double angleDiff = targetAngle - botPose.heading.toDouble();
+            if (side == Side.BLUE) {
+                angleDiff -= toRadians(2.5);
+            }
 
             double r = Math.toDegrees(angleDiff) * pRotational;
             moveRelative(0, 0, r, 1.0);

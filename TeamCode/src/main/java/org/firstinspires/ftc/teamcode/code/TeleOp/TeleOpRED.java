@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.code.TeleOp;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.toRadians;
 
 import androidx.annotation.NonNull;
 
@@ -34,18 +35,14 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @TeleOp
 public class TeleOpRED extends LinearOpMode {
     private Bot bot;
-    private Pose2d currentPose;
-    private boolean useAprilTag = true;
-    Pose2d launchPose = new Pose2d(-22.4, 16.6, Math.toRadians(-46));
-    private double distance = 0.0;
-    private AprilTagDetection latestAprilTagDetection = null;
-
     Side side = Side.RED;
 
     //This is the roadrunner mecanum drive
     MecanumDrive drive;
+    boolean isShooting = false;
+    boolean lastIsShooting = false;
+    double intakeSpeed = 0;
 
-    double lastRightTrigger = 0.0;
     //MANUAL CONTROLS BESIDES MOVEMENT IN HERE
     private class ManualControls implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
@@ -53,48 +50,61 @@ public class TeleOpRED extends LinearOpMode {
                 telemetry.addLine("A pressed");
             }
 
+            lastIsShooting = isShooting;
+            if (gamepad1.right_trigger > 0.1 && bot.canon.isAtSpeed()) {
+                isShooting = true;
+            }
+            if (gamepad1.right_trigger < 0.1) {
+                isShooting = false;
+            }
+
             if (gamepad1.left_bumper || gamepad2.left_bumper) {
                 bot.intake.intake();
             } else if (gamepad1.right_bumper || gamepad2.right_bumper) {
                 bot.intake.reverse();
             } else {
-                if (gamepad1.right_trigger > 0.1) {
+                if (isShooting) {
                     bot.gate.openManual();
-                    if (bot.distanceToGoal > 70)
-                        bot.intake.setPowerManual(-0.7);
+                    if (bot.distanceToGoal > 80)
+                        bot.intake.setPowerManual(-0.8);
                     else
                         bot.intake.setPowerManual(-1.0);
-                } else if (lastRightTrigger > 0.1) {
+                } else if (lastIsShooting) {
                     bot.gate.closeManual();
                     bot.intake.stop();
                 } else {
                     bot.intake.stop();
                 }
             }
-            lastRightTrigger = gamepad1.right_trigger;
 
-            if (gamepad2.a) {
-                bot.gate.openManual();
-            } else if (gamepad2.b) {
-                bot.gate.closeManual();
-            } else {
-                bot.gate.holdManual();
+            if (gamepad2.aWasPressed()) {
+                bot.canon.setVelocityToCloseSpeed();
             }
 
+            if (gamepad2.y) {
+                //bot.canon.motor.setPower(1.0);
+                bot.canon.motor2.setPower(1.0);
+            }
+
+            if (gamepad2.dpadRightWasPressed()) {
+                bot.gate.openManual();
+            } else if (gamepad2.dpadLeftWasPressed()) {
+                bot.gate.closeManual();
+            }
+
+            if (gamepad2.dpadUpWasPressed()) {
+                bot.canon.CLOSE_SPEED -= 10;
+            }
+            if (gamepad2.dpadDownWasPressed()) {
+                bot.canon.CLOSE_SPEED += 10;
+            }
             if (gamepad2.y) {
                 bot.canon.motor.setVelocity(bot.canon.CLOSE_SPEED);
             }
 
-            if (gamepad2.dpadRightWasPressed()) {
-                bot.targetDistance += 1;
-            }
-            if (gamepad2.dpadLeftWasPressed()) {
-                bot.targetDistance -= 1;
-            }
-
-            if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {
+            /*if (gamepad1.yWasPressed() || gamepad2.yWasPressed()) {
                 bot.canon.motor.setVelocity(-1850);
-            }
+            }*/
 
 
             return true;
@@ -104,8 +114,7 @@ public class TeleOpRED extends LinearOpMode {
     @Override
     public void runOpMode() {
         //Pose2d startPose = new Pose2d(60.1, -12.7, 0);
-        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0)); //The start position,
-        // which is on the left tile of the far launch zone, with the intake up against the wall.
+        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
         bot = new Bot(hardwareMap, drive, side, telemetry);
         bot.initialize();
@@ -113,50 +122,45 @@ public class TeleOpRED extends LinearOpMode {
         TelemetryPacket t = new TelemetryPacket();
 
         Action defaultAction = new ParallelAction(
-            //new FieldCentricMovement(),
-            new ManualControls()
+            new FieldCentricMovement(),
+            new ManualControls(),
+            new KeepRunning(bot.canon.cloneMotorPower())
         );
         Action currentAction = defaultAction;
 
         waitForStart();
         while (opModeIsActive()) {
-            /*telemetry.update();
+            telemetry.update();
 
-            Vector2d aprilVec = new Vector2d(-58.3727f, 55.6425f);
+            bot.updatePose();
 
-            Pose2d botPose = bot.localizer.getPose();
-            double dx = botPose.position.x - aprilVec.x;
-            double dy = botPose.position.y - aprilVec.y;
-            latestAprilTagDetection = bot.getLatestAprilTagDetection();
-            if (latestAprilTagDetection != null) {
-                distance = latestAprilTagDetection.ftcPose.y;
-            } else {
-                distance = Math.sqrt(dx*dx + dy*dy);
-            }
+            telemetry.addData("X: ", bot.botPose.position.x);
+            telemetry.addData("Y: ", bot.botPose.position.y);
+            telemetry.addData("R: ", bot.botPose.heading.toDouble() * (180/Math.PI));
+            telemetry.addLine("==============================");
+            telemetry.addData("Vel_X: ", bot.velX);
+            telemetry.addData("Vel_Y: ", bot.velY);
+            telemetry.addData("TargetR: ", bot.canon.targetAngle * (180/Math.PI));
+            telemetry.addLine("==============================");
+            telemetry.addData("Canon_X: ", bot.canonPose.position.x);
+            telemetry.addData("Canon_Y: ", bot.canonPose.position.y);
+            telemetry.addData("Canon_R: ", bot.canonPose.heading.toDouble() * (180/Math.PI));
+            telemetry.addLine("==============================");
+            telemetry.addData("Target Speed: ", bot.canon.targetVel);
+            telemetry.addData("Speed: ", bot.canon.motor.getVelocity());
+            telemetry.addData("Canon power: ", bot.canon.motor.getPower());
+            telemetry.addData("isAtSpeed: ", bot.canon.isAtSpeed());
+            telemetry.addLine("==============================");
+            telemetry.addData("Distance: ", bot.distanceToGoal);
+            telemetry.addData("Intake Speed: ", intakeSpeed);
+            telemetry.addLine("==============================");
 
-            telemetry.addData("Distance: ", distance);
-            if (latestAprilTagDetection != null)
-                telemetry.addData("April Center: ", latestAprilTagDetection.center.x);
-
-            telemetry.addData("Target Distance: ", bot.targetDistance);
-            telemetry.addData("Target Speed: ", bot.canon.CLOSE_SPEED);
-            telemetry.addData("Target Speed First: ", bot.canon.CLOSE_SPEED_FIRST);
-
-            telemetry.addData("LocalizerX: ", drive.localizer.getPose().position.x);
-            telemetry.addData("LocalizerY: ", drive.localizer.getPose().position.y);
-            telemetry.addData("LocalizerR: ", Math.toDegrees(drive.localizer.getPose().heading.toDouble()));
-            telemetry.addData("Using April Tag: ", useAprilTag);
-            telemetry.addLine();
-
-            bot.aprilTagTelementary();
-
-            bot.updatePoseUsingAprilTag();
-
-            drive.updatePoseEstimate();
-            currentPose = drive.localizer.getPose();
 
             if (gamepad1.xWasPressed()) {
-                currentAction = bot.moveToImprecise(new Pose2d(-3, 56.0, 0));
+                currentAction = new SequentialAction(
+                    bot.moveToContinuous(new Pose2d(-0.5, -50, 0)),
+                    bot.moveTo(new Pose2d(-0.5, -54, 0))
+                );
             }
 
             if (gamepad1.dpadUpWasPressed()) {
@@ -184,10 +188,6 @@ public class TeleOpRED extends LinearOpMode {
             }
             Actions.runBlocking(bot.canon.cloneMotorPower());
 
-
-            telemetry.addData("Canon power: ", bot.canon.motor.getPower());
-            telemetry.addData("Canon speed: ", bot.canon.motor.getVelocity());
-            telemetry.addData("Pos: ", currentPose);
         }
     }
 
@@ -210,28 +210,27 @@ public class TeleOpRED extends LinearOpMode {
 
     private class TrackedMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
-            double kr2 = (1.0 / 60);
-            Vector2d aprilVec = new Vector2d(-58.3727f, 55.6425f);
-            Vector2d goalVec = new Vector2d(aprilVec.x-7, aprilVec.y+7);
+            double kr2 = (1.0 / 70);
 
             double y = -gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x * 1.1;
 
-            Pose2d botPose = bot.localizer.getPose();
-            double dx = botPose.position.x - goalVec.x;
-            double dy = botPose.position.y - goalVec.y;
+            double dx = bot.botPose.position.x - bot.goalVec.x;
+            double dy = bot.botPose.position.y - bot.goalVec.y;
 
             double targetAngle = Math.atan2(dx, -dy) - Math.PI/2;
             if (targetAngle < -Math.PI) {
                 targetAngle += 2*Math.PI;
             }
 
-            double angleDiff = targetAngle - botPose.heading.toDouble();
+            double angleDiff = targetAngle - bot.botPose.heading.toDouble();
+            if (bot.distanceToGoal < 70)
+                angleDiff += toRadians(-2);
             double r = Math.toDegrees(angleDiff) * kr2;
 
             bot.moveFieldCentric(x, y, r, Op.TELE);
 
-            return true;*/
+            return true;
         }
     }
 }

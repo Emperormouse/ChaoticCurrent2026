@@ -24,31 +24,31 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 
 @Autonomous
 @Config
-public class AutoBLUE extends LinearOpMode {
+public class AutoRED extends LinearOpMode {
     public static class PARAMS {
         public double x1 = 7.5;
-        public double angle = -120;
-        public double y1 = -50;
-        public double y2 = -63.7;
+        public double angle = 120;
+        public double y1 = 50;
+        public double y2 = 63.7;
         public double xMiddle = 10;
-        public double yMiddle1 = -30;
-        public double yMiddle2 = -60;
+        public double yMiddle1 = 30;
+        public double yMiddle2 = 60;
         public double closeX = -14;
-        public double closeY1 = -33;
-        public double closeY2 = -53.5;
+        public double closeY1 = 33;
+        public double closeY2 = 53.5;
 
     }
     public static PARAMS PARAMS = new PARAMS();
 
     MecanumDrive drive;
     Bot bot;
-    Pose2d launchPose = new Pose2d(-14, -16, Math.toRadians(38));
+    Pose2d launchPose = new Pose2d(-14, 16, Math.toRadians(-38));
     Vector2d launchVec = new Vector2d(launchPose.position.x, launchPose.position.y);
     double launchSpeed = 1420;
 
     public void runOpMode() {
         drive = new MecanumDrive(hardwareMap, new Pose2d(-52.87, -36.2, Math.toRadians(-90)));
-        bot = new Bot(hardwareMap, drive, Side.BLUE, telemetry);
+        bot = new Bot(hardwareMap, drive, Side.RED, telemetry);
 
         bot.initialize();
         long startTime = System.currentTimeMillis();
@@ -64,47 +64,47 @@ public class AutoBLUE extends LinearOpMode {
         bot.isOpModeRunning = true;
 
         Action RRPath = bot.drive.actionBuilder(startPos)
-            .strafeToLinearHeading(launchVec, toRadians(38))
+            .strafeToLinearHeading(launchVec, toRadians(-38))
             .afterTime(0, aimSequence(2.4, 1.1))
             .waitSeconds(2.4)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
-            .splineToSplineHeading(new Pose2d(PARAMS.xMiddle, PARAMS.yMiddle1, toRadians(-90)), toRadians(-90))
+            .splineToSplineHeading(new Pose2d(PARAMS.xMiddle, PARAMS.yMiddle1, toRadians(90)), toRadians(90))
             .strafeToConstantHeading(new Vector2d(PARAMS.xMiddle, PARAMS.yMiddle2))
             .afterTime(0.3, bot.intake.setPower(0))
-            .setTangent(toRadians(90))
+            .setTangent(toRadians(-90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
             .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
-            .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
+            .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(90))
             .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
             .afterTime(0.3, bot.intake.setPower(0))
-            .setTangent(toRadians(90))
+            .setTangent(toRadians(-90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
             .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
-            .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
+            .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(90))
             .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
             .afterTime(0.3, bot.intake.setPower(0))
-            .setTangent(toRadians(90))
+            .setTangent(toRadians(-90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
             .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
-            .strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
+            .strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(90))
             .lineToY(PARAMS.closeY2)
             .afterTime(0.3, bot.intake.setPower(0))
-            .strafeToLinearHeading(launchVec, toRadians(38))
+            .strafeToLinearHeading(launchVec, toRadians(-38))
             .afterTime(0, aimSequence())
             .waitSeconds(1.3)
 
@@ -128,7 +128,7 @@ public class AutoBLUE extends LinearOpMode {
                 ),
                 new EndAfterFirstParallel(
                     new Wait(0.4),
-                    new KeepRunning(bot.moveRelativeAction(-1.0, 0.0, 0.0, 1.0))
+                    new KeepRunning(bot.moveRelativeAction(1.0, 0.0, 0.0, 1.0))
                 ),
                 bot.stopAction(),
                 bot.intake.setPower(0),

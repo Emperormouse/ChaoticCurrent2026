@@ -24,13 +24,16 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 
 @Autonomous
 @Config
-public class AutoBLUE_FAR_CYCLE extends LinearOpMode {
+public class AutoRED_FAR extends LinearOpMode {
     public static class PARAMS {
         public double launchX = 52;
-        public double launchY = -15;
-        public double launchR = 28;
+        public double launchY = 15;
+        public double launchR = -20;
         public double cycleX = 63.5;
-        public double cycleY = -64;
+        public double cycleY = 64;
+        public double yRow1 = 30;
+        public double yRow2 = 60;
+        public double xRow = 30;
 
     }
     public static PARAMS PARAMS = new PARAMS();
@@ -44,7 +47,7 @@ public class AutoBLUE_FAR_CYCLE extends LinearOpMode {
 
     public void runOpMode() {
         drive = new MecanumDrive(hardwareMap, new Pose2d(-52.87, -36.2, Math.toRadians(-90)));
-        bot = new Bot(hardwareMap, drive, Side.BLUE, telemetry);
+        bot = new Bot(hardwareMap, drive, Side.RED, telemetry);
 
         bot.initialize();
         long startTime = System.currentTimeMillis();
@@ -61,28 +64,30 @@ public class AutoBLUE_FAR_CYCLE extends LinearOpMode {
 
 
         Action RRPath = bot.drive.actionBuilder(startPos)
-            .strafeToLinearHeading(launchVecFar, toRadians(20))
+            .strafeToLinearHeading(launchVecFar, toRadians(PARAMS.launchR))
             .waitSeconds(2.0)
             .afterTime(0, aimSequence(4.4, 1.0))
             .waitSeconds(4.5)
 
-            .turnTo(toRadians(-90))
             .afterTime(0, bot.intake.setPower(-1.0))
-            .strafeToConstantHeading(new Vector2d(PARAMS.cycleX, PARAMS.cycleY))
-            .waitSeconds(1.0)
-            .strafeToSplineHeading(launchVecFar, toRadians(20))
+            .setTangent(toRadians(180))
+            .splineToSplineHeading(new Pose2d(PARAMS.xRow, PARAMS.yRow1, toRadians(90)), toRadians(90))
+            .strafeToConstantHeading(new Vector2d(PARAMS.xRow, PARAMS.yRow2))
+            .waitSeconds(0.5)
+            .afterTime(0.5, bot.intake.setPower(0))
+            .strafeToLinearHeading(launchVecFar, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence())
             .waitSeconds(5.0)
 
-            .turnTo(toRadians(-90))
+            .turnTo(toRadians(90))
             .afterTime(0, bot.intake.setPower(-1.0))
             .strafeToConstantHeading(new Vector2d(PARAMS.cycleX, PARAMS.cycleY))
             .waitSeconds(1.0)
-            .strafeToSplineHeading(launchVecFar, toRadians(20))
+            .strafeToSplineHeading(launchVecFar, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence())
             .waitSeconds(5.0)
 
-            .strafeToConstantHeading(new Vector2d(PARAMS.cycleX, -45))
+            .strafeToConstantHeading(new Vector2d(PARAMS.cycleX, 45))
             .waitSeconds(1.0)
 
             .build();
