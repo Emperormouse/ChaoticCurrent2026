@@ -210,7 +210,7 @@ public class TeleOpRED extends LinearOpMode {
 
     private class TrackedMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
-            double kr2 = (1.0 / 70);
+            double kr2 = (1.0 / 80);
 
             double y = -gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x * 1.1;

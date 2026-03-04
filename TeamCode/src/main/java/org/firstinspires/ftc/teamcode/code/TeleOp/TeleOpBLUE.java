@@ -178,6 +178,16 @@ public class TeleOpBLUE extends LinearOpMode {
                 );
             }
 
+            if (gamepad1.yWasPressed()) {
+                bot.intake.stop();
+                bot.gate.close();
+                bot.canon.setPower(0);
+                currentAction = new ParallelAction(
+                    new CycleMovement(),
+                    new ManualControls()
+                );
+            }
+
             if (gamepad1.bWasPressed() || gamepad2.bWasPressed()) {
                 bot.canon.setPower(0);
                 bot.gate.closeManual();
@@ -211,7 +221,7 @@ public class TeleOpBLUE extends LinearOpMode {
 
     private class TrackedMovement implements Action {
         public boolean run(@NonNull TelemetryPacket t) {
-            double kr2 = (1.0 / 70);
+            double kr2 = (1.0 / 80);
 
             double y = -gamepad1.left_stick_y;
             double x = -gamepad1.left_stick_x * 1.1;
@@ -227,6 +237,24 @@ public class TeleOpBLUE extends LinearOpMode {
             double angleDiff = targetAngle - bot.botPose.heading.toDouble();
             if (bot.distanceToGoal < 70)
                 angleDiff += toRadians(-2);
+            double r = Math.toDegrees(angleDiff) * kr2;
+
+            bot.moveFieldCentric(x, y, r, Op.TELE);
+
+            return true;
+        }
+    }
+
+    private class CycleMovement implements Action {
+        public boolean run(@NonNull TelemetryPacket t) {
+            double kr2 = (1.0 / 80);
+
+            double y = -gamepad1.left_stick_y;
+            double x = -gamepad1.left_stick_x * 1.1;
+
+            double targetAngle = toRadians(-120);
+
+            double angleDiff = targetAngle - bot.botPose.heading.toDouble();
             double r = Math.toDegrees(angleDiff) * kr2;
 
             bot.moveFieldCentric(x, y, r, Op.TELE);

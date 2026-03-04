@@ -36,15 +36,17 @@ public class AutoBLUE extends LinearOpMode {
         public double closeX = -14;
         public double closeY1 = -33;
         public double closeY2 = -53.5;
-
+        public double launchX = -15;
+        public double launchY = -17;
+        public double launchR = 38;
     }
     public static PARAMS PARAMS = new PARAMS();
 
     MecanumDrive drive;
     Bot bot;
-    Pose2d launchPose = new Pose2d(-14, -16, Math.toRadians(38));
+    Pose2d launchPose = new Pose2d(PARAMS.launchX, PARAMS.launchY, Math.toRadians(PARAMS.launchR));
     Vector2d launchVec = new Vector2d(launchPose.position.x, launchPose.position.y);
-    double launchSpeed = 1420;
+    double launchSpeed = 1440;
 
     public void runOpMode() {
         drive = new MecanumDrive(hardwareMap, new Pose2d(-52.87, -36.2, Math.toRadians(-90)));
@@ -64,7 +66,7 @@ public class AutoBLUE extends LinearOpMode {
         bot.isOpModeRunning = true;
 
         Action RRPath = bot.drive.actionBuilder(startPos)
-            .strafeToLinearHeading(launchVec, toRadians(38))
+            .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence(2.4, 1.1))
             .waitSeconds(2.4)
 
@@ -104,7 +106,7 @@ public class AutoBLUE extends LinearOpMode {
             .strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
             .lineToY(PARAMS.closeY2)
             .afterTime(0.3, bot.intake.setPower(0))
-            .strafeToLinearHeading(launchVec, toRadians(38))
+            .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence())
             .waitSeconds(1.3)
 
@@ -151,7 +153,7 @@ public class AutoBLUE extends LinearOpMode {
                 new ParallelAction(
                     new SequentialAction(
                         new EndAfterFirstParallel(
-                            new Wait(0.6),
+                            new Wait(1.1),
                             new KeepRunning(bot.aimAtGoal())
                         ),
                         bot.stopAction()

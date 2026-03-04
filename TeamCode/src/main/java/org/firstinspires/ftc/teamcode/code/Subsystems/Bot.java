@@ -559,7 +559,7 @@ public class Bot {
 
     //drives to location while tracking april tag
     public class AimAtGoal implements Action {
-        private double pRotational = (1.0 / 70);
+        private double pRotational = (1.0 / 80);
         private double speed;
 
         public AimAtGoal() {
@@ -585,6 +585,8 @@ public class Bot {
             double angleDiff = targetAngle - botPose.heading.toDouble();
             if (side == Side.BLUE) {
                 angleDiff -= toRadians(2.5);
+            } else {
+                angleDiff -= toRadians(3.5);
             }
 
             double r = Math.toDegrees(angleDiff) * pRotational;

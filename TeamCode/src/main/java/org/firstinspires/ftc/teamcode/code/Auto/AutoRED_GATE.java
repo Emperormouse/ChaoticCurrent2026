@@ -24,7 +24,7 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 
 @Autonomous
 @Config
-public class AutoRED extends LinearOpMode {
+public class AutoRED_GATE extends LinearOpMode {
     public static class PARAMS {
         public double x1 = 12;
         public double angle = 120;
@@ -39,6 +39,9 @@ public class AutoRED extends LinearOpMode {
         public double launchX = -15;
         public double launchY = 17;
         public double launchR = -40;
+        public double gateX = 8;
+        public double gateY = 60;
+        public double gateR = 0;
     }
     public static PARAMS PARAMS = new PARAMS();
 
@@ -75,6 +78,7 @@ public class AutoRED extends LinearOpMode {
             .splineToSplineHeading(new Pose2d(PARAMS.xMiddle, PARAMS.yMiddle1, toRadians(90)), toRadians(90))
             .strafeToConstantHeading(new Vector2d(PARAMS.xMiddle, PARAMS.yMiddle2))
             .afterTime(0.3, bot.intake.setPower(0))
+            .strafeToSplineHeading(new Vector2d(PARAMS.gateX, PARAMS.gateY), toRadians(PARAMS.gateR))
             .setTangent(toRadians(-90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
