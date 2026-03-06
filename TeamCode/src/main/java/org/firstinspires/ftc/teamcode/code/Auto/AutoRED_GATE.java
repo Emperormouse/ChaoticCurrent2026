@@ -26,21 +26,21 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 @Config
 public class AutoRED_GATE extends LinearOpMode {
     public static class PARAMS {
-        public double x1 = 12;
-        public double angle = 120;
-        public double y1 = 50;
-        public double y2 = 64;
-        public double xMiddle = 16;
+        public double x1 = 11.6;
+        public double angle = 117;
+        public double y1 = 45;
+        public double y2 = 65;
+        public double xMiddle = 15.5;
         public double yMiddle1 = 30;
         public double yMiddle2 = 62;
-        public double closeX = -12.5;
-        public double closeY1 = 30;
-        public double closeY2 = 53.5;
+        public double closeX = -13.25;
+        public double closeY1 = 26;
+        public double closeY2 = 54.5;
         public double launchX = -15;
         public double launchY = 17;
-        public double launchR = -40;
-        public double gateX = 8;
-        public double gateY = 60;
+        public double launchR = -46;
+        public double gateX = 3;
+        public double gateY = 59;
         public double gateR = 0;
     }
     public static PARAMS PARAMS = new PARAMS();

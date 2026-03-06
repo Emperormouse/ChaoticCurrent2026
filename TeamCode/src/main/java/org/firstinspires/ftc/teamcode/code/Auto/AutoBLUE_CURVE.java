@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.code.Auto;
 
+import static java.lang.Math.PI;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 import static java.lang.Math.toRadians;
 
 import com.acmerobotics.dashboard.config.Config;
@@ -24,21 +27,22 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 
 @Autonomous
 @Config
-public class AutoRED extends LinearOpMode {
+public class AutoBLUE_CURVE extends LinearOpMode {
     public static class PARAMS {
-        public double x1 = 7.2;
-        public double angle = 125;
-        public double y1 = 45;
-        public double y2 = 62;
-        public double xMiddle = 15.5;
-        public double yMiddle1 = 30;
-        public double yMiddle2 = 62;
-        public double closeX = -13.25;
-        public double closeY1 = 26;
-        public double closeY2 = 54.5;
+        public double x1 = 7.5;
+        public double angle = -120;
+        public double y1 = -50;
+        public double y2 = -63.7;
+        public double xMiddle = 10;
+        public double yMiddle1 = -30;
+        public double yMiddle2 = -60;
+        public double closeX = -14;
+        public double closeY1 = -33;
+        public double closeY2 = -53.5;
         public double launchX = -15;
-        public double launchY = 17;
-        public double launchR = -46;
+        public double launchY = -17;
+        public double launchR = 38;
+        public double lenBack = 5;
     }
     public static PARAMS PARAMS = new PARAMS();
 
@@ -50,7 +54,7 @@ public class AutoRED extends LinearOpMode {
 
     public void runOpMode() {
         drive = new MecanumDrive(hardwareMap, new Pose2d(-52.87, -36.2, Math.toRadians(-90)));
-        bot = new Bot(hardwareMap, drive, Side.RED, telemetry);
+        bot = new Bot(hardwareMap, drive, Side.BLUE, telemetry);
 
         bot.initialize();
         long startTime = System.currentTimeMillis();
@@ -67,46 +71,48 @@ public class AutoRED extends LinearOpMode {
 
         Action RRPath = bot.drive.actionBuilder(startPos)
             .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
-            .afterTime(0, aimSequence(2.4, 1.2))
-            .waitSeconds(2.5)
+            .afterTime(0, aimSequence(2.4, 1.1))
+            .waitSeconds(2.4)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
-            .splineToSplineHeading(new Pose2d(PARAMS.xMiddle, PARAMS.yMiddle1, toRadians(90)), toRadians(90))
+            .splineToSplineHeading(new Pose2d(PARAMS.xMiddle, PARAMS.yMiddle1, toRadians(-90)), toRadians(-90))
             .strafeToConstantHeading(new Vector2d(PARAMS.xMiddle, PARAMS.yMiddle2))
             .afterTime(0.3, bot.intake.setPower(0))
-            .setTangent(toRadians(-90))
+            .setTangent(toRadians(90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
             .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
-            .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y2, toRadians(PARAMS.angle)), toRadians(120))
-            //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(90))
+            //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
             //.strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
+            .splineToSplineHeading(new Pose2d(PARAMS.x1+PARAMS.lenBack*cos(toRadians(60)), PARAMS.y2+PARAMS.lenBack*sin(toRadians(60)), toRadians(PARAMS.angle)), toRadians(-120))
+            .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
             .afterTime(0.3, bot.intake.setPower(0))
-            .setTangent(toRadians(-90))
+            .setTangent(toRadians(90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
             .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
-            .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y2, toRadians(PARAMS.angle)), toRadians(120))
-            //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(90))
+            //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
             //.strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
+            .splineToSplineHeading(new Pose2d(PARAMS.x1+PARAMS.lenBack*cos(toRadians(60)), PARAMS.y2+PARAMS.lenBack*sin(toRadians(60)), toRadians(PARAMS.angle)), toRadians(-120))
+            .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
             .afterTime(0.3, bot.intake.setPower(0))
-            .setTangent(toRadians(-90))
+            .setTangent(toRadians(90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
             .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
-            .strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(90))
-            .strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
+            .strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
+            .lineToY(PARAMS.closeY2)
             .afterTime(0.3, bot.intake.setPower(0))
             .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence())
@@ -132,7 +138,7 @@ public class AutoRED extends LinearOpMode {
                 ),
                 new EndAfterFirstParallel(
                     new Wait(0.4),
-                    new KeepRunning(bot.moveRelativeAction(1.0, 0.0, 0.0, 1.0))
+                    new KeepRunning(bot.moveRelativeAction(-1.0, 0.0, 0.0, 1.0))
                 ),
                 bot.stopAction(),
                 bot.intake.setPower(0),
@@ -142,7 +148,7 @@ public class AutoRED extends LinearOpMode {
     }
 
     public Action aimSequence() {
-        return aimSequence(1.3, 0.1);
+        return aimSequence(1.3, 0.0);
     }
     public Action aimSequence(double time1, double time2) {
         return new SequentialAction(
