@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.code.Auto;
 
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 import static java.lang.Math.toRadians;
 
 import com.acmerobotics.dashboard.config.Config;
@@ -26,19 +28,20 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 @Config
 public class AutoRED extends LinearOpMode {
     public static class PARAMS {
-        public double x1 = 7.2;
-        public double angle = 125;
+        public double x1 = 8.0;
+        public double angle = 120;
         public double y1 = 45;
-        public double y2 = 62;
+        public double y2 = 61.5;
         public double xMiddle = 15.5;
         public double yMiddle1 = 30;
         public double yMiddle2 = 62;
         public double closeX = -13.25;
         public double closeY1 = 26;
-        public double closeY2 = 54.5;
+        public double closeY2 = 55.5;
         public double launchX = -15;
         public double launchY = 17;
-        public double launchR = -46;
+        public double launchR = -45;
+        public double lenBack = 5;
     }
     public static PARAMS PARAMS = new PARAMS();
 
@@ -82,9 +85,9 @@ public class AutoRED extends LinearOpMode {
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
-            .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y2, toRadians(PARAMS.angle)), toRadians(120))
-            //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(90))
-            //.strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
+            //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y2, toRadians(PARAMS.angle)), toRadians(120))
+            .splineToSplineHeading(new Pose2d(PARAMS.x1+PARAMS.lenBack*cos(toRadians(60)), PARAMS.y2-PARAMS.lenBack*sin(toRadians(60)), toRadians(PARAMS.angle)), toRadians(120))
+            .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
             .afterTime(0.3, bot.intake.setPower(0))
             .setTangent(toRadians(-90))
@@ -94,9 +97,9 @@ public class AutoRED extends LinearOpMode {
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
-            .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y2, toRadians(PARAMS.angle)), toRadians(120))
-            //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(90))
-            //.strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
+            //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y2, toRadians(PARAMS.angle)), toRadians(120))
+            .splineToSplineHeading(new Pose2d(PARAMS.x1+PARAMS.lenBack*cos(toRadians(60)), PARAMS.y2-PARAMS.lenBack*sin(toRadians(60)), toRadians(PARAMS.angle)), toRadians(120))
+            .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
             .afterTime(0.3, bot.intake.setPower(0))
             .setTangent(toRadians(-90))

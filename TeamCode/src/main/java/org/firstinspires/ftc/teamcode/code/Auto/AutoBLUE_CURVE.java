@@ -29,7 +29,7 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 @Config
 public class AutoBLUE_CURVE extends LinearOpMode {
     public static class PARAMS {
-        public double x1 = 7.5;
+        public double x1 = 6.8;
         public double angle = -120;
         public double y1 = -50;
         public double y2 = -63.7;
@@ -111,8 +111,11 @@ public class AutoBLUE_CURVE extends LinearOpMode {
             .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
-            .strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
-            .lineToY(PARAMS.closeY2)
+            //.strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
+            //.strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
+            .setTangent(toRadians(-100))
+            .splineToSplineHeading(new Pose2d(PARAMS.closeX, PARAMS.closeY1, toRadians(-90)), toRadians(-90))
+            .strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
             .afterTime(0.3, bot.intake.setPower(0))
             .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence())

@@ -104,7 +104,7 @@ public class AutoBLUE extends LinearOpMode {
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
-            .lineToY(PARAMS.closeY2)
+            .strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
             .afterTime(0.3, bot.intake.setPower(0))
             .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence())

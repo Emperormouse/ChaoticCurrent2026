@@ -88,12 +88,12 @@ public final class MecanumDrive {
         public double maxAngAccel = Math.PI*2;
 
         // path controller gains
-        public double axialGain = 11;
-        public double lateralGain = 11;
+        public double axialGain = 13;
+        public double lateralGain = 13;
         public double headingGain = 12; // shared with turn
 
-        public double axialVelGain = 0.0;
-        public double lateralVelGain = 0.0;
+        public double axialVelGain = 1.5;
+        public double lateralVelGain = 1.5;
         public double headingVelGain = 0.2; // shared with turn
     }
 
