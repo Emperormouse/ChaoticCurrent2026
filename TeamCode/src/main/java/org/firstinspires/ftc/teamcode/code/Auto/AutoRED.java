@@ -70,8 +70,8 @@ public class AutoRED extends LinearOpMode {
 
         Action RRPath = bot.drive.actionBuilder(startPos)
             .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
-            .afterTime(0, aimSequence(2.4, 1.2))
-            .waitSeconds(2.5)
+            .afterTime(0, aimSequence(2.3, 1.1))
+            .waitSeconds(2.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
@@ -81,7 +81,7 @@ public class AutoRED extends LinearOpMode {
             .setTangent(toRadians(-90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.3)
+            .waitSeconds(1.2)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
@@ -93,7 +93,7 @@ public class AutoRED extends LinearOpMode {
             .setTangent(toRadians(-90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.3)
+            .waitSeconds(1.2)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
@@ -105,7 +105,7 @@ public class AutoRED extends LinearOpMode {
             .setTangent(toRadians(-90))
             .splineToLinearHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.3)
+            .waitSeconds(1.2)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(90))
@@ -113,7 +113,7 @@ public class AutoRED extends LinearOpMode {
             .afterTime(0.3, bot.intake.setPower(0))
             .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.3)
+            .waitSeconds(1.2)
 
             .build();
 
@@ -131,10 +131,10 @@ public class AutoRED extends LinearOpMode {
                         new KeepRunning(bot.canon.cloneMotorPower()),
                         new KeepRunning(bot.canon.setVelAction(launchSpeed))
                     ),
-                    new Wait(29.6)
+                    new Wait(29.7)
                 ),
                 new EndAfterFirstParallel(
-                    new Wait(0.4),
+                    new Wait(0.3),
                     new KeepRunning(bot.moveRelativeAction(1.0, 0.0, 0.0, 1.0))
                 ),
                 bot.stopAction(),
@@ -145,7 +145,7 @@ public class AutoRED extends LinearOpMode {
     }
 
     public Action aimSequence() {
-        return aimSequence(1.3, 0.1);
+        return aimSequence(1.2, 0.0);
     }
     public Action aimSequence(double time1, double time2) {
         return new SequentialAction(

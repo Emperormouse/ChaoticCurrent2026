@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.code.Auto;
 
+import static java.lang.Math.PI;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 import static java.lang.Math.toRadians;
 
 import com.acmerobotics.dashboard.config.Config;
@@ -26,7 +29,7 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 @Config
 public class AutoBLUE extends LinearOpMode {
     public static class PARAMS {
-        public double x1 = 7.5;
+        public double x1 = 6.8;
         public double angle = -120;
         public double y1 = -50;
         public double y2 = -63.7;
@@ -39,6 +42,7 @@ public class AutoBLUE extends LinearOpMode {
         public double launchX = -15;
         public double launchY = -17;
         public double launchR = 38;
+        public double lenBack = 5;
     }
     public static PARAMS PARAMS = new PARAMS();
 
@@ -67,8 +71,8 @@ public class AutoBLUE extends LinearOpMode {
 
         Action RRPath = bot.drive.actionBuilder(startPos)
             .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
-            .afterTime(0, aimSequence(2.4, 1.1))
-            .waitSeconds(2.4)
+            .afterTime(0, aimSequence(2.3, 1.1))
+            .waitSeconds(2.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
@@ -82,7 +86,9 @@ public class AutoBLUE extends LinearOpMode {
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
-            .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
+            //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
+            //.strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
+            .splineToSplineHeading(new Pose2d(PARAMS.x1+PARAMS.lenBack*cos(toRadians(60)), PARAMS.y2+PARAMS.lenBack*sin(toRadians(60)), toRadians(PARAMS.angle)), toRadians(-120))
             .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
             .afterTime(0.3, bot.intake.setPower(0))
@@ -93,7 +99,9 @@ public class AutoBLUE extends LinearOpMode {
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
-            .splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
+            //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
+            //.strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
+            .splineToSplineHeading(new Pose2d(PARAMS.x1+PARAMS.lenBack*cos(toRadians(60)), PARAMS.y2+PARAMS.lenBack*sin(toRadians(60)), toRadians(PARAMS.angle)), toRadians(-120))
             .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
             .afterTime(0.3, bot.intake.setPower(0))
@@ -103,7 +111,10 @@ public class AutoBLUE extends LinearOpMode {
             .waitSeconds(1.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
-            .strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
+            //.strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
+            //.strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
+            .setTangent(toRadians(-100))
+            .splineToSplineHeading(new Pose2d(PARAMS.closeX, PARAMS.closeY1, toRadians(-90)), toRadians(-90))
             .strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
             .afterTime(0.3, bot.intake.setPower(0))
             .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
@@ -126,10 +137,10 @@ public class AutoBLUE extends LinearOpMode {
                         new KeepRunning(bot.canon.cloneMotorPower()),
                         new KeepRunning(bot.canon.setVelAction(launchSpeed))
                     ),
-                    new Wait(29.6)
+                    new Wait(29.7)
                 ),
                 new EndAfterFirstParallel(
-                    new Wait(0.4),
+                    new Wait(0.3),
                     new KeepRunning(bot.moveRelativeAction(-1.0, 0.0, 0.0, 1.0))
                 ),
                 bot.stopAction(),
@@ -140,7 +151,7 @@ public class AutoBLUE extends LinearOpMode {
     }
 
     public Action aimSequence() {
-        return aimSequence(1.3, 0.0);
+        return aimSequence(1.3, 0.1);
     }
     public Action aimSequence(double time1, double time2) {
         return new SequentialAction(

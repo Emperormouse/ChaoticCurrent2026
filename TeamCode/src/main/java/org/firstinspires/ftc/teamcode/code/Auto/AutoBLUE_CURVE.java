@@ -14,6 +14,7 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
@@ -27,6 +28,7 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 
 @Autonomous
 @Config
+@Disabled
 public class AutoBLUE_CURVE extends LinearOpMode {
     public static class PARAMS {
         public double x1 = 6.8;
@@ -71,8 +73,8 @@ public class AutoBLUE_CURVE extends LinearOpMode {
 
         Action RRPath = bot.drive.actionBuilder(startPos)
             .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
-            .afterTime(0, aimSequence(2.4, 1.1))
-            .waitSeconds(2.4)
+            .afterTime(0, aimSequence(2.3, 1.1))
+            .waitSeconds(2.3)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
