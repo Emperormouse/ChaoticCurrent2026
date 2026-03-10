@@ -29,14 +29,14 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 @Config
 public class AutoBLUE extends LinearOpMode {
     public static class PARAMS {
-        public double x1 = 4.8;
+        public double x1 = 6.5;
         public double angle = -120;
         public double angleVel = -100;
         public double y1 = -50;
         public double y2 = -61.75;
         public double xMiddle = 10;
         public double yMiddle1 = -30;
-        public double yMiddle2 = -60;
+        public double yMiddle2 = -61;
         public double closeX = -14;
         public double closeY1 = -33;
         public double closeY2 = -54.5;
@@ -52,7 +52,7 @@ public class AutoBLUE extends LinearOpMode {
     Bot bot;
     Pose2d launchPose = new Pose2d(PARAMS.launchX, PARAMS.launchY, Math.toRadians(PARAMS.launchR));
     Vector2d launchVec = new Vector2d(launchPose.position.x, launchPose.position.y);
-    double launchSpeed = 1440;
+    double launchSpeed = 1400;
 
     public void runOpMode() {
         drive = new MecanumDrive(hardwareMap, new Pose2d(-52.87, -36.2, Math.toRadians(-90)));
@@ -71,11 +71,19 @@ public class AutoBLUE extends LinearOpMode {
         telemetry.update();
         bot.isOpModeRunning = true;
 
-        Action RRPath = bot.drive.actionBuilder(startPos)
+        Action RRPath1 = bot.drive.actionBuilder(startPos)
             .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence(2.3, 1.1))
             .waitSeconds(2.3)
+            .build();
 
+        //END OF INIT
+        waitForStart();
+
+        Actions.runBlocking(bot.canon.setVelAction(launchSpeed));
+        Actions.runBlocking(genPath(RRPath1));
+
+        Action RRPath2 = bot.drive.actionBuilder(bot.botPose)
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
             .splineToSplineHeading(new Pose2d(PARAMS.xMiddle, PARAMS.yMiddle1, toRadians(-90)), toRadians(-90))
@@ -85,7 +93,11 @@ public class AutoBLUE extends LinearOpMode {
             .splineToSplineHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
             .waitSeconds(1.4)
+            .build();
 
+        Actions.runBlocking(genPath(RRPath2));
+
+        Action RRPath3 = bot.drive.actionBuilder(bot.botPose)
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
             //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
@@ -98,7 +110,11 @@ public class AutoBLUE extends LinearOpMode {
             .splineToSplineHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
             .waitSeconds(1.4)
+            .build();
 
+        Actions.runBlocking(genPath(RRPath3));
+
+        Action RRPath4 = bot.drive.actionBuilder(bot.botPose)
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
             //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
@@ -111,9 +127,13 @@ public class AutoBLUE extends LinearOpMode {
             .splineToSplineHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
             .waitSeconds(1.4)
+            .build();
 
+        Actions.runBlocking(genPath(RRPath4));
+
+        Action RRPath5 = bot.drive.actionBuilder(bot.botPose)
             .afterTime(0, bot.intake.setPower(-1.0))
-            .afterTime(0, bot.canon.setVelAction(1200))
+            .afterTime(0, bot.canon.setVelAction(1260))
             //.strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
             //.strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
             .setTangent(toRadians(-100))
@@ -123,15 +143,11 @@ public class AutoBLUE extends LinearOpMode {
             .strafeToSplineHeading(new Vector2d(-38.47, -15.2), toRadians(58))
             .afterTime(0, aimSequence())
             .waitSeconds(1.4)
-
             .build();
 
-        waitForStart();
+        Actions.runBlocking(genPath(RRPath5));
 
-        //END OF INIT
-
-
-        Actions.runBlocking(
+        /*Actions.runBlocking(
             new SequentialAction(
                 bot.canon.setVelAction(launchSpeed),
                 new ParallelAction(
@@ -143,6 +159,17 @@ public class AutoBLUE extends LinearOpMode {
                 bot.stopAction(),
                 bot.intake.setPower(0),
                 bot.canon.setPowerAction(0)
+            )
+        );*/
+    }
+
+    public Action genPath(Action path) {
+        return new EndAfterFirstParallel(
+            path,
+            new ParallelAction(
+                new KeepRunning(bot.updatePoseAction()),
+                new KeepRunning(bot.canon.cloneMotorPower()),
+                new KeepRunning(bot.canon.setVelToTargetAction())
             )
         );
     }
