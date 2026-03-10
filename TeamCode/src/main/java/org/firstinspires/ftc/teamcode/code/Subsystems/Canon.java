@@ -80,6 +80,16 @@ public class Canon {
         }
     }
 
+    public Action setVelToTargetAction() {
+        return new SetVelToTargetAction();
+    }
+    public class SetVelToTargetAction implements Action {
+        public boolean run(TelemetryPacket t) {
+            motor.setVelocity(targetVel);
+            return false;
+        }
+    }
+
     public class SetVelByDistance implements Action {
         private double maxSpeed = 10_000;
         public SetVelByDistance(double maxSpeed) {

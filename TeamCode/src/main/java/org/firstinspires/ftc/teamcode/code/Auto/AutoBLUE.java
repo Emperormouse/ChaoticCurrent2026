@@ -29,20 +29,21 @@ import org.firstinspires.ftc.teamcode.code.utility.Side;
 @Config
 public class AutoBLUE extends LinearOpMode {
     public static class PARAMS {
-        public double x1 = 6.8;
+        public double x1 = 4.8;
         public double angle = -120;
+        public double angleVel = -100;
         public double y1 = -50;
-        public double y2 = -63.7;
+        public double y2 = -61.75;
         public double xMiddle = 10;
         public double yMiddle1 = -30;
         public double yMiddle2 = -60;
         public double closeX = -14;
         public double closeY1 = -33;
-        public double closeY2 = -53.5;
+        public double closeY2 = -54.5;
         public double launchX = -15;
         public double launchY = -17;
-        public double launchR = 38;
-        public double lenBack = 5;
+        public double launchR = 40;
+        public double lenBack = 10;
     }
     public static PARAMS PARAMS = new PARAMS();
 
@@ -80,46 +81,47 @@ public class AutoBLUE extends LinearOpMode {
             .strafeToConstantHeading(new Vector2d(PARAMS.xMiddle, PARAMS.yMiddle2))
             .afterTime(0.3, bot.intake.setPower(0))
             .setTangent(toRadians(90))
-            .splineToLinearHeading(launchPose, toRadians(180))
+            .splineToSplineHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.3)
+            .waitSeconds(1.4)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
             //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
             //.strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
-            .splineToSplineHeading(new Pose2d(PARAMS.x1+PARAMS.lenBack*cos(toRadians(60)), PARAMS.y2+PARAMS.lenBack*sin(toRadians(60)), toRadians(PARAMS.angle)), toRadians(-120))
+            .splineToSplineHeading(new Pose2d(PARAMS.x1+PARAMS.lenBack*cos(toRadians(180+PARAMS.angleVel)), PARAMS.y2+PARAMS.lenBack*sin(toRadians(180+PARAMS.angleVel)), toRadians(PARAMS.angle)), toRadians(PARAMS.angleVel))
             .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
             .afterTime(0.3, bot.intake.setPower(0))
             .setTangent(toRadians(90))
-            .splineToLinearHeading(launchPose, toRadians(180))
+            .splineToSplineHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.3)
+            .waitSeconds(1.4)
 
             .afterTime(0, bot.intake.setPower(-1.0))
             .setTangent(toRadians(0))
             //.splineToSplineHeading(new Pose2d(PARAMS.x1, PARAMS.y1, toRadians(PARAMS.angle)), toRadians(-90))
             //.strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
-            .splineToSplineHeading(new Pose2d(PARAMS.x1+PARAMS.lenBack*cos(toRadians(60)), PARAMS.y2+PARAMS.lenBack*sin(toRadians(60)), toRadians(PARAMS.angle)), toRadians(-120))
+            .splineToSplineHeading(new Pose2d(PARAMS.x1+PARAMS.lenBack*cos(toRadians(180+PARAMS.angleVel)), PARAMS.y2+PARAMS.lenBack*sin(toRadians(180+PARAMS.angleVel)), toRadians(PARAMS.angle)), toRadians(PARAMS.angleVel))
             .strafeToLinearHeading(new Vector2d(PARAMS.x1, PARAMS.y2), toRadians(PARAMS.angle))
             .waitSeconds(1.5)
             .afterTime(0.3, bot.intake.setPower(0))
             .setTangent(toRadians(90))
-            .splineToLinearHeading(launchPose, toRadians(180))
+            .splineToSplineHeading(launchPose, toRadians(180))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.3)
+            .waitSeconds(1.4)
 
             .afterTime(0, bot.intake.setPower(-1.0))
+            .afterTime(0, bot.canon.setVelAction(1200))
             //.strafeToSplineHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY1), toRadians(-90))
             //.strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
             .setTangent(toRadians(-100))
             .splineToSplineHeading(new Pose2d(PARAMS.closeX, PARAMS.closeY1, toRadians(-90)), toRadians(-90))
             .strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
             .afterTime(0.3, bot.intake.setPower(0))
-            .strafeToLinearHeading(launchVec, toRadians(PARAMS.launchR))
+            .strafeToSplineHeading(new Vector2d(-38.47, -15.2), toRadians(58))
             .afterTime(0, aimSequence())
-            .waitSeconds(1.3)
+            .waitSeconds(1.4)
 
             .build();
 
@@ -130,18 +132,12 @@ public class AutoBLUE extends LinearOpMode {
 
         Actions.runBlocking(
             new SequentialAction(
-                new EndAfterEitherParallel(
-                    new ParallelAction(
-                        RRPath,
-                        new KeepRunning(bot.updatePoseAction()),
-                        new KeepRunning(bot.canon.cloneMotorPower()),
-                        new KeepRunning(bot.canon.setVelAction(launchSpeed))
-                    ),
-                    new Wait(29.7)
-                ),
-                new EndAfterFirstParallel(
-                    new Wait(0.3),
-                    new KeepRunning(bot.moveRelativeAction(-1.0, 0.0, 0.0, 1.0))
+                bot.canon.setVelAction(launchSpeed),
+                new ParallelAction(
+                    RRPath,
+                    new KeepRunning(bot.updatePoseAction()),
+                    new KeepRunning(bot.canon.cloneMotorPower()),
+                    new KeepRunning(bot.canon.setVelToTargetAction())
                 ),
                 bot.stopAction(),
                 bot.intake.setPower(0),
@@ -151,7 +147,7 @@ public class AutoBLUE extends LinearOpMode {
     }
 
     public Action aimSequence() {
-        return aimSequence(1.3, 0.1);
+        return aimSequence(1.4, 0.3);
     }
     public Action aimSequence(double time1, double time2) {
         return new SequentialAction(
@@ -175,7 +171,6 @@ public class AutoBLUE extends LinearOpMode {
                     )
                 )
             ),
-            bot.canon.setPowerAction(0),
             bot.gate.close(),
             bot.disableAprilTag()
         );
