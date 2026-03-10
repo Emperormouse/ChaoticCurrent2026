@@ -46,6 +46,7 @@ public class AutoBLUE extends LinearOpMode {
         public double lenBack = 10;
     }
     public static PARAMS PARAMS = new PARAMS();
+    //hi
 
     MecanumDrive drive;
     Bot bot;
