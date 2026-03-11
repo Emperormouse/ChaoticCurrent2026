@@ -43,6 +43,9 @@ public class AutoBLUE extends LinearOpMode {
         public double launchX = -15;
         public double launchY = -17;
         public double launchR = 40;
+        public double launch_2X = -38.47;
+        public double launch_2Y = -15.2;
+        public double launch_2R = 58;
         public double lenBack = 10;
     }
     public static PARAMS PARAMS = new PARAMS();
@@ -140,7 +143,7 @@ public class AutoBLUE extends LinearOpMode {
             .splineToSplineHeading(new Pose2d(PARAMS.closeX, PARAMS.closeY1, toRadians(-90)), toRadians(-90))
             .strafeToConstantHeading(new Vector2d(PARAMS.closeX, PARAMS.closeY2))
             .afterTime(0.3, bot.intake.setPower(0))
-            .strafeToSplineHeading(new Vector2d(-38.47, -15.2), toRadians(58))
+            .strafeToSplineHeading(new Vector2d(PARAMS.launch_2X, PARAMS.launch_2Y), toRadians(PARAMS.launch_2R))
             .afterTime(0, aimSequence())
             .waitSeconds(1.4)
             .build();
