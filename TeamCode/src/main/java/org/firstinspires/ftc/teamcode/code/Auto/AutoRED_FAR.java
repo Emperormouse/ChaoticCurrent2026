@@ -28,12 +28,12 @@ public class AutoRED_FAR extends LinearOpMode {
     public static class PARAMS {
         public double launchX = 52;
         public double launchY = 15;
-        public double launchR = -20;
-        public double cycleX = 63.5;
+        public double launchR = -22;
+        public double cycleX = 64.5;
         public double cycleY = 64;
         public double yRow1 = 30;
         public double yRow2 = 60;
-        public double xRow = 30;
+        public double xRow = 39;
 
     }
     public static PARAMS PARAMS = new PARAMS();
@@ -43,7 +43,7 @@ public class AutoRED_FAR extends LinearOpMode {
 
     Pose2d launchPoseFar = new Pose2d(PARAMS.launchX, PARAMS.launchY, Math.toRadians(PARAMS.launchR));
     Vector2d launchVecFar = new Vector2d(launchPoseFar.position.x, launchPoseFar.position.y);
-    double launchSpeed = 1740;
+    double launchSpeed = 1700;
 
     public void runOpMode() {
         drive = new MecanumDrive(hardwareMap, new Pose2d(-52.87, -36.2, Math.toRadians(-90)));
@@ -64,7 +64,7 @@ public class AutoRED_FAR extends LinearOpMode {
 
 
         Action RRPath = bot.drive.actionBuilder(startPos)
-            .strafeToLinearHeading(launchVecFar, toRadians(PARAMS.launchR))
+            .strafeToSplineHeading(launchVecFar, toRadians(PARAMS.launchR))
             .waitSeconds(2.0)
             .afterTime(0, aimSequence(4.4, 1.0))
             .waitSeconds(4.5)
@@ -75,11 +75,13 @@ public class AutoRED_FAR extends LinearOpMode {
             .strafeToConstantHeading(new Vector2d(PARAMS.xRow, PARAMS.yRow2))
             .waitSeconds(0.5)
             .afterTime(0.5, bot.intake.setPower(0))
-            .strafeToLinearHeading(launchVecFar, toRadians(PARAMS.launchR))
+            .strafeToSplineHeading(launchVecFar, toRadians(PARAMS.launchR))
             .afterTime(0, aimSequence())
             .waitSeconds(5.0)
 
             .turnTo(toRadians(90))
+            .setTangent(toRadians(0))
+            .lineToX(PARAMS.cycleX)
             .afterTime(0, bot.intake.setPower(-1.0))
             .strafeToConstantHeading(new Vector2d(PARAMS.cycleX, PARAMS.cycleY))
             .waitSeconds(1.0)

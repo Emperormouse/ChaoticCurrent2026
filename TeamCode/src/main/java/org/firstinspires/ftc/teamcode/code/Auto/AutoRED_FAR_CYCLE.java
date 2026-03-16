@@ -28,7 +28,7 @@ public class AutoRED_FAR_CYCLE extends LinearOpMode {
     public static class PARAMS {
         public double launchX = 52;
         public double launchY = 15;
-        public double launchR = -20;
+        public double launchR = -22;
         public double cycleX = 63.5;
         public double cycleY = 64;
 

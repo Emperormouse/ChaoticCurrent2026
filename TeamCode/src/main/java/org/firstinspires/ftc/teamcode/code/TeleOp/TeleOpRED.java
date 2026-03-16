@@ -23,6 +23,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.code.Subsystems.Bot;
+import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterEitherParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.EndAfterFirstParallel;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.KeepRunning;
 import org.firstinspires.ftc.teamcode.code.utility.Actions.Wait;
@@ -170,10 +171,22 @@ public class TeleOpRED extends LinearOpMode {
             if (gamepad1.aWasPressed()) {
                 bot.intake.stop();
                 bot.gate.close();
-                currentAction = new ParallelAction(
+                currentAction = new EndAfterEitherParallel(
                     new TrackedMovement(),
-                    new ManualControls(),
-                    bot.canon.setVelByDistance()
+                    new ParallelAction(
+                            new ManualControls(),
+                            bot.canon.setVelByDistance()
+                    )
+                );
+            }
+
+            if (gamepad1.yWasPressed()) {
+                bot.intake.stop();
+                bot.gate.close();
+                bot.canon.setPower(0);
+                currentAction = new EndAfterEitherParallel(
+                    new CycleMovement(),
+                    new ManualControls()
                 );
             }
 
@@ -228,9 +241,36 @@ public class TeleOpRED extends LinearOpMode {
                 angleDiff += toRadians(-2);
             double r = Math.toDegrees(angleDiff) * kr2;
 
+            if (Math.abs(x) > 0.2 || Math.abs(y) > 0.2)
+                r *= 1.5;
+
             bot.moveFieldCentric(x, y, r, Op.TELE);
 
-            return true;
+            if (Math.abs(gamepad1.right_stick_x) > 0.1 || Math.abs(gamepad1.right_stick_y) > 0.1)
+                return false;
+            else
+                return true;
+        }
+    }
+
+    private class CycleMovement implements Action {
+        public boolean run(@NonNull TelemetryPacket t) {
+            double kr2 = (1.0 / 90);
+
+            double y = -gamepad1.left_stick_y;
+            double x = -gamepad1.left_stick_x * 1.1;
+
+            double targetAngle = toRadians(112.5);
+
+            double angleDiff = targetAngle - bot.botPose.heading.toDouble();
+            double r = Math.toDegrees(angleDiff) * kr2;
+
+            bot.moveFieldCentric(x, y, r, Op.TELE);
+
+            if (Math.abs(gamepad1.right_stick_x) > 0.1 || Math.abs(gamepad1.right_stick_y) > 0.1)
+                return false;
+            else
+                return true;
         }
     }
 }
